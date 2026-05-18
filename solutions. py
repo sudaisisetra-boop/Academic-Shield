@@ -1,0 +1,22 @@
+import streamlit as st
+
+def grade_physics_item1(rd_input, density_b_input):
+    score = 0
+    feedback = []
+    
+    # Q1 Logic: Relative Density (0.75 submerged * 1.2 liquid)
+    if 0.89 <= rd_input <= 0.91:
+        score += 50
+        feedback.append("✅ Q1 Correct! You mastered the RD ratio.")
+    else:
+        feedback.append("❌ Q1 Incorrect. Hint: RD_rod = Fraction_submerged * RD_liquid.")
+
+    # Q2 Logic: Adding 50N (approx 5kg) to 200kg mass
+    # New density required to float at same level: ~1230 kg/m^3
+    if 1220 <= density_b_input <= 1240:
+        score += 50
+        feedback.append("✅ Q2 Correct! Excellent mass-buoyancy integration.")
+    else:
+        feedback.append("❌ Q2 Incorrect. Did you add the 50N (5kg) weight to the total mass?")
+
+    return score, "\n".join(feedback)
