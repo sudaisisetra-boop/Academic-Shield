@@ -1,0 +1,44 @@
+import streamlit as st
+import pandas as pd
+import solutions 
+
+st.set_page_config(page_title="Academic Shield", layout="wide")
+
+if 'results' not in st.session_state:
+    st.session_state.results = []
+
+# Login System
+st.sidebar.title("🔐 Scholar Login")
+user = st.sidebar.selectbox("Select Name", ["Setra stones", "Gideon Cheps"])
+pwd = st.sidebar.text_input("Enter Access Code", type="password")
+
+if pwd == "Amazima2026":
+    st.sidebar.success(f"Welcome, {user}")
+    menu = ["📝 Exam Center", "📊 Progress Tracker", "📂 Upload Samples"]
+    choice = st.sidebar.radio("Navigate", menu)
+
+    if choice == "📝 Exam Center":
+        st.header("Physics: Bridge Construction Item")
+        st.write("**Scenario:** A concrete pillar (200kg) floats with 75% submerged in Fluid A (RD 1.2). A 50N weight is added to keep it at that depth in Fluid B.")
+        
+        q1 = st.number_input("Q1: Relative Density of Pillar", format="%.2f")
+        q2 = st.number_input("Q2: Density of Fluid B (kg/m³)", format="%.1f")
+        
+        if st.button("Submit Exam"):
+            score, feedback = solutions.grade_physics_item1(q1, q2)
+            st.session_state.results.append({"Student": user, "Score": score, "Subject": "Physics"})
+            st.info(feedback)
+            if score == 100: st.balloons()
+
+    elif choice == "📊 Progress Tracker":
+        st.header("Academic Standings")
+        if st.session_state.results:
+            st.table(pd.DataFrame(st.session_state.results))
+        else:
+            st.write("No data recorded yet.")
+
+    elif choice == "📂 Upload Samples":
+        st.header("Submit UNEB Papers")
+        st.file_uploader("Upload photos for AI analysis")
+else:
+    st.warning("Please enter the access code.")
