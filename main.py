@@ -4,6 +4,7 @@ import datetime
 import random
 import google.generativeai as genai
 from streamlit_gsheets import GSheetsConnection
+from PIL import Image
 
 st.set_page_config(page_title="Academic Shield Pro", layout="wide", page_icon="🛡️")
 
@@ -40,7 +41,6 @@ if pwd == "Amazima2026":
         st.caption(f"📅 Daily Synchronized Session: **{today_str}**")
 
         try:
-            # Read the question prompts you typed without answers
             raw_bank = conn.read(worksheet=subject_choice)
             base_questions = raw_bank['question_text'].dropna().tolist()
         except Exception:
@@ -48,14 +48,10 @@ if pwd == "Amazima2026":
             base_questions = []
 
         if base_questions:
-            # Seed ensure both you and Gideon get the exact same items today
             random.seed(today_str)
-            
-            # Select up to 4 baseline prompts from your sheet
             sample_size = min(4, len(base_questions))
             selected_bases = random.sample(base_questions, sample_size)
             
-            # AI generation tool wrapped in a cache to lock the exact output for 24 hours
             @st.cache_data(ttl=86400)
             def generate_full_paper(bases_list, subject, date_key):
                 generated_items = []
@@ -79,58 +75,82 @@ if pwd == "Amazima2026":
             with st.spinner("🤖 AI Examiner is constructing your 4-item parallel paper..."):
                 active_paper_items = generate_full_paper(selected_bases, subject_choice, today_str)
             
-            # Displaying the questions and generating input scripts dynamically
             student_scripts = {}
             
             for i, item_raw in enumerate(active_paper_items):
                 st.markdown("---")
                 st.subheader(f"📝 Question Item {i+1}")
-                
-                # Render the AI question text neatly
                 st.markdown(item_raw)
                 
-                # Create dedicated input scripts for this specific question item
-                st.markdown(f"**✍️ Your Script for Item {i+1}:**")
-                ans_a = st.text_area(f"Type solution for Item {i+1} - Part A:", height=100, key=f"script_a_{i}")
-                ans_b = st.text_area(f"Type solution for Item {i+1} - Part B:", height=100, key=f"script_b_{i}")
+                st.markdown(f"**✍️ Submit Your Script for Item {i+1}:**")
+                input_mode = st.radio(f"Choose submission method for Item {i+1}:", ["📷 Upload Photo of Handwritten Work", "⌨️ Type My Answers"], key=f"mode_{i}")
                 
-                # Save answers to evaluate later
+                ans_a = ""
+                ans_b = ""
+                uploaded_photo = None
+                
+                if input_mode == "⌨️ Type My Answers":
+                    ans_a = st.text_area(f"Type solution for Item {i+1} - Part A:", height=100, key=f"script_a_{i}")
+                    ans_b = st.text_area(f"Type solution for Item {i+1} - Part B:", height=100, key=f"script_b_{i}")
+                else:
+                    uploaded_photo = st.file_uploader(f"Snap/Upload photo of your written sheet for Item {i+1}:", type=["jpg", "jpeg", "png"], key=f"photo_{i}")
+                    if uploaded_photo:
+                        st.image(uploaded_photo, caption=f"Your uploaded script for Item {i+1}", width=300)
+                
                 student_scripts[f"item_{i}"] = {
                     "question_context": item_raw,
+                    "mode": input_mode,
                     "ans_a": ans_a,
-                    "ans_b": ans_b
+                    "ans_b": ans_b,
+                    "photo": uploaded_photo
                 }
 
             st.markdown("---")
             
             if st.button("📤 Submit Entire Exam Script"):
-                with st.spinner("📝 Examiner is marking your full scripts against curriculum standards..."):
-                    
-                    # Package all answers into a single grading review block
+                with st.spinner("📝 Examiner is analyzing text and images to grade your scripts..."):
                     evaluation_summary = ""
                     total_calculated_score = 0
                     
                     for i in range(len(active_paper_items)):
                         script = student_scripts[f"item_{i}"]
-                        grading_prompt = f"""
+                        
+                        if script["mode"] == "⌨️ Type My Answers":
+                            prompt_content = f"The student submitted text answers:\nPart A: '{script['ans_a']}'\nPart B: '{script['ans_b']}'"
+                        else:
+                            if script["photo"] is not None:
+                                prompt_content = "The student submitted an image of their handwritten work. Carefully read their handwriting, evaluate every step of their calculations, and identify any structural loopholes, algebraic drops, or formula errors."
+                            else:
+                                prompt_content = "\n[The student left this question completely blank.]\n"
+                        
+                        master_grading_instruction = f"""
                         You are a strict UNEB Examiner grading a Senior Five student script.
-                        Question text: '{script['question_context']}'
-                        Student answers:
-                        Part A: '{script['ans_a']}'
-                        Part B: '{script['ans_b']}'
+                        The Exam Question was: '{script['question_context']}'
+                        
+                        {prompt_content}
                         
                         Grade this item out of 25 maximum marks (12.5 marks for Part A, 12.5 marks for Part B).
-                        Provide crisp feedback showing where they missed marks or made calculation errors.
+                        Provide crisp feedback showing where they missed marks, what parts they left incomplete, or where their calculation logic failed. 
+                        If they failed or got a step wrong, write down the complete step-by-step model solution as a correction.
+                        
                         At the very bottom of your response, output a single line formatted exactly like this:
                         ITEM_SCORE: [X]
                         Where [X] is the integer score out of 25 (e.g., ITEM_SCORE: 18).
                         """
-                        grading_response = model.generate_content(grading_prompt)
-                        review_text = grading_response.text
+                        
+                        if script["mode"] == "📷 Upload Photo of Handwritten Work" and script["photo"] is not None:
+                            actual_payload = [master_grading_instruction, Image.open(script["photo"])]
+                        else:
+                            actual_payload = [master_grading_instruction]
+                            
+                        try:
+                            grading_response = model.generate_content(actual_payload)
+                            review_text = grading_response.text
+                        except Exception as e:
+                            review_text = f"Grading failed for this item due to an interface error: {str(e)}"
                         
                         evaluation_summary += f"\n\n### 📋 Evaluation for Item {i+1}\n" + review_text
                         
-                        # Extract score out of 25 for this item
                         try:
                             score_line = [line for line in review_text.split('\n') if "ITEM_SCORE:" in line][-1]
                             item_score = int(''.join(filter(str.isdigit, score_line)))
@@ -138,14 +158,12 @@ if pwd == "Amazima2026":
                             item_score = 0
                         total_calculated_score += item_score
                     
-                    # Convert total marks to a standard UNEB percentage scale
                     final_percentage = int((total_calculated_score / (len(active_paper_items) * 25)) * 100)
                     
                     st.markdown("---")
                     st.title(f"🏆 Final Exam Grade: {final_percentage}%")
                     st.markdown(evaluation_summary)
                     
-                    # Log the cumulative score to Google Sheets
                     try:
                         existing_data = conn.read(worksheet="Sheet1")
                         new_row = pd.DataFrame([{"Student": user, "Score": final_percentage, "Subject": subject_choice}])
