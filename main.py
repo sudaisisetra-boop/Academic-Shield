@@ -16,24 +16,27 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Directly access API Key from Streamlit Secrets
+# Fetch API Key Safely
 api_key = st.secrets.get("GEMINI_API_KEY", "")
 if not api_key:
     st.error("AI Engine configuration missing. Please add GEMINI_API_KEY to your Secrets panel.")
 
-# Bulletproof Public Sheet Reader
+# Streamlined URL Reader for Public Google Sheets
 def read_public_sheet(worksheet_name):
     try:
         sheet_id = "1xU80PotVALVM3sWt7PS3kLGbsivqzMvznXq0c8Cu44M"
         export_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={worksheet_name}"
-        return pd.read_csv(export_url)
+        df = pd.read_csv(export_url)
+        if not df.empty:
+            return df
+        return None
     except Exception:
         return None
 
-# Direct HTTP Gateway to Gemini (Bypasses picky library handshakes completely)
+# Google AI Studio Developer Endpoint Bridge
 def generate_content_via_http(prompt_text, api_token):
-    # Using the standard Google Production v1 Gateway for 1.5 Flash
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_token}"
+    # This explicit v1beta path handles development keys correctly
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={api_token}"
     headers = {'Content-Type': 'application/json'}
     payload = {
         "contents": [
@@ -51,7 +54,7 @@ def generate_content_via_http(prompt_text, api_token):
             response_data = response.json()
             return response_data['candidates'][0]['content']['parts'][0]['text']
         else:
-            return f"API Gateway Error: Code {response.status_code} - {response.text}"
+            return f"AI Generation Error: Code {response.status_code} - {response.text}"
     except Exception as e:
         return f"Connection Failed: {str(e)}"
 
@@ -79,7 +82,6 @@ if authenticated:
     st.sidebar.markdown("---")
     
     subject_choice = st.sidebar.selectbox("📚 Choose Subject", ["Physics", "Mathematics", "Chemistry"])
-    target_worksheet = f"{subject_choice}pro"
     
     if user == "Setra stones":
         menu = ["📝 Exam Center", "💬 Study Room Chat", "📊 Progress Tracker", "📂 Upload Samples", "📁 Vault Archives"]
@@ -103,18 +105,18 @@ if authenticated:
             st.caption(f"📅 Daily Session: **{current_date.strftime('%Y-%m-%d')}**")
 
         base_questions = []
-        raw_bank = read_public_sheet(target_worksheet)
         
-        if raw_bank is None or raw_bank.empty:
+        # Try primary worksheet name option, fallback to base name if it fails
+        raw_bank = read_public_sheet(f"{subject_choice}pro")
+        if raw_bank is None:
             raw_bank = read_public_sheet(subject_choice)
 
-        if raw_bank is not None and not raw_bank.empty:
-            if 'question_text' in raw_bank.columns:
-                base_questions = raw_bank['question_text'].dropna().tolist()
-            else:
-                st.error(f"Worksheet tab found, but column A1 must be named exactly 'question_text'.")
+        if raw_bank is not None:
+            # Dynamically identify the first column if 'question_text' isn't exact
+            col_name = raw_bank.columns[0]
+            base_questions = raw_bank[col_name].dropna().tolist()
         else:
-            st.error(f"Could not find data. Ensure sheet tabs are named '{subject_choice}pro' or '{subject_choice}' and contain a 'question_text' column.")
+            st.error(f"Could not reach data for {subject_choice}. Double-check that your tab exists in the Google Sheet.")
 
         if base_questions:
             date_seed = current_date.strftime("%Y-%b") if is_assessment_week else current_date.strftime("%Y-%m-%d")
@@ -143,7 +145,7 @@ if authenticated:
         display_loading_brand()
         st.header("📊 Global Leaderboard")
         track_df = read_public_sheet("Sheet1")
-        if track_df is not None and not track_df.empty:
+        if track_df is not None:
             st.table(track_df)
         else:
             st.write("No historical script grades recorded on 'Sheet1' yet.")
