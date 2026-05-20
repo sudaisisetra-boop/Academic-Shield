@@ -3,7 +3,6 @@ import pandas as pd
 import datetime
 import random
 import requests
-import google.generativeai as genai
 
 st.set_page_config(page_title="Academic Shield Pro", layout="wide", page_icon="🛡️")
 
@@ -16,12 +15,12 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Fetch API Key Safely from Streamlit Secrets
-api_key = st.secrets.get("GEMINI_API_KEY", "")
+# Fetch OpenAI API Key Safely from Secrets
+api_key = st.secrets.get("OPENAI_API_KEY", "")
 if not api_key:
-    st.error("AI Engine configuration missing. Please add GEMINI_API_KEY to your Secrets panel.")
+    st.error("AI Engine configuration missing. Please add OPENAI_API_KEY to your Secrets panel.")
 
-# Streamlined URL Reader for Public Google Sheets with Optional Debugging (Section 13)
+# Streamlined URL Reader for Public Google Sheets
 def read_public_sheet(worksheet_name):
     try:
         sheet_id = "1xU80PotVALVM3sWt7PS3kLGbsivqzMvznXq0c8Cu44M"
@@ -34,17 +33,38 @@ def read_public_sheet(worksheet_name):
         st.error(f"Sheet Read Error [{worksheet_name}]: {e}")
         return None
 
-# PERMANENT OFFICIAL GEMINI SDK FUNCTION (Section 5 & 9 with fully qualified name)
+# BULLETPROOF OPENAI HTTP GATEWAY
 def generate_content(prompt_text, api_token):
+    url = "https://api.openai.com/v1/chat/completions"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_token}"
+    }
+    payload = {
+        "model": "gpt-4o-mini",  # Highly responsive, high-speed model
+        "messages": [
+            {
+                "role": "user",
+                "parts": [{"text": prompt_text}] if "gemini" in url else prompt_text 
+            }
+        ],
+        "temperature": 0.7
+    }
+    
+    # Correcting structure for pure OpenAI chat payload standard
+    payload["messages"] = [{"role": "user", "content": prompt_text}]
+
     try:
-        # Configure Gemini
-        genai.configure(api_key=api_token)
-        # Initialize supported model using the fully qualified name string
-        model = genai.GenerativeModel("models/gemini-1.5-flash")
-        response = model.generate_content(prompt_text)
-        return response.text
+        response = requests.post(url, headers=headers, json=payload)
+        response_json = response.json()
+        
+        if response.status_code == 200:
+            return response_json['choices'][0]['message']['content']
+        else:
+            error_msg = response_json.get('error', {}).get('message', 'Unknown Gateway Error')
+            return f"OpenAI Engine Error: {error_msg} (Status {response.status_code})"
     except Exception as e:
-        return f"AI Engine Failure: {str(e)}"
+        return f"AI Connection Failure: {str(e)}"
 
 def display_loading_brand():
     st.markdown("""
@@ -111,7 +131,6 @@ if authenticated:
             
             with st.spinner("🤖 NCDC AI Expert is compiling the exam paper layout..."):
                 prompt = f"Construct an official standard competence examination paper for Senior Five {subject_choice} based on this topic seed: '{seed_text}' using real Ugandan educational contexts."
-                # Call modern SDK layout (Section 5)
                 active_paper_text = generate_content(prompt, api_key)
                 
                 st.markdown("---")
