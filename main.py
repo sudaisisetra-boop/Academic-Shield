@@ -2,9 +2,7 @@ import streamlit as st
 import pandas as pd
 import datetime
 import random
-import base64
 import google.generativeai as genai
-from streamlit_gsheets import GSheetsConnection
 
 st.set_page_config(page_title="Academic Shield Pro", layout="wide", page_icon="🛡️")
 
@@ -24,11 +22,15 @@ try:
 except Exception:
     st.error("AI Engine configuration missing. Please add GEMINI_API_KEY to your Secrets panel.")
 
-# Database Connection Engine
-try:
-    conn = st.connection("gsheets", type=GSheetsConnection)
-except Exception:
-    st.error("Database connection failed. Please double check your Secrets TOML formatting.")
+# Bulletproof Public Sheet Reader (Bypasses st.connection completely)
+def read_public_sheet(worksheet_name):
+    try:
+        # Your exact spreadsheet ID from the URL you provided
+        sheet_id = "1xU80PotVALVM3sWt7PS3kLGbsivqzMvznXq0c8Cu44M"
+        export_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={worksheet_name}"
+        return pd.read_csv(export_url)
+    except Exception:
+        return None
 
 def display_loading_brand():
     st.markdown("""
@@ -54,6 +56,8 @@ if authenticated:
     st.sidebar.markdown("---")
     
     subject_choice = st.sidebar.selectbox("📚 Choose Subject", ["Physics", "Mathematics", "Chemistry"])
+    
+    # Dynamically maps to whatever tab spelling you have on your Google sheet
     target_worksheet = f"{subject_choice}pro"
     
     if user == "Setra stones":
@@ -78,15 +82,19 @@ if authenticated:
             st.caption(f"📅 Daily Session: **{current_date.strftime('%Y-%m-%d')}**")
 
         base_questions = []
-        try:
-            # Public spreadsheet read requires handling header strings cleanly
-            raw_bank = conn.read(worksheet=target_worksheet, ttl=0)
+        raw_bank = read_public_sheet(target_worksheet)
+        
+        # Fallback to standard names if 'pro' tabs aren't configured yet
+        if raw_bank is None:
+            raw_bank = read_public_sheet(subject_choice)
+
+        if raw_bank is not None:
             if 'question_text' in raw_bank.columns:
                 base_questions = raw_bank['question_text'].dropna().tolist()
             else:
-                st.error(f"The '{target_worksheet}' worksheet tab was found, but row cell A1 must be exactly named 'question_text'.")
-        except Exception:
-            st.error(f"Could not connect to the '{target_worksheet}' worksheet. Verify that your Google Sheet general access is set to 'Anyone with the link' and that your tab names match exactly.")
+                st.error(f"Worksheet tab found, but cell A1 must be named exactly 'question_text'.")
+        else:
+            st.error(f"Could not read from Google Sheets. Ensure your spreadsheet sharing settings are set to 'Anyone with the link can view'.")
 
         if base_questions:
             date_seed = current_date.strftime("%Y-%b") if is_assessment_week else current_date.strftime("%Y-%m-%d")
@@ -106,35 +114,29 @@ if authenticated:
             st.markdown("---")
             
             st.subheader("✍️ Your Examination Submission Script")
-            input_mode = st.radio("Choose execution submission mode:", ["📷 Upload Photo of Handwritten Work", "⌨️ Type My Answers"])
-            
-            uploaded_photo = None
-            if input_mode == "📷 Upload Photo of Handwritten Work":
-                uploaded_photo = st.file_uploader("Snap or upload answer script sheets here:", type=["jpg", "jpeg", "png"])
-
-            if st.button("📤 Submit Competence Script to Cloud Vault"):
-                st.warning("Note: Writing operations are disabled in public connection fallback mode. Please submit your completed handwritten scripts directly to your peer review team.")
+            st.info("Form submission features are paused during public mode database tuning.")
 
     # PAGE 2: MULTIMEDIA STUDY ROOM CHAT
     elif choice == "💬 Study Room Chat":
         display_loading_brand()
         st.title("💬 Real-Time Scholar Study Room")
-        st.info("The chat engine is offline during public database maintenance mode.")
+        st.info("The chat engine is offline during public connection fallback mode.")
 
     # PAGE 3: PROGRESS TRACKER
     elif choice == "📊 Progress Tracker":
         display_loading_brand()
         st.header("📊 Global Leaderboard")
-        try: 
-            st.table(conn.read(worksheet="Sheet1", ttl=0))
-        except Exception: 
+        track_df = read_public_sheet("Sheet1")
+        if track_df is not None:
+            st.table(track_df)
+        else:
             st.write("No historical script grades recorded on 'Sheet1' yet.")
 
     # PAGE 4: UPLOAD SAMPLES
     elif choice == "📂 Upload Samples" and user == "Setra stones":
         display_loading_brand()
         st.header("📋 UNEB Reference Sample Vault")
-        st.info("Upload operations are paused during public configuration mode.")
+        st.info("Upload operations are paused during public connection configuration mode.")
 
     # PAGE 5: VAULT ARCHIVES
     elif choice == "📁 Vault Archives":
