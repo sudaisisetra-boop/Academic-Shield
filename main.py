@@ -24,7 +24,7 @@ try:
 except Exception:
     st.error("AI Engine configuration missing. Please add GEMINI_API_KEY to your Secrets panel.")
 
-# Database Connection Engine
+# Database Connection Engine with Explicit Fallback configuration rules
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
 except Exception:
@@ -78,13 +78,14 @@ if authenticated:
 
         base_questions = []
         try:
-            raw_bank = conn.read(worksheet=subject_choice, ttl=0)
+            # Force dynamic read with clear cache argument rule mapping
+            raw_bank = conn.read(worksheet=subject_choice, ttl="0m")
             if 'question_text' in raw_bank.columns:
                 base_questions = raw_bank['question_text'].dropna().tolist()
             else:
                 st.error(f"The '{subject_choice}' worksheet tab was found, but row cell A1 must be exactly named 'question_text'.")
-        except Exception:
-            st.error(f"Could not connect to the '{subject_choice}' worksheet. Confirm its spelling in your Google Sheet.")
+        except Exception as e:
+            st.error(f"Could not connect to the '{subject_choice}' worksheet. Please select Clear Cache in 'Manage App' to force service account connection update.")
 
         if base_questions:
             date_seed = current_date.strftime("%Y-%b") if is_assessment_week else current_date.strftime("%Y-%m-%d")
@@ -115,7 +116,7 @@ if authenticated:
                     encoded_img = base64.b64encode(uploaded_photo.read()).decode("utf-8") if uploaded_photo else ""
                     try:
                         try:
-                            vault_df = conn.read(worksheet="ScriptVault", ttl=0)
+                            vault_df = conn.read(worksheet="ScriptVault", ttl="0m")
                         except Exception:
                             vault_df = pd.DataFrame(columns=["Date", "Student", "Subject", "ImageData"])
                         
@@ -123,14 +124,14 @@ if authenticated:
                         conn.update(worksheet="ScriptVault", data=pd.concat([vault_df, new_row], ignore_index=True))
                         st.success("Script securely archived in your cloud repository!")
                     except Exception:
-                        st.error("Storage Sync Error: Please verify ScriptVault headers.")
+                        st.error("Storage Sync Error: Please verify ScriptVault headers or clear system storage cache.")
 
     # PAGE 2: MULTIMEDIA STUDY ROOM CHAT
     elif choice == "💬 Study Room Chat":
         display_loading_brand()
         st.title("💬 Real-Time Scholar Study Room")
         try: 
-            chat_df = conn.read(worksheet="ChatLog", ttl=0)
+            chat_df = conn.read(worksheet="ChatLog", ttl="0m")
         except Exception: 
             chat_df = pd.DataFrame(columns=["Timestamp", "Sender", "Text", "MediaType", "MediaData", "FileName"])
 
@@ -157,14 +158,14 @@ if authenticated:
                     conn.update(worksheet="ChatLog", data=pd.concat([chat_df, new_msg], ignore_index=True))
                     st.rerun()
                 except Exception: 
-                    st.error("Message delivery failed. Check your connection configs.")
+                    st.error("Message sync dropped. Ensure 'ChatLog' tab has headers: Timestamp, Sender, Text, MediaType, MediaData, FileName")
 
     # PAGE 3: PROGRESS TRACKER
     elif choice == "📊 Progress Tracker":
         display_loading_brand()
         st.header("📊 Global Leaderboard")
         try: 
-            st.table(conn.read(worksheet="Sheet1", ttl=0))
+            st.table(conn.read(worksheet="Sheet1", ttl="0m"))
         except Exception: 
             st.write("No historical script grades recorded on 'Sheet1' yet.")
 
@@ -178,14 +179,14 @@ if authenticated:
                 encoded_sample = base64.b64encode(sample_file.read()).decode("utf-8")
                 try:
                     try:
-                        sample_df = conn.read(worksheet="SampleVault", ttl=0)
+                        sample_df = conn.read(worksheet="SampleVault", ttl="0m")
                     except Exception:
                         sample_df = pd.DataFrame(columns=["Subject", "FileName", "ImageData"])
                     new_sample_row = pd.DataFrame([{"Subject": subject_choice, "FileName": sample_file.name, "ImageData": encoded_sample}])
                     conn.update(worksheet="SampleVault", data=pd.concat([sample_df, new_sample_row], ignore_index=True))
                     st.success("Reference item saved to cloud successfully!")
                 except Exception:
-                    st.error("Upload aborted. Verify your SampleVault worksheet configuration.")
+                    st.error("Upload failed. Make sure your 'SampleVault' tab has 'Subject', 'FileName', and 'ImageData' headers in row 1.")
 
     # PAGE 5: VAULT ARCHIVES
     elif choice == "📁 Vault Archives":
@@ -195,7 +196,7 @@ if authenticated:
         
         if view_mode == "Show Exam Script Submissions":
             try:
-                scripts = conn.read(worksheet="ScriptVault", ttl=0)
+                scripts = conn.read(worksheet="ScriptVault", ttl="0m")
                 for idx, row in scripts.iterrows():
                     if pd.notna(row["ImageData"]) and str(row["ImageData"]).strip() != "":
                         st.markdown(f"**📝 Candidate Script:** `{row['Student']}` | **Subject:** `{row['Subject']}`")
@@ -204,7 +205,7 @@ if authenticated:
                 
         elif view_mode == "Show Uploaded Reference Sample Papers":
             try:
-                samples = conn.read(worksheet="SampleVault", ttl=0)
+                samples = conn.read(worksheet="SampleVault", ttl="0m")
                 for idx, row in samples.iterrows():
                     if row["Subject"] == subject_choice and pd.notna(row["ImageData"]) and str(row["ImageData"]).strip() != "":
                         st.markdown(f"**📐 Reference Source:** `{row['FileName']}`")
