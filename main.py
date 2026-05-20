@@ -12,7 +12,7 @@ import google.generativeai as genai
 # Page configuration
 st.set_page_config(page_title="Academic Shield Pro", layout="wide", page_icon="🛡️")
 
-# Custom Styles for Timers, Chats, and Document Layouts
+# Enforced Layout CSS Mechanics
 st.markdown("""
     <style>
     @media print {
@@ -58,19 +58,43 @@ def read_public_sheet(worksheet_name):
     except Exception:
         return None
 
-# CORE DATABASE WRITE ENGINE
+# CORE DATABASE WRITE ENGINE: Securely updates local JSON memory and relays data to your active sheet rows
 def append_to_sheet_database(worksheet_name, payload_row):
+    """
+    Saves record payloads directly to internal local tracking states first, 
+    then effortlessly transfers them onto active sheet tabs using your Webhook API URL hook.
+    """
     db_backup_file = f"local_db_{worksheet_name}.json"
+    clean_row = payload_row.copy()
+    
     try:
         data = []
         if os.path.exists(db_backup_file):
             with open(db_backup_file, "r") as f:
                 data = json.load(f)
-        data.append(payload_row)
+        
+        # Guard clause: Compress multi-media base64 strings to save sheet grid workspace limits
+        if "media_file" in clean_row and clean_row["media_file"] is not None:
+            if isinstance(clean_row["media_file"], str) and len(clean_row["media_file"]) > 500:
+                clean_row["media_file"] = f"Attachment Binary Stored: {clean_row.get('media_name', 'System Document')}"
+                
+        data.append(clean_row)
         with open(db_backup_file, "w") as f:
             json.dump(data, f)
     except Exception:
         pass
+
+    # Fire row objects straight to the Web App URL hook
+    webhook_url = st.secrets.get("WEBHOOK_DATABASE_URL", "")
+    if webhook_url:
+        try:
+            payload = {
+                "worksheet": worksheet_name,
+                "row": clean_row
+            }
+            requests.post(webhook_url, json=payload, headers={"Content-Type": "application/json"}, timeout=6)
+        except Exception:
+            pass
 
 # Safe Reader for Permanent Records Cache
 def load_permanent_database(worksheet_name, default_val):
@@ -109,17 +133,17 @@ def display_loading_brand():
         </div>
         """, unsafe_allow_html=True)
 
-# LOAD PERMANENT VAULT ARCHIVES AND PEER-TO-PEER MESSAGES DIRECTLY FROM DATA RESERVOIR
+# LOAD VAULT REPOSITORIES
 if "p2p_chat_messages" not in st.session_state:
     st.session_state["p2p_chat_messages"] = load_permanent_database("ChatLogs", [
-        {"sender": "System", "text": "Permanent Archive Sync Active. Communications secured.", "time": "00:00", "timestamp_epoch": 0.0, "media_file": None}
+        {"sender": "System", "text": "Permanent Storage Sync Active.", "time": "00:00", "timestamp_epoch": 0.0, "media_file": None}
     ])
 if "historical_exams_archive" not in st.session_state:
     st.session_state["historical_exams_archive"] = load_permanent_database("ExamArchives", [])
 if "diagram_vault" not in st.session_state:
     st.session_state["diagram_vault"] = []
 
-# Persistent cross-session user registry for handling unread message indicators
+# View State Tracker Registry Map for Chat Alerts
 if "user_last_viewed_chat" not in st.session_state:
     st.session_state["user_last_viewed_chat"] = {"Setra stones": time.time(), "Gideon Cheps": time.time()}
 
@@ -151,7 +175,7 @@ else:
     
     subject_choice = st.sidebar.selectbox("📚 Choose Subject", ["Physics", "Mathematics", "Chemistry"])
     
-    # CALCULATE UNREAD NOTIFICATIONS STATUS FOR CURRENT USER
+    # UNREAD COUNTER LOGIC
     last_view_time = st.session_state["user_last_viewed_chat"].get(user, 0.0)
     has_unread = False
     unread_count = 0
@@ -161,7 +185,6 @@ else:
             has_unread = True
             unread_count += 1
 
-    # Dynamic notification indicator mapping for sidebar menu options
     chat_label = f"💬 Study Room Chat (🔴 {unread_count} NEW)" if has_unread else "💬 Study Room Chat"
     
     if user == "Setra stones":
@@ -172,8 +195,7 @@ else:
     choice = st.sidebar.radio("Navigate Pages", menu)
     st.sidebar.markdown(f"<br><br><br><div style='color:#aaaaaa; font-size:12px; font-weight:bold;'>⚙️ System Ownership:<br><span style='color:#ff3333;'>Created by Sudaisi Setra</span></div>", unsafe_allow_html=True)
 
-    # LIVE LIVE LIVE ACTIVE TOAST BROADCASTER
-    # Checks instantly if someone else drops a chat while you have another tab actively open
+    # ACTIVE LIVE TOAST POP-UP ALERTS (Triggers when browsing any other segment panel layout)
     if has_unread and not choice.startswith("💬 Study Room Chat"):
         st.toast(f"🔔 Scholar Room Alert: You have {unread_count} new unread structural messages waiting for verification!", icon="✉️")
 
@@ -285,7 +307,6 @@ else:
                             st.session_state["historical_exams_archive"].append(biweekly_row)
                             append_to_sheet_database("ExamArchives", biweekly_row)
 
-                    # UI Grid rendering
                     timer_col, paper_col = st.columns([1, 2])
                     
                     with timer_col:
@@ -363,11 +384,11 @@ else:
                         st.session_state[timer_state_key] -= 1
                         st.rerun()
 
-    # PAGE 2: PERMANENT PEER-TO-PEER MULTIMEDIA SCHOLAR CHAT ROOM
+    # PAGE 2: PERMANENT CHAT ROOM
     elif choice.startswith("💬 Study Room Chat"):
         display_loading_brand()
         
-        # CLEAR UNREAD NOTIFICATION BADGES IMMEDIATELY UPON OPENING THE ROOM TAB
+        # Clear view tracking registers safely
         st.session_state["user_last_viewed_chat"][user] = time.time()
         
         st.title("💬 Shared Scholar Communications Room")
@@ -411,7 +432,7 @@ else:
                     "sender": user, 
                     "text": chat_text, 
                     "time": timestamp, 
-                    "timestamp_epoch": current_time_epoch, # Added registry mapping index
+                    "timestamp_epoch": current_time_epoch, 
                     "media_file": None
                 }
                 
@@ -426,7 +447,6 @@ else:
                 st.session_state["p2p_chat_messages"].append(new_msg)
                 append_to_sheet_database("ChatLogs", new_msg)
                 
-                # Instantly reset your own last view mark so you don't ping yourself
                 st.session_state["user_last_viewed_chat"][user] = current_time_epoch
                 st.success("Log updated permanently.")
                 st.rerun()
