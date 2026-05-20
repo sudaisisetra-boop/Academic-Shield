@@ -37,18 +37,12 @@ st.markdown("""
     .chat-left { background-color: #262730; color: white; margin-right: auto; }
     .chat-right { background-color: #ff3333; color: white; margin-left: auto; text-align: right; }
     
-    /* Calculator Specialized Interface Styling */
-    .calc-screen {
-        background-color: #1e2522 !important;
-        color: #39ff14 !important;
-        font-family: 'Courier New', monospace !important;
-        font-size: 20px !important;
+    /* Calculator Custom Desk Button Framework Styling */
+    div.stButton > button {
+        width: 100% !important;
+        padding: 6px 2px !important;
         font-weight: bold !important;
-        text-align: right !important;
-        padding: 10px !important;
-        border-radius: 5px !important;
-        border: 2px solid #333 !important;
-        margin-bottom: 10px !important;
+        font-size: 14px !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -121,11 +115,11 @@ def load_permanent_database(worksheet_name, default_val):
             return default_val
     return default_val
 
-# AI Core Engine configured precisely to gemini-3.5-flash (Supports Multi-modal Image analysis)
+# AI Core Engine configured precisely to gemini-1.5-flash for complete free-tier compliance
 def generate_content(prompt_text, api_token, image_bytes_data=None, mime_type=None):
     try:
         genai.configure(api_key=api_token)
-        model = genai.GenerativeModel("models/gemini-3.5-flash")
+        model = genai.GenerativeModel("models/gemini-1.5-flash")
         
         if image_bytes_data is not None:
             contents = [
@@ -162,7 +156,7 @@ if "historical_exams_archive" not in st.session_state:
 if "diagram_vault" not in st.session_state:
     st.session_state["diagram_vault"] = []
 
-# Calculator Pad Memory String Holders
+# Calculator Landscape Notepad Memory Buffers
 if "calc_expression_string" not in st.session_state:
     st.session_state["calc_expression_string"] = ""
 if "calc_result_string" not in st.session_state:
@@ -313,27 +307,8 @@ else:
                     fortnight_cycle_index = days_delta // 14
                     biweekly_paper_key = f"biweekly_paper_cycle_{fortnight_cycle_index}_{subject_choice}"
 
-                    if biweekly_paper_key not in st.session_state:
-                        with st.spinner("⏳ Compiling automated bi-weekly 4-item NCDC layout sheet..."):
-                            biweekly_prompt = (
-                                f"Generate a full-length assessment paper for Senior Five {subject_choice} conforming to NCDC standards. "
-                                f"It must consist of exactly FOUR (4) separate comprehensive competence scenarios. Do not include solution markings."
-                            )
-                            compiled_biweekly_text = generate_content(biweekly_prompt, api_key)
-                            st.session_state[biweekly_paper_key] = compiled_biweekly_text
-                            
-                            biweekly_row = {
-                                "id": biweekly_paper_key,
-                                "subject": subject_choice,
-                                "type": "Official Bi-Weekly 4-Item Exam",
-                                "date": current_date.strftime("%Y-%b-%d"),
-                                "content": compiled_biweekly_text
-                            }
-                            st.session_state["historical_exams_archive"].append(biweekly_row)
-                            append_to_sheet_database("ExamArchives", biweekly_row)
-
                     # THREE COLUMN MATRIX INTERFACE LAYOUT
-                    timer_col, paper_col, calc_col = st.columns([1.1, 1.8, 1.3])
+                    timer_col, paper_col, calc_col = st.columns([1.0, 1.6, 1.4])
                     
                     with timer_col:
                         st.markdown("### ⏱️ Private Clock Deck")
@@ -377,101 +352,94 @@ else:
                         html_formatted_twins = f"<html><body style='font-family:serif; padding:30px;'><h2>Senior Five {subject_choice} Twin Scenarios</h2><hr><p>{st.session_state[paper_key]}</p></body></html>"
                         st.markdown(custom_pdf_download_link(html_formatted_twins, f"{paper_key}.html", "📥 Instant Download Twin Questions Document"), unsafe_allow_html=True)
 
-                    # 🧮 UPGRADED: ADVANCED SCIENTIFIC KEYBOARD LAYOUT ENGINE
+                    # 🧮 LANDSCAPE KEYBOARD NOTEPAD CALCULATOR ENGINE (COMPUTES INSTANTLY ON = KEY CLICK)
                     with calc_col:
-                        st.markdown("### 🧮 Scientific Calculator Deck")
-                        with st.expander("📊 Launch Pad Panel", expanded=True):
-                            
-                            # Render Display Matrix Screen
-                            st.markdown(f"""
-                                <div style="background-color:#1a1f1c; padding:12px; border-radius:6px; border:1px solid #444; margin-bottom:10px;">
-                                    <div style="color:#888; font-family:monospace; font-size:11px; text-align:left; min-height:15px;">{st.session_state["calc_expression_string"] if st.session_state["calc_expression_string"] else "Ready"}</div>
-                                    <div style="color:#39ff14; font-family:monospace; font-size:24px; text-align:right; font-weight:bold; overflow:hidden;">{st.session_state["calc_result_string"]}</div>
-                                </div>
-                            """, unsafe_allow_html=True)
-                            
-                            # Define helper functions to process clicks locally without refiring Gemini
-                            def push_token(tok):
-                                st.session_state["calc_expression_string"] += str(tok)
-                            def clear_all():
-                                st.session_state["calc_expression_string"] = ""
-                                st.session_state["calc_result_string"] = "0"
-                            def compute_total():
-                                raw_expr = st.session_state["calc_expression_string"]
-                                if not raw_expr: return
-                                try:
-                                    # Substitute display layouts safely into clean executable python code strings
-                                    process_string = raw_expr.replace("×", "*").replace("÷", "/")
-                                    process_string = process_string.replace("sin(", "math.sin(math.radians(")
-                                    process_string = process_string.replace("cos(", "math.cos(math.radians(")
-                                    process_string = process_string.replace("tan(", "math.tan(math.radians(")
-                                    process_string = process_string.replace("√(", "math.sqrt(")
-                                    process_string = process_string.replace("log(", "math.log10(")
-                                    process_string = process_string.replace("ln(", "math.log(")
-                                    process_string = process_string.replace("^", "**")
-                                    process_string = process_string.replace("π", "math.pi")
-                                    
-                                    # Balance trigonometry brackets implicitly if left open by student
-                                    if "math.radians(" in process_string:
-                                        open_braces = process_string.count("(")
-                                        close_braces = process_string.count(")")
-                                        if open_braces > close_braces:
-                                            process_string += ")" * (open_braces - close_braces)
-                                            
-                                    res = eval(process_string, {"math": math, "__builtins__": None}, {})
-                                    st.session_state["calc_result_string"] = str(round(res, 6) if isinstance(res, float) else res)
-                                except Exception:
-                                    st.session_state["calc_result_string"] = "Syntax Error"
+                        st.markdown("### 🧮 Scientific Calculator Keyboard")
+                        
+                        # Render Display Matrix Screen Box
+                        st.markdown(f"""
+                            <div style="background-color:#131715; padding:10px; border-radius:6px; border:2px solid #333; margin-bottom:8px;">
+                                <div style="color:#777; font-family:monospace; font-size:12px; text-align:left; min-height:16px; letter-spacing:1px;">{st.session_state["calc_expression_string"] if st.session_state["calc_expression_string"] else "Ready"}</div>
+                                <div style="color:#39ff14; font-family:monospace; font-size:26px; text-align:right; font-weight:bold; overflow:hidden;">{st.session_state["calc_result_string"]}</div>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # Local processing triggers (0% API hits)
+                        def push_token(tok):
+                            st.session_state["calc_expression_string"] += str(tok)
+                        def clear_all():
+                            st.session_state["calc_expression_string"] = ""
+                            st.session_state["calc_result_string"] = "0"
+                        def compute_total():
+                            raw_expr = st.session_state["calc_expression_string"]
+                            if not raw_expr: return
+                            try:
+                                # Safe python formatting replacements
+                                process_string = raw_expr.replace("×", "*").replace("÷", "/")
+                                process_string = process_string.replace("sin(", "math.sin(math.radians(")
+                                process_string = process_string.replace("cos(", "math.cos(math.radians(")
+                                process_string = process_string.replace("tan(", "math.tan(math.radians(")
+                                process_string = process_string.replace("√(", "math.sqrt(")
+                                process_string = process_string.replace("log(", "math.log10(")
+                                process_string = process_string.replace("ln(", "math.log(")
+                                process_string = process_string.replace("^", "**")
+                                process_string = process_string.replace("π", "math.pi")
+                                
+                                # Auto bracket balancer
+                                open_braces = process_string.count("(")
+                                close_braces = process_string.count(")")
+                                if open_braces > close_braces:
+                                    process_string += ")" * (open_braces - close_braces)
+                                        
+                                res = eval(process_string, {"math": math, "__builtins__": None}, {})
+                                st.session_state["calc_result_string"] = str(round(res, 6) if isinstance(res, float) else res)
+                            except Exception:
+                                st.session_state["calc_result_string"] = "Syntax Error"
 
-                            # Row 1: Scientific Functions Deck
-                            r1_1, r1_2, r1_3, r1_4, r1_5 = st.columns(5)
-                            if r1_1.button("sin", key="btn_sin"): push_token("sin("); st.rerun()
-                            if r1_2.button("cos", key="btn_cos"): push_token("cos("); st.rerun()
-                            if r1_3.button("tan", key="btn_tan"): push_token("tan("); st.rerun()
-                            if r1_4.button("log", key="btn_log"): push_token("log("); st.rerun()
-                            if r1_5.button("ln", key="btn_ln"): push_token("ln("); st.rerun()
-                            
-                            # Row 2: Powers and Roots Deck
-                            r2_1, r2_2, r2_3, r2_4, r2_5 = st.columns(5)
-                            if r2_1.button("x²", key="btn_sq"): push_token("^2"); st.rerun()
-                            if r2_2.button("x³", key="btn_cb"): push_token("^3"); st.rerun()
-                            if r2_3.button("xʸ", key="btn_pwr"): push_token("^"); st.rerun()
-                            if r2_4.button("√", key="btn_root"): push_token("√("); st.rerun()
-                            if r2_5.button("π", key="btn_pi"): push_token("π"); st.rerun()
+                        # Landscape Matrix Row 1: Sci Functions & Controls
+                        c_r1_1, c_r1_2, c_r1_3, c_r1_4, c_r1_5, c_r1_6, c_r1_7 = st.columns(7)
+                        if c_r1_1.button("sin", key="l_sin"): push_token("sin("); st.rerun()
+                        if c_r1_2.button("cos", key="l_cos"): push_token("cos("); st.rerun()
+                        if c_r1_3.button("tan", key="l_tan"): push_token("tan("); st.rerun()
+                        if c_r1_4.button("log", key="l_log"): push_token("log("); st.rerun()
+                        if c_r1_5.button("ln", key="l_ln"): push_token("ln("); st.rerun()
+                        if c_r1_6.button(" ( ", key="l_op"): push_token("("); st.rerun()
+                        if c_r1_7.button(" ) ", key="l_cl"): push_token(")"); st.rerun()
 
-                            # Row 3: Command & Clear Operators Deck
-                            r3_1, r3_2, r3_3, r3_4, r3_5 = st.columns(5)
-                            if r3_1.button(" ( ", key="btn_op"): push_token("("); st.rerun()
-                            if r3_2.button(" ) ", key="btn_cl"): push_token(")"); st.rerun()
-                            if r3_3.button("AC", key="btn_ac"): clear_all(); st.rerun()
-                            if r3_4.button("÷", key="btn_div"): push_token("÷"); st.rerun()
-                            if r3_5.button("×", key="btn_mul"): push_token("×"); st.rerun()
+                        # Landscape Matrix Row 2: Powers, Roots, Grid 7-9 & Division
+                        c_r2_1, c_r2_2, c_r2_3, c_r2_4, c_r2_5, c_r2_6, c_r2_7 = st.columns(7)
+                        if c_r2_1.button("x²", key="l_sq"): push_token("^2"); st.rerun()
+                        if c_r2_2.button("x³", key="l_cb"): push_token("^3"); st.rerun()
+                        if c_r2_3.button("xʸ", key="l_pwr"): push_token("^"); st.rerun()
+                        if c_r2_4.button("7", key="l_7"): push_token("7"); st.rerun()
+                        if c_r2_5.button("8", key="l_8"): push_token("8"); st.rerun()
+                        if c_r2_6.button("9", key="l_9"): push_token("9"); st.rerun()
+                        if c_r2_7.button("÷", key="l_div"): push_token("÷"); st.rerun()
 
-                            # Row 4: Numbers Grid Segment A
-                            r4_1, r4_2, r4_3, r4_4 = st.columns([1,1,1,2])
-                            if r4_1.button("7", key="btn_7"): push_token("7"); st.rerun()
-                            if r4_2.button("8", key="btn_8"): push_token("8"); st.rerun()
-                            if r4_3.button("9", key="btn_9"): push_token("9"); st.rerun()
-                            if r4_4.button("—", key="btn_sub"): push_token("-"); st.rerun()
+                        # Landscape Matrix Row 3: Roots, Pi, Grid 4-6 & Multiplication
+                        c_r3_1, c_r3_2, c_r3_3, c_r3_4, c_r3_5, c_r3_6, c_r3_7 = st.columns(7)
+                        if c_r3_1.button("√", key="l_rt"): push_token("√("); st.rerun()
+                        if c_r3_2.button("π", key="l_pi"): push_token("π"); st.rerun()
+                        if c_r3_3.button("AC", key="l_ac"): clear_all(); st.rerun()
+                        if c_r3_4.button("4", key="l_4"): push_token("4"); st.rerun()
+                        if c_r3_5.button("5", key="l_5"): push_token("5"); st.rerun()
+                        if c_r3_6.button("6", key="l_6"): push_token("6"); st.rerun()
+                        if c_r3_7.button("×", key="l_mul"): push_token("×"); st.rerun()
 
-                            # Row 5: Numbers Grid Segment B
-                            r5_1, r5_2, r5_3, r5_4 = st.columns([1,1,1,2])
-                            if r5_1.button("4", key="btn_4"): push_token("4"); st.rerun()
-                            if r5_2.button("5", key="btn_5"): push_token("5"); st.rerun()
-                            if r5_3.button("6", key="btn_6"): push_token("6"); st.rerun()
-                            if r5_4.button("+", key="btn_add"): push_token("+"); st.rerun()
-
-                            # Row 6: Final Execution Grid Deck
-                            r6_1, r6_2, r6_3, r6_4 = st.columns([1,1,1,2])
-                            if r6_1.button("1", key="btn_1"): push_token("1"); st.rerun()
-                            if r6_2.button("2", key="btn_2"): push_token("2"); st.rerun()
-                            if r6_3.button("3", key="btn_3"): push_token("3"); st.rerun()
-                            if r6_4.button("=", key="btn_eq"): compute_total(); st.rerun()
-
-                            # Row 7: Decimal and Zero Ground Deck
-                            r7_1, r7_2 = st.columns([2,1])
-                            if r7_1.button("0", key="btn_0"): push_token("0"); st.rerun()
-                            if r7_2.button(".", key="btn_dot"): push_token("."); st.rerun()
+                        # Landscape Matrix Row 4: Grid 1-3, Addition, Subtraction & Immediate Answer Evaluation Clicker (=)
+                        c_r4_1, c_r4_2, c_r4_3, c_r4_4, c_r4_5, c_r4_6, c_r4_7 = st.columns(7)
+                        if c_r4_1.button("0", key="l_0"): push_token("0"); st.rerun()
+                        if c_r4_2.button(".", key="l_dt"): push_token("."); st.rerun()
+                        if c_r4_3.button("1", key="l_1"): push_token("1"); st.rerun()
+                        if c_r4_4.button("2", key="l_2"): push_token("2"); st.rerun()
+                        if c_r4_5.button("3", key="l_3"): push_token("3"); st.rerun()
+                        if c_r4_6.button("+", key="l_add"): push_token("+"); st.rerun()
+                        if c_r4_7.button("-", key="l_sub"): push_token("-"); st.rerun()
+                        
+                        # Full Landscape Execution Row Block for the immediate computation click action
+                        if st.button(" ＝ ", key="l_execute_equals"):
+                            compute_total()
+                            st.rerun()
 
                     st.markdown("---")
                     
@@ -509,7 +477,7 @@ else:
                                     f"{st.session_state[paper_key]}\n\n"
                                     f"Evaluate the candidate's work provided below. Mark strictly against the official NCDC criteria.\n"
                                     f"IMPORTANT INSTRUCTIONS:\n"
-                                    f"1. Give a clear score/grade distribution out of full marks.\n"
+                                    f"1. Give a some clear score/grade distribution out of full marks.\n"
                                     f"2. Check if the student has failed, misfired, or gotten any part of the core conceptual calculation steps incorrect.\n"
                                     f"3. CRITICAL: If and only if the student has failed or misfired on any component number, print this exact keyword phrase tag: '[[MISFIRE_DETECTION_TRIGGERED]]' anywhere inside your text response block, and then append a beautiful, highly detailed, step-by-step NCDC standard reference solutions model detailing all mathematical steps."
                                 )
@@ -537,11 +505,36 @@ else:
                     st.markdown("---")
                     st.markdown("## 📅 Automated Bi-Weekly 4-Item Assessment Section")
                     st.caption("Synchronized to NCDC curriculum framework rules.")
-                    st.markdown(f'<div style="background-color: #121212; padding: 20px; border-radius: 6px; border-left: 5px solid #ff3333;">{st.session_state.get(biweekly_paper_key, "Compiling...")}</div>', unsafe_allow_html=True)
-                    st.markdown("<br>", unsafe_allow_html=True)
                     
-                    html_formatted_biweekly = f"<html><body style='font-family:serif; padding:30px;'><h2>Senior Five {subject_choice} - 4-Item Standard Paper</h2><hr><p>{st.session_state.get(biweekly_paper_key, '')}</p></body></html>"
-                    st.markdown(custom_pdf_download_link(html_formatted_biweekly, f"Official_BiWeekly_4_Item_{subject_choice}.html", "📥 Instant Download Bi-Weekly 4-Item Paper Document"), unsafe_allow_html=True)
+                    # 🛡️ THE FIX: Bi-Weekly generator is now completely manual. It will never run unless explicitly clicked.
+                    if st.button("✨ OPTIONAL ENGINE: Generate Bi-Weekly 4-Item Exam Paper"):
+                        with st.spinner("⏳ Compiling full-length 4-item NCDC standard layout..."):
+                            biweekly_prompt = (
+                                f"Generate a full-length assessment paper for Senior Five {subject_choice} conforming to NCDC standards. "
+                                f"It must consist of exactly FOUR (4) separate comprehensive competence scenarios. Do not include solution markings."
+                            )
+                            compiled_biweekly_text = generate_content(biweekly_prompt, api_key)
+                            st.session_state[biweekly_paper_key] = compiled_biweekly_text
+                            
+                            biweekly_row = {
+                                "id": biweekly_paper_key,
+                                "subject": subject_choice,
+                                "type": "Official Bi-Weekly 4-Item Exam",
+                                "date": current_date.strftime("%Y-%b-%d"),
+                                "content": compiled_biweekly_text
+                            }
+                            st.session_state["historical_exams_archive"].append(biweekly_row)
+                            append_to_sheet_database("ExamArchives", biweekly_row)
+                    
+                    # Render the biweekly workspace area only if it has values saved in the user session
+                    if biweekly_paper_key in st.session_state:
+                        st.markdown(f'<div style="background-color: #121212; padding: 20px; border-radius: 6px; border-left: 5px solid #ff3333;">{st.session_state[biweekly_paper_key]}</div>', unsafe_allow_html=True)
+                        st.markdown("<br>", unsafe_allow_html=True)
+                        
+                        html_formatted_biweekly = f"<html><body style='font-family:serif; padding:30px;'><h2>Senior Five {subject_choice} - 4-Item Standard Paper</h2><hr><p>{st.session_state[biweekly_paper_key]}</p></body></html>"
+                        st.markdown(custom_pdf_download_link(html_formatted_biweekly, f"Official_BiWeekly_4_Item_{subject_choice}.html", "📥 Instant Download Bi-Weekly 4-Item Paper Document"), unsafe_allow_html=True)
+                    else:
+                        st.info("Bi-weekly paper sandbox dormant. Click the initialization button component above to safely generate structural items.")
 
                     if st.session_state[timer_state_key] > 0 and st.session_state[timer_running_key]:
                         time.sleep(1)
