@@ -33,7 +33,7 @@ def read_public_sheet(worksheet_name):
         st.error(f"Sheet Read Error [{worksheet_name}]: {e}")
         return None
 
-# BULLETPROOF OPENAI HTTP GATEWAY
+# PURE OPENAI HTTP GATEWAY
 def generate_content(prompt_text, api_token):
     url = "https://api.openai.com/v1/chat/completions"
     headers = {
@@ -41,18 +41,10 @@ def generate_content(prompt_text, api_token):
         "Authorization": f"Bearer {api_token}"
     }
     payload = {
-        "model": "gpt-4o-mini",  # Highly responsive, high-speed model
-        "messages": [
-            {
-                "role": "user",
-                "parts": [{"text": prompt_text}] if "gemini" in url else prompt_text 
-            }
-        ],
+        "model": "gpt-4o-mini",
+        "messages": [{"role": "user", "content": prompt_text}],
         "temperature": 0.7
     }
-    
-    # Correcting structure for pure OpenAI chat payload standard
-    payload["messages"] = [{"role": "user", "content": prompt_text}]
 
     try:
         response = requests.post(url, headers=headers, json=payload)
