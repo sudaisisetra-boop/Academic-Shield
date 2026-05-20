@@ -15,17 +15,16 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Initialize AI Brain Engine
+# Initialize AI Brain Engine with corrected model string
 try:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-1.5-flash-latest')
 except Exception:
     st.error("AI Engine configuration missing. Please add GEMINI_API_KEY to your Secrets panel.")
 
-# Bulletproof Public Sheet Reader (Bypasses st.connection completely)
+# Bulletproof Public Sheet Reader
 def read_public_sheet(worksheet_name):
     try:
-        # Your exact spreadsheet ID from the URL you provided
         sheet_id = "1xU80PotVALVM3sWt7PS3kLGbsivqzMvznXq0c8Cu44M"
         export_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={worksheet_name}"
         return pd.read_csv(export_url)
@@ -57,7 +56,7 @@ if authenticated:
     
     subject_choice = st.sidebar.selectbox("📚 Choose Subject", ["Physics", "Mathematics", "Chemistry"])
     
-    # Dynamically maps to whatever tab spelling you have on your Google sheet
+    # Check both potential variations of tab names
     target_worksheet = f"{subject_choice}pro"
     
     if user == "Setra stones":
@@ -84,7 +83,6 @@ if authenticated:
         base_questions = []
         raw_bank = read_public_sheet(target_worksheet)
         
-        # Fallback to standard names if 'pro' tabs aren't configured yet
         if raw_bank is None:
             raw_bank = read_public_sheet(subject_choice)
 
@@ -107,11 +105,13 @@ if authenticated:
                 return model.generate_content(prompt).text
 
             with st.spinner("🤖 NCDC AI Expert is compiling the exam paper layout..."):
-                active_paper_text = generate_paper(seed_text, subject_choice, date_seed, is_assessment_week)
-            
-            st.markdown("---")
-            st.markdown(f'<div class="print-content"> {active_paper_text} </div>', unsafe_allow_html=True)
-            st.markdown("---")
+                try:
+                    active_paper_text = generate_paper(seed_text, subject_choice, date_seed, is_assessment_week)
+                    st.markdown("---")
+                    st.markdown(f'<div class="print-content"> {active_paper_text} </div>', unsafe_allow_html=True)
+                    st.markdown("---")
+                except Exception as ai_err:
+                    st.error(f"AI Generation Error: {str(ai_err)}. Please ensure your API key matches the requested model.")
             
             st.subheader("✍️ Your Examination Submission Script")
             st.info("Form submission features are paused during public mode database tuning.")
