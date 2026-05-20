@@ -5,12 +5,10 @@ import random
 import base64
 import google.generativeai as genai
 from streamlit_gsheets import GSheetsConnection
-from PIL import Image
-import io
 
 st.set_page_config(page_title="Academic Shield Pro", layout="wide", page_icon="🛡️")
 
-# Injection of Clean CSS for Print Optimization
+# Injection of Clean CSS for Print Optimization and Layout
 st.markdown("""
     <style>
     @media print {
@@ -27,11 +25,11 @@ try:
 except Exception:
     st.error("AI Engine configuration missing. Please add GEMINI_API_KEY to your Secrets panel.")
 
-# Database Connection (Forced live synchronization)
+# Database Connection (Leverages your Service Account credentials automatically)
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
 except Exception:
-    st.error("Database connection failed. Check your Secrets formatting.")
+    st.error("Database connection failed. Please double check your Secrets formatting.")
 
 # Animated/Colorful Dynamic Loading Matrix Header Function
 def display_loading_brand():
@@ -69,7 +67,7 @@ if authenticated:
     choice = st.sidebar.radio("Navigate Pages", menu)
     st.sidebar.markdown("<br><br><br><div style='color:#aaaaaa; font-size:12px; font-weight:bold;'>⚙️ System Ownership:<br><span style='color:#ff3333;'>ASP by Sudaisi Setra</span></div>", unsafe_allow_html=True)
 
-    # LIVE NOTIFICATION BANNER ENGINE
+    # LIVE IN-APP NOTIFICATION BANNER ENGINE (Forced live read, ttl=0)
     try:
         notify_df = conn.read(worksheet="ChatLog", ttl=0)
         if not notify_df.empty:
@@ -79,7 +77,7 @@ if authenticated:
     except Exception:
         pass
 
-    # PAGE 1: EXAM CENTER
+    # PAGE 1: EXAM CENTER (Bi-Weekly 4-Item Core & Print Integration)
     if choice == "📝 Exam Center":
         display_loading_brand()
         
@@ -89,16 +87,17 @@ if authenticated:
         
         if is_assessment_week:
             st.title(f"🏆 Official Bi-Weekly 4-Item UNEB Standard Exam")
-            st.markdown("<p style='color:#ff3333; font-weight:bold;'>⚠️ EXAMINATION NOTICE: This is a synchronized compulsory assessment fortnight.</p>", unsafe_allow_html=True)
+            st.markdown("<p style='color:#ff3333; font-weight:bold;'>⚠️ EXAMINATION NOTICE: This is a synchronized compulsory assessment fortnight. You must attempt all 4 items.</p>", unsafe_allow_html=True)
         else:
             st.title(f"🏛️ UNEB S5 {subject_choice} Competence Portal")
-            st.caption(f"📅 Daily Training Session: **{current_date.strftime('%Y-%m-%d')}**")
+            st.caption(f"📅 Daily Synchronized Training Session: **{current_date.strftime('%Y-%m-%d')}**")
 
         try:
+            # Forced dynamic read to capture your spreadsheet changes instantly
             raw_bank = conn.read(worksheet=subject_choice, ttl=0)
             base_questions = raw_bank['question_text'].dropna().tolist()
         except Exception:
-            st.error(f"Could not read from the '{subject_choice}' worksheet repository.")
+            st.error(f"Could not read from the '{subject_choice}' worksheet repository. Make sure the tab exists and column A1 is exactly named 'question_text'.")
             base_questions = []
 
         if base_questions:
@@ -114,13 +113,21 @@ if authenticated:
             @st.cache_data(ttl=60)
             def generate_ncdc_competence_paper(seed_source, subject, cycle_key, large_format):
                 if large_format:
-                    prompt = f"Construct an official standard competence examination paper for Senior Five {subject} based on: '{seed_source}'. Must have exactly FOUR compulsory items matching NCDC standards."
+                    prompt = f"""
+                    You are a chief executive principal examiner for the Uganda National Examinations Board (UNEB) and NCDC curriculum consultant.
+                    Construct an official standard competence examination paper for Senior Five {subject} based on these core prompts: '{seed_source}'.
+                    The paper MUST consist of exactly FOUR (4) comprehensive, compulsory question items built completely around Uganda National Curriculum Development Centre (NCDC) Elements of Construct.
+                    """
                 else:
-                    prompt = f"You are a UNEB examiner. Take this scenario: '{seed_source}'. Generate exactly TWO distinct, parallel competence-based questions for S5 {subject} using a real Ugandan context."
+                    prompt = f"""
+                    You are a senior expert examiner for the Uganda National Examinations Board (UNEB), specialized in the New Competence-Based Curriculum standards for Senior Five {subject}.
+                    Take this reference question scenario: '{seed_source}'
+                    Generate exactly TWO distinct, interconnected parallel questions (Question 1 and Question 2) using a fresh real-world Ugandan context.
+                    """
                 response = model.generate_content(prompt)
                 return response.text
 
-            with st.spinner("🤖 NCDC AI Expert is compiling the master exam paper layout..."):
+            with st.spinner("🤖 NCDC AI Expert is compiling the synchronized master exam paper layout..."):
                 active_paper_text = generate_ncdc_competence_paper(seed_text, subject_choice, date_seed, is_assessment_week)
             
             st.markdown("---")
@@ -141,12 +148,12 @@ if authenticated:
                     st.image(uploaded_photo, width=300, caption="Submission Preview")
 
             if st.button("📤 Submit Competence Script to Cloud Vault"):
-                with st.spinner("📝 Saving permanently to Google Sheet & evaluating performance..."):
+                with st.spinner("📝 Saving permanently to cloud database storage..."):
                     encoded_img = ""
                     if uploaded_photo is not None:
                         encoded_img = base64.b64encode(uploaded_photo.read()).decode("utf-8")
-                        
-                        # Write image permanently to Google Sheet ScriptVault tab
+                    
+                    try:
                         try:
                             vault_df = conn.read(worksheet="ScriptVault", ttl=0)
                         except Exception:
@@ -159,29 +166,36 @@ if authenticated:
                             "ImageData": encoded_img
                         }])
                         conn.update(worksheet="ScriptVault", data=pd.concat([vault_df, new_script_row], ignore_index=True))
-
-                    st.success("Script securely archived forever in your personal cloud repository!")
+                        st.success("Script securely archived forever in your cloud repository!")
+                    except Exception:
+                        st.error("Storage Sync Error. Double check your 'ScriptVault' sheet contains 'Date', 'Student', 'Subject', and 'ImageData' headers in row 1.")
         else:
-            st.warning(f"Your '{subject_choice}' question repository is empty.")
+            st.warning(f"Your '{subject_choice}' question repository is empty. Add text to cell A2 in your spreadsheet.")
 
     # PAGE 2: MULTIMEDIA STUDY ROOM CHAT
     elif choice == "💬 Study Room Chat":
         display_loading_brand()
         st.title("💬 Real-Time Scholar Study Room")
         
-        try: chat_df = conn.read(worksheet="ChatLog", ttl=0)
-        except Exception: chat_df = pd.DataFrame(columns=["Timestamp", "Sender", "Text", "MediaType", "MediaData", "FileName"])
+        try: 
+            chat_df = conn.read(worksheet="ChatLog", ttl=0)
+        except Exception: 
+            chat_df = pd.DataFrame(columns=["Timestamp", "Sender", "Text", "MediaType", "MediaData", "FileName"])
 
         for idx, row in chat_df.tail(25).iterrows():
             with st.chat_message("user" if row["Sender"] == user else "assistant"):
                 st.markdown(f"**{row['Sender']}** <span style='font-size:11px; color:gray;'>({row['Timestamp']})</span>", unsafe_allow_html=True)
                 if pd.notna(row["Text"]) and str(row["Text"]).strip() != "": st.write(row["Text"])
-                if pd.notna(row["MediaType"]) and pd.notna(row["MediaData"]):
-                    m_data = base64.b64decode(row["MediaData"])
-                    if row["MediaType"] == "Image": st.image(m_data, width=300)
-                    elif row["MediaType"] == "Audio": st.audio(m_data)
-                    elif row["MediaType"] == "Video": st.video(m_data)
-                    elif row["MediaType"] == "Document": st.download_button(f"📥 Download {row['FileName']}", m_data, file_name=row['FileName'])
+                if pd.notna(row["MediaType"]) and pd.notna(row["MediaData"]) and str(row["MediaData"]).strip() != "":
+                    try:
+                        m_data = base64.b64decode(row["MediaData"])
+                        if row["MediaType"] == "Image": st.image(m_data, width=300)
+                        elif row["MediaType"] == "Audio": st.audio(m_data)
+                        elif row["MediaType"] == "Video": st.video(m_data)
+                        elif row["MediaType"] == "Document": st.download_button(f"📥 Download {row['FileName']}", m_data, file_name=row['FileName'])
+                    except Exception:
+                        pass
+        st.markdown("---")
 
         with st.form("chat_form", clear_on_submit=True):
             msg_text = st.text_input("Type text or insert emojis here...")
@@ -205,34 +219,39 @@ if authenticated:
                     try:
                         conn.update(worksheet="ChatLog", data=pd.concat([chat_df, new_msg], ignore_index=True))
                         st.rerun()
-                    except Exception: pass
+                    except Exception: 
+                        st.error("Message delivery failed. Check your network or credentials.")
 
     # PAGE 3: PROGRESS TRACKER
     elif choice == "📊 Progress Tracker":
         display_loading_brand()
         st.header("📊 Global Leaderboard")
         try: st.table(conn.read(worksheet="Sheet1", ttl=0))
-        except Exception: st.write("No entries recorded yet.")
+        except Exception: st.write("No historical script entries logged yet.")
 
-    # PAGE 4: UPLOAD SAMPLES (Admin Only Page - Fixed to Save Permanently to Cloud)
+    # PAGE 4: UPLOAD SAMPLES (Admin Managing Authority Guard - Exclusive to Setra stones)
     elif choice == "📂 Upload Samples" and user == "Setra stones":
         display_loading_brand()
         st.header("📋 UNEB Reference Sample Vault")
         sample_file = st.file_uploader("Upload reference visual or past paper layout:", type=["jpg", "jpeg", "png"])
         
         if sample_file:
-            with st.spinner("Locking file into secure cloud drive storage..."):
-                encoded_sample = base64.b64encode(sample_file.read()).decode("utf-8")
-                try:
-                    sample_df = conn.read(worksheet="SampleVault", ttl=0)
-                except Exception:
-                    sample_df = pd.DataFrame(columns=["Subject", "FileName", "ImageData"])
-                
-                new_sample_row = pd.DataFrame([{"Subject": subject_choice, "FileName": sample_file.name, "ImageData": encoded_sample}])
-                conn.update(worksheet="SampleVault", data=pd.concat([sample_df, new_sample_row], ignore_index=True))
-                st.success(f"📎 Reference item '{sample_file.name}' is now locked in cloud memory forever!")
+            if st.button("💾 Confirm Permanent Save to Cloud Vault"):
+                with st.spinner("Locking data string into permanent cloud sheets repository..."):
+                    encoded_sample = base64.b64encode(sample_file.read()).decode("utf-8")
+                    try:
+                        try:
+                            sample_df = conn.read(worksheet="SampleVault", ttl=0)
+                        except Exception:
+                            sample_df = pd.DataFrame(columns=["Subject", "FileName", "ImageData"])
+                        
+                        new_sample_row = pd.DataFrame([{"Subject": subject_choice, "FileName": sample_file.name, "ImageData": encoded_sample}])
+                        conn.update(worksheet="SampleVault", data=pd.concat([sample_df, new_sample_row], ignore_index=True))
+                        st.success(f"📎 Reference item '{sample_file.name}' added to permanent cloud memory successfully!")
+                    except Exception:
+                        st.error("Upload failed. Make sure your 'SampleVault' tab has 'Subject', 'FileName', and 'ImageData' headers in row 1.")
 
-    # PAGE 5: VAULT ARCHIVES (Forced to load directly out of Cloud Sheet data strings)
+    # PAGE 5: VAULT ARCHIVES
     elif choice == "📁 Vault Archives":
         display_loading_brand()
         st.title("📁 Shared Candidate Vault Archives")
@@ -244,26 +263,27 @@ if authenticated:
                 scripts = conn.read(worksheet="ScriptVault", ttl=0)
                 if not scripts.empty:
                     for idx, row in scripts.iterrows():
-                        st.markdown(f"**📝 Candidate Script:** `{row['Student']}` | **Subject:** `{row['Subject']}` | **Cycle:** `{row['Date']}`")
-                        st.image(base64.b64decode(row["ImageData"]), width=450)
-                        st.markdown("---")
+                        if pd.notna(row["ImageData"]) and str(row["ImageData"]).strip() != "":
+                            st.markdown(f"**📝 Candidate Script:** `{row['Student']}` | **Subject:** `{row['Subject']}` | **Cycle:** `{row['Date']}`")
+                            st.image(base64.b64decode(row["ImageData"]), width=450)
+                            st.markdown("---")
                 else:
                     st.info("No exam submissions recorded in the cloud archive yet.")
             except Exception:
-                st.info("No submission records found. Ensure your 'ScriptVault' tab is active.")
+                st.info("No submission records found.")
                 
         elif view_mode == "Show Uploaded Reference Sample Papers":
             try:
                 samples = conn.read(worksheet="SampleVault", ttl=0)
                 if not samples.empty:
                     for idx, row in samples.iterrows():
-                        if row["Subject"] == subject_choice:
+                        if row["Subject"] == subject_choice and pd.notna(row["ImageData"]) and str(row["ImageData"]).strip() != "":
                             st.markdown(f"**📐 Reference Source:** `{row['FileName']}` | **Subject:** `{row['Subject']}`")
                             st.image(base64.b64decode(row["ImageData"]), width=450)
                             st.markdown("---")
                 else:
                     st.info("No sample sheets uploaded for this subject yet.")
             except Exception:
-                st.info("No sample records found. Ensure your 'SampleVault' tab is active.")
+                st.info("No sample records found.")
 else:
-    st.warning("Please enter your access code in the sidebar.")
+    st.sidebar.warning("Access Denied. Please enter your valid credentials.")
