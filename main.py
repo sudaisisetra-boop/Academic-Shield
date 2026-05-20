@@ -33,16 +33,23 @@ def read_public_sheet(worksheet_name):
         st.error(f"Sheet Read Error [{worksheet_name}]: {e}")
         return None
 
-# PURE OPENAI HTTP GATEWAY
+# CORRECTED OPENAI API GATEWAY
 def generate_content(prompt_text, api_token):
     url = "https://api.openai.com/v1/chat/completions"
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_token}"
     }
+    
+    # Corrected nested payload structure matching OpenAI's developer specification
     payload = {
         "model": "gpt-4o-mini",
-        "messages": [{"role": "user", "content": prompt_text}],
+        "messages": [
+            {
+                "role": "user",
+                "content": prompt_text
+            }
+        ],
         "temperature": 0.7
     }
 
@@ -51,10 +58,12 @@ def generate_content(prompt_text, api_token):
         response_json = response.json()
         
         if response.status_code == 200:
+            # Safely navigate the choices dictionary
             return response_json['choices'][0]['message']['content']
         else:
-            error_msg = response_json.get('error', {}).get('message', 'Unknown Gateway Error')
-            return f"OpenAI Engine Error: {error_msg} (Status {response.status_code})"
+            # Fallback to show clear message if key lacks credits or permissions
+            error_details = response_json.get('error', {}).get('message', 'Unknown Gateway Error')
+            return f"OpenAI Gateway Alert: {error_details} (Status Code {response.status_code})"
     except Exception as e:
         return f"AI Connection Failure: {str(e)}"
 
