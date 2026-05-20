@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 import datetime
 import random
-import google.generativeai as genai
+import requests
+import json
 
 st.set_page_config(page_title="Academic Shield Pro", layout="wide", page_icon="🛡️")
 
@@ -15,10 +16,9 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Bulletproof Stable AI Engine Setup
-if "GEMINI_API_KEY" in st.secrets:
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-else:
+# Directly access API Key from Streamlit Secrets
+api_key = st.secrets.get("GEMINI_API_KEY", "")
+if not api_key:
     st.error("AI Engine configuration missing. Please add GEMINI_API_KEY to your Secrets panel.")
 
 # Bulletproof Public Sheet Reader
@@ -29,6 +29,31 @@ def read_public_sheet(worksheet_name):
         return pd.read_csv(export_url)
     except Exception:
         return None
+
+# Direct HTTP Gateway to Gemini (Bypasses picky library handshakes completely)
+def generate_content_via_http(prompt_text, api_token):
+    # Using the standard Google Production v1 Gateway for 1.5 Flash
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_token}"
+    headers = {'Content-Type': 'application/json'}
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": prompt_text}
+                ]
+            }
+        ]
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        if response.status_code == 200:
+            response_data = response.json()
+            return response_data['candidates'][0]['content']['parts'][0]['text']
+        else:
+            return f"API Gateway Error: Code {response.status_code} - {response.text}"
+    except Exception as e:
+        return f"Connection Failed: {str(e)}"
 
 def display_loading_brand():
     st.markdown("""
@@ -54,8 +79,6 @@ if authenticated:
     st.sidebar.markdown("---")
     
     subject_choice = st.sidebar.selectbox("📚 Choose Subject", ["Physics", "Mathematics", "Chemistry"])
-    
-    # Check both potential variations of tab names dynamically
     target_worksheet = f"{subject_choice}pro"
     
     if user == "Setra stones":
@@ -99,17 +122,12 @@ if authenticated:
             seed_text = " || ".join(random.sample(base_questions, min(2, len(base_questions)))) if is_assessment_week else random.choice(base_questions)
             
             with st.spinner("🤖 NCDC AI Expert is compiling the exam paper layout..."):
-                try:
-                    # Using models/gemini-1.5-flash prefix forces the library to bypass api version conflicts
-                    ai_handler = genai.GenerativeModel('models/gemini-1.5-flash')
-                    prompt = f"Construct an official standard competence examination paper for Senior Five {subject_choice} based on this topic seed: '{seed_text}' using real Ugandan educational contexts."
-                    response = ai_handler.generate_content(prompt)
-                    
-                    st.markdown("---")
-                    st.markdown(f'<div class="print-content"> {response.text} </div>', unsafe_allow_html=True)
-                    st.markdown("---")
-                except Exception as ai_err:
-                    st.error(f"AI Generation Error: {str(ai_err)}. Let's check API keys or fallback alternatives.")
+                prompt = f"Construct an official standard competence examination paper for Senior Five {subject_choice} based on this topic seed: '{seed_text}' using real Ugandan educational contexts."
+                active_paper_text = generate_content_via_http(prompt, api_key)
+                
+                st.markdown("---")
+                st.markdown(f'<div class="print-content"> {active_paper_text} </div>', unsafe_allow_html=True)
+                st.markdown("---")
             
             st.subheader("✍️ Your Examination Submission Script")
             st.info("Form submission features are paused during public mode database tuning.")
