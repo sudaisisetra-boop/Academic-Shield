@@ -3,6 +3,7 @@ import pandas as pd
 import datetime
 import random
 import requests
+import google.generativeai as genai
 
 st.set_page_config(page_title="Academic Shield Pro", layout="wide", page_icon="🛡️")
 
@@ -20,7 +21,7 @@ api_key = st.secrets.get("GEMINI_API_KEY", "")
 if not api_key:
     st.error("AI Engine configuration missing. Please add GEMINI_API_KEY to your Secrets panel.")
 
-# Streamlined URL Reader for Public Google Sheets
+# Streamlined URL Reader for Public Google Sheets with Step 8 Debugging
 def read_public_sheet(worksheet_name):
     try:
         sheet_id = "1xU80PotVALVM3sWt7PS3kLGbsivqzMvznXq0c8Cu44M"
@@ -29,33 +30,19 @@ def read_public_sheet(worksheet_name):
         if df is not None and not df.empty:
             return df
         return None
-    except Exception:
+    except Exception as e:
+        st.error(f"Sheet Read Error [{worksheet_name}]: {e}")
         return None
 
-# Corrected Google AI Studio HTTP Gateway
-def generate_content_via_http(prompt_text, api_token):
-    # Fixed URL structure: Using standard v1 production gateway with verified model name
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_token}"
-    headers = {'Content-Type': 'application/json'}
-    payload = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": prompt_text}
-                ]
-            }
-        ]
-    }
-    
+# OFFICIAL GEMINI SDK ENGINE (Integrated from Step 4 of Master Solution)
+def generate_content(prompt_text, api_token):
     try:
-        response = requests.post(url, headers=headers, json=payload)
-        if response.status_code == 200:
-            response_data = response.json()
-            return response_data['candidates'][0]['content']['parts'][0]['text']
-        else:
-            return f"AI Generation Error: Code {response.status_code} - {response.text}"
+        genai.configure(api_key=api_token)
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        response = model.generate_content(prompt_text)
+        return response.text
     except Exception as e:
-        return f"Connection Failed: {str(e)}"
+        return f"AI Engine Failure: {str(e)}"
 
 def display_loading_brand():
     st.markdown("""
@@ -111,11 +98,10 @@ if authenticated:
             raw_bank = read_public_sheet(subject_choice)
 
         if raw_bank is not None:
-            # Bulletproof: Pull whatever the first column is, ignoring exact naming requirements
             col_name = raw_bank.columns[0]
             base_questions = raw_bank[col_name].dropna().tolist()
         else:
-            st.error(f"Could not reach data for {subject_choice}. Verify that your tab names ('{subject_choice}' or '{subject_choice}pro') exist in your Google Sheet.")
+            st.error(f"Could not reach data for {subject_choice}. Verify that your tab names exist in your Google Sheet.")
 
         if base_questions:
             date_seed = current_date.strftime("%Y-%b") if is_assessment_week else current_date.strftime("%Y-%m-%d")
@@ -124,7 +110,8 @@ if authenticated:
             
             with st.spinner("🤖 NCDC AI Expert is compiling the exam paper layout..."):
                 prompt = f"Construct an official standard competence examination paper for Senior Five {subject_choice} based on this topic seed: '{seed_text}' using real Ugandan educational contexts."
-                active_paper_text = generate_content_via_http(prompt, api_key)
+                # Using the new SDK call layout from Step 5
+                active_paper_text = generate_content(prompt, api_key)
                 
                 st.markdown("---")
                 st.markdown(f'<div class="print-content"> {active_paper_text} </div>', unsafe_allow_html=True)
