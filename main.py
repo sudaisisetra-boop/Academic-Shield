@@ -7,6 +7,7 @@ import time
 import os
 import json
 import base64
+import math
 import google.generativeai as genai
 
 # Page configuration
@@ -60,10 +61,6 @@ def read_public_sheet(worksheet_name):
 
 # CORE DATABASE WRITE ENGINE: Securely updates local JSON memory and relays data to your active sheet rows
 def append_to_sheet_database(worksheet_name, payload_row):
-    """
-    Saves record payloads directly to internal local tracking states first, 
-    then effortlessly transfers them onto active sheet tabs using your Webhook API URL hook.
-    """
     db_backup_file = f"local_db_{worksheet_name}.json"
     clean_row = payload_row.copy()
     
@@ -110,12 +107,20 @@ def load_permanent_database(worksheet_name, default_val):
             return default_val
     return default_val
 
-# AI Core Engine configured precisely to gemini-3.5-flash
-def generate_content(prompt_text, api_token):
+# AI Core Engine configured precisely to gemini-3.5-flash (Supports Multi-modal Image analysis)
+def generate_content(prompt_text, api_token, image_bytes_data=None, mime_type=None):
     try:
         genai.configure(api_key=api_token)
         model = genai.GenerativeModel("models/gemini-3.5-flash")
-        response = model.generate_content(prompt_text)
+        
+        if image_bytes_data is not None:
+            contents = [
+                {"mime_type": mime_type, "data": image_bytes_data},
+                prompt_text
+            ]
+            response = model.generate_content(contents)
+        else:
+            response = model.generate_content(prompt_text)
         return response.text  
     except Exception as e:
         return f"AI Engine Connection/Model Failure: {str(e)}"
@@ -307,7 +312,8 @@ else:
                             st.session_state["historical_exams_archive"].append(biweekly_row)
                             append_to_sheet_database("ExamArchives", biweekly_row)
 
-                    timer_col, paper_col = st.columns([1, 2])
+                    # THREE COLUMN MATRIX INTERFACE LAYOUT (Packs the side calculator deck beautifully)
+                    timer_col, paper_col, calc_col = st.columns([1.1, 1.8, 1.1])
                     
                     with timer_col:
                         st.markdown("### ⏱️ Private Clock Deck")
@@ -351,24 +357,92 @@ else:
                         html_formatted_twins = f"<html><body style='font-family:serif; padding:30px;'><h2>Senior Five {subject_choice} Twin Scenarios</h2><hr><p>{st.session_state[paper_key]}</p></body></html>"
                         st.markdown(custom_pdf_download_link(html_formatted_twins, f"{paper_key}.html", "📥 Instant Download Twin Questions Document"), unsafe_allow_html=True)
 
+                    # BRAND NEW ADDITION: SMART SCIENTIFIC CALCULATOR COMPONENT EXPANDER DECK
+                    with calc_col:
+                        st.markdown("### 🧮 Exam Scientific Deck")
+                        with st.expander("📊 Launch Calculator Engine", expanded=False):
+                            st.caption("Perform complex calculations directly inside your workflow.")
+                            expr = st.text_input("Enter math expression (e.g., sin(45) * sqrt(180) or 2.5**3):", key=f"calc_{user}_input")
+                            if expr:
+                                try:
+                                    # Create a safe mapping sandbox for evaluating scientific parameters locally
+                                    safe_env = {
+                                        "sin": lambda x: math.sin(math.radians(x)),
+                                        "cos": lambda x: math.cos(math.radians(x)),
+                                        "tan": lambda x: math.tan(math.radians(x)),
+                                        "sqrt": math.sqrt,
+                                        "log": math.log10,
+                                        "ln": math.log,
+                                        "pi": math.pi,
+                                        "e": math.e
+                                    }
+                                    calc_res = eval(expr, {"__builtins__": None}, safe_env)
+                                    st.success(f"Result: **{calc_res}**")
+                                except Exception:
+                                    st.error("Invalid Math Syntax")
+
                     st.markdown("---")
                     
+                    # SYSTEM PANEL UPGRADE: FLEXIBLE DUAL TEXT/PHOTO ASSIGNMENT SUBMISSION GATEWAY
                     st.subheader("✍️ Candidate Examination Script Submission Panel")
                     if st.session_state[timer_state_key] > 0:
-                        student_work = st.text_area("Supply structural steps for automatic grading metrics evaluation:", height=150, key=f"work_{user}_box")
+                        submission_mode = st.radio("Choose script compilation input style:", ["⌨️ Type answer text scripts directly", "📸 Upload a photo of handwritten structural calculations"])
+                        
+                        student_work_text = ""
+                        uploaded_photo_bytes = None
+                        photo_mime = None
+                        
+                        if submission_mode == "⌨️ Type answer text scripts directly":
+                            student_work_text = st.text_area("Supply structural steps for automatic grading metrics evaluation:", height=150, key=f"work_txt_{user}_box")
+                        else:
+                            uploaded_photo = st.file_uploader("Snap or upload your handwritten answer sheet:", type=["png", "jpg", "jpeg"], key=f"work_img_{user}_box")
+                            if uploaded_photo is not None:
+                                uploaded_photo_bytes = uploaded_photo.read()
+                                photo_mime = uploaded_photo.type
+                                st.image(uploaded_photo_bytes, caption="Uploaded Script Preview", width=250)
+                        
                         can_submit = True
                     else:
                         st.warning("Time window closed.")
-                        student_work = ""
                         can_submit = False
 
+                    # UPGRADED EVALUATION BLOCK: MARKS REVIEWS AND UNLOCKS CONDITIONAL NCDC SOLUTIONS UPON FAILURE
                     if st.button("🚀 Submit Script for Automated Grading Evaluation", disabled=not can_submit):
-                        if student_work.strip() != "":
-                            with st.spinner("UNEB Principal Examiner assessing calculations..."):
-                                review_prompt = f"Evaluate this student script for Senior Five {subject_choice} based on questions: {st.session_state[paper_key]}. Student work: {student_work}"
-                                evaluation_result = generate_content(review_prompt, api_key)
+                        has_content = (student_work_text.strip() != "") or (uploaded_photo_bytes is not None)
+                        if has_content:
+                            with st.spinner("UNEB Principal Examiner assessing calculations and cross-matching logic structures..."):
+                                
+                                review_prompt = (
+                                    f"You are a Senior UNEB Principal Examiner grading an S5 {subject_choice} exam based strictly on these target questions:\n"
+                                    f"{st.session_state[paper_key]}\n\n"
+                                    f"Evaluate the candidate's work provided below. Mark strictly against the official NCDC criteria.\n"
+                                    f"IMPORTANT INSTRUCTIONS:\n"
+                                    f"1. Give a clear score/grade distribution out of full marks.\n"
+                                    f"2. Check if the student has failed, misfired, or gotten any part of the core conceptual calculation steps incorrect.\n"
+                                    f"3. CRITICAL: If and only if the student has failed or misfired on any component number, print this exact keyword phrase tag: '[[MISFIRE_DETECTION_TRIGGERED]]' anywhere inside your text response block, and then append a beautiful, highly detailed, step-by-step NCDC standard reference solutions model detailing all mathematical steps."
+                                )
+                                
+                                if uploaded_photo_bytes is not None:
+                                    evaluation_result = generate_content(review_prompt, api_key, uploaded_photo_bytes, photo_mime)
+                                else:
+                                    full_text_prompt = f"{review_prompt}\n\nCandidate typed answer script content:\n{student_work_text}"
+                                    evaluation_result = generate_content(full_text_prompt, api_key)
+                                
                                 st.markdown("### 📊 Official Script Evaluation Report")
-                                st.info(evaluation_result)
+                                
+                                # Cleanly remove the hidden keyword flag string if present, before showing report text to scholars
+                                polished_report = evaluation_result.replace("[[MISFIRE_DETECTION_TRIGGERED]]", "")
+                                st.info(polished_report)
+                                
+                                # Auto-log the grade review to historical records database array rows
+                                log_payload = {
+                                    "id": f"Review_{paper_key}_{user}",
+                                    "subject": subject_choice,
+                                    "type": f"Graded Work: {user}",
+                                    "date": current_date.strftime("%Y-%b-%d"),
+                                    "content": polished_report
+                                }
+                                append_to_sheet_database("ExamArchives", log_payload)
 
                     st.markdown("---")
                     st.markdown("## 📅 Automated Bi-Weekly 4-Item Assessment Section")
