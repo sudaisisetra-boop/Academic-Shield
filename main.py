@@ -3,7 +3,6 @@ import pandas as pd
 import datetime
 import random
 import requests
-import json
 
 st.set_page_config(page_title="Academic Shield Pro", layout="wide", page_icon="🛡️")
 
@@ -27,16 +26,16 @@ def read_public_sheet(worksheet_name):
         sheet_id = "1xU80PotVALVM3sWt7PS3kLGbsivqzMvznXq0c8Cu44M"
         export_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={worksheet_name}"
         df = pd.read_csv(export_url)
-        if not df.empty:
+        if df is not None and not df.empty:
             return df
         return None
     except Exception:
         return None
 
-# Google AI Studio Developer Endpoint Bridge
+# Corrected Google AI Studio HTTP Gateway
 def generate_content_via_http(prompt_text, api_token):
-    # This explicit v1beta path handles development keys correctly
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={api_token}"
+    # Fixed URL structure: Using standard v1 production gateway with verified model name
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_token}"
     headers = {'Content-Type': 'application/json'}
     payload = {
         "contents": [
@@ -112,11 +111,11 @@ if authenticated:
             raw_bank = read_public_sheet(subject_choice)
 
         if raw_bank is not None:
-            # Dynamically identify the first column if 'question_text' isn't exact
+            # Bulletproof: Pull whatever the first column is, ignoring exact naming requirements
             col_name = raw_bank.columns[0]
             base_questions = raw_bank[col_name].dropna().tolist()
         else:
-            st.error(f"Could not reach data for {subject_choice}. Double-check that your tab exists in the Google Sheet.")
+            st.error(f"Could not reach data for {subject_choice}. Verify that your tab names ('{subject_choice}' or '{subject_choice}pro') exist in your Google Sheet.")
 
         if base_questions:
             date_seed = current_date.strftime("%Y-%b") if is_assessment_week else current_date.strftime("%Y-%m-%d")
