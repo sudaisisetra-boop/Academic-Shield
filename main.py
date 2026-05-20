@@ -4,33 +4,45 @@ import datetime
 import random
 import requests
 import time
+import os
+import json
+import google.generativeai as genai
 
+# Page configuration
 st.set_page_config(page_title="Academic Shield Pro", layout="wide", page_icon="🛡️")
 
-# Custom print layout rules and responsive styling
+# Enforced Custom Styles & Print Setup
 st.markdown("""
     <style>
     @media print {
-        .no-print, [data-testid="stSidebar"], header, footer { display: none !important; }
+        .no-print, [data-testid="stSidebar"], header, footer, .stButton { display: none !important; }
         .print-content { width: 100% !important; margin: 0 !important; padding: 0 !important; }
     }
-    .timer-box {
+    .timer-container {
         background-color: #111111;
         padding: 15px;
         border-radius: 8px;
         border: 2px solid #ff3333;
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 25px;
     }
+    .chat-bubble {
+        padding: 10px 15px;
+        border-radius: 15px;
+        margin-bottom: 10px;
+        max-width: 75%;
+    }
+    .chat-left { background-color: #262730; color: white; margin-right: auto; }
+    .chat-right { background-color: #ff3333; color: white; margin-left: auto; text-align: right; }
     </style>
     """, unsafe_allow_html=True)
 
-# Fetch Gemini API Key Safely from Streamlit Secrets
+# Fetch Gemini API Key from Streamlit Secrets
 api_key = st.secrets.get("GEMINI_API_KEY", "")
 if not api_key:
     st.error("AI Engine configuration missing. Please add GEMINI_API_KEY to your Secrets panel.")
 
-# UNCHANGED: Bulletproof URL Reader for Public Google Sheets
+# UNCHANGED: Stable Google Sheets Reader Engine
 def read_public_sheet(worksheet_name):
     sheet_id = "1xU80PotVALVM3sWt7PS3kLGbsivqzMvznXq0c8Cu44M"
     clean_name = worksheet_name.strip()
@@ -40,24 +52,18 @@ def read_public_sheet(worksheet_name):
         if df is not None and not df.empty:
             return df
         return None
-    except Exception:
+    except Exception as e:
         return None
 
-# DIRECT REST API CALL TIER - MODEL SPECIFIED: gemini-3.5-flash
+# FIXED: Permanent Official Gemini SDK Function as commanded by the Recovery Guide
 def generate_content(prompt_text, api_token):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={api_token}"
-    headers = {'Content-Type': 'application/json'}
-    payload = {
-        "contents": [{"parts": [{"text": prompt_text}]}]
-    }
     try:
-        response = requests.post(url, headers=headers, json=payload)
-        if response.status_code == 200:
-            return response.json()['candidates'][0]['content']['parts'][0]['text']
-        else:
-            return f"API Server Notice: Unable to construct layout under version 3.5. Status {response.status_code}"
+        genai.configure(api_key=api_token)
+        model = genai.GenerativeModel("models/gemini-1.5-flash")
+        response = model.generate_content(prompt_text)
+        return response.text  
     except Exception as e:
-        return f"AI Connection Failure: {str(e)}"
+        return f"AI Engine Failure: {str(e)}"
 
 def display_loading_brand():
     st.markdown("""
@@ -67,14 +73,13 @@ def display_loading_brand():
         </div>
         """, unsafe_allow_html=True)
 
-# Initialize global session state objects for private tracking
-if "chat_history" not in st.session_state:
-    st.session_state["chat_history"] = []
-if "uploaded_materials" not in st.session_state:
-    st.session_state["uploaded_materials"] = [
-        {"name": "Kinematics Component Analysis Guide.txt", "timestamp": "System Default"},
-        {"name": "Relative Motion Vector Mechanics Worksheet.txt", "timestamp": "System Default"}
+# Mock Persistent Storage for Peer-to-Peer Scholar Chat & Diagrams Cache
+if "p2p_chat_messages" not in st.session_state:
+    st.session_state["p2p_chat_messages"] = [
+        {"sender": "System", "text": "Welcome to the Scholar Room. Leave notes, files, or audio for each other here.", "type": "text", "time": "00:00"}
     ]
+if "diagram_vault" not in st.session_state:
+    st.session_state["diagram_vault"] = {}
 
 # Scholar Login Interface
 st.sidebar.title("🔐 Scholar Login")
@@ -94,27 +99,22 @@ if authenticated:
     subject_choice = st.sidebar.selectbox("📚 Choose Subject", ["Physics", "Mathematics", "Chemistry"])
     
     if user == "Setra stones":
-        menu = ["📝 Exam Center", "💬 Study Room Chat", "📊 Progress Tracker", "📂 Upload Samples", "📁 Vault Archives"]
+        menu = ["📝 Exam Center", "💬 Study Room Chat", "📊 Progress Tracker", "📂 Upload Diagrams", "📁 Vault Archives"]
     else:
         menu = ["📝 Exam Center", "💬 Study Room Chat", "📊 Progress Tracker", "📁 Vault Archives"]
         
     choice = st.sidebar.radio("Navigate Pages", menu)
     st.sidebar.markdown("<br><br><br><div style='color:#aaaaaa; font-size:12px; font-weight:bold;'>⚙️ System Ownership:<br><span style='color:#ff3333;'>ASP Private System</span></div>", unsafe_allow_html=True)
 
-    # PAGE 1: EXAM CENTER (With live 25-Minute Session Timer)
+    # PAGE 1: EXAM CENTER (Hides answers, renders questions next to the timer, checks data correctly)
     if choice == "📝 Exam Center":
         display_loading_brand()
         current_date = datetime.date.today()
-        week_number = current_date.isocalendar()[1]
-        is_assessment_week = (week_number % 2 == 0)
         
-        if is_assessment_week:
-            st.title(f"🏆 Official Bi-Weekly 4-Item UNEB Standard Exam")
-        else:
-            st.title(f"🏛️ UNEB S5 {subject_choice} Competence Portal")
-            st.caption(f"📅 Daily Session: **{current_date.strftime('%Y-%m-%d')}**")
+        st.title(f"🏛️ UNEB S5 {subject_choice} Competence Portal")
+        st.caption(f"📅 Daily Session: **{current_date.strftime('%Y-%m-%d')}**")
 
-        # Fixed multi-tier data bank lookup syntax for flawless cross-subject fetching
+        # Multi-tier spreadsheet reading
         base_questions = []
         raw_bank = read_public_sheet(f"{subject_choice}pro")
         if raw_bank is None or raw_bank.empty:
@@ -126,113 +126,168 @@ if authenticated:
             col_name = raw_bank.columns[0]
             base_questions = raw_bank[col_name].dropna().tolist()
         else:
-            st.error(f"❌ Error: Database worksheet entries for '{subject_choice}' could not be pulled from your Google Sheet. Please confirm the tab name matches exactly.")
+            st.error(f"❌ Error: Could not pull items from the Google Sheet tab for '{subject_choice}'.")
 
         if base_questions:
-            date_seed = current_date.strftime("%Y-%b") if is_assessment_week else current_date.strftime("%Y-%m-%d")
+            # Seed selection ensuring stable tracking across updates
+            date_seed = current_date.strftime("%Y-%m-%d")
             random.seed(date_seed)
-            seed_text = " || ".join(random.sample(base_questions, min(2, len(base_questions)))) if is_assessment_week else random.choice(base_questions)
+            selected_seed_question = random.choice(base_questions)
             
-            # Generate the layout if seed changes
-            if "current_paper" not in st.session_state or st.session_state.get("paper_seed") != seed_text or st.session_state.get("current_subject") != subject_choice:
-                with st.spinner("🤖 NCDC AI Expert is compiling exam questions..."):
+            # STAGE 1: Generate 2 Identical New Curriculum Questions from the Google Sheet reference
+            if "twin_questions" not in st.session_state or st.session_state.get("exam_subject") != subject_choice:
+                with st.spinner("🤖 NCDC AI Expert is compiling the twin identical competence items..."):
                     prompt = (
-                        f"Construct an official standard competence examination question sheet for Senior Five {subject_choice} "
-                        f"based on this topic seed: '{seed_text}' using real Ugandan educational contexts. "
-                        f"CRITICAL RULES:\n"
-                        f"1. Output ONLY the questions, clear instruction metrics, and marks allocation.\n"
-                        f"2. Do NOT under any circumstances output answers, step-by-step solutions, final parameters, or marking schemes."
+                        f"You are an NCDC Curriculum Specialist setting a Senior Five {subject_choice} exam.\n"
+                        f"Based EXACTLY on this reference question from our database: '{selected_seed_question}', "
+                        f"generate TWO (2) fresh, separate, but identical competence-based question scenarios.\n"
+                        f"CRITICAL REQUIREMENTS:\n"
+                        f"1. Both questions must require the exact same structural approach and solution methods as the reference question.\n"
+                        f"2. Frame them purely as modern NCDC competence scenarios (contextual real-life scenarios), NOT old curriculum knowledge retrieval.\n"
+                        f"3. Output ONLY the questions, clear sub-sections (a, b, c), and marks. Absolute ban on providing solutions, answers, guides, or final parameters."
                     )
-                    st.session_state["current_paper"] = generate_content(prompt, api_key)
-                    st.session_state["paper_seed"] = seed_text
-                    st.session_state["current_subject"] = subject_choice
-                    st.session_state["start_time"] = time.time()
+                    st.session_state["twin_questions"] = generate_content(prompt, api_key)
+                    st.session_state["exam_subject"] = subject_choice
+                    st.session_state["timer_start_time"] = time.time()
+                    st.session_state["four_item_paper"] = None  # Clear downstream paper until unlocked
 
-            # Countdown Timer Execution Logic (Strictly 25 Minutes)
-            TOTAL_EXAM_SECONDS = 25 * 60  
-            elapsed_time = time.time() - st.session_state.get("start_time", time.time())
-            remaining_seconds = int(TOTAL_EXAM_SECONDS - elapsed_time)
+            # STAGE 2: Timer Layout Configuration (Fixed to prevent UI wiping out questions)
+            TOTAL_EXAM_SECONDS = 40 * 60  # Updated to strictly 40 minutes for the two items
+            elapsed = time.time() - st.session_state.get("timer_start_time", time.time())
+            remaining = int(TOTAL_EXAM_SECONDS - elapsed)
 
-            if remaining_seconds > 0:
-                mins, secs = divmod(remaining_seconds, 60)
-                time_str = f"{mins:02d}:{secs:02d}"
-                
-                st.markdown(f"""
-                    <div class="timer-box">
-                        <span style="color: #ffffff; font-size: 14px; font-family: monospace;">⏳ EXAMINATION TIME REMAINING</span>
-                        <h2 style="color: #ff3333; font-size: 36px; margin: 5px 0 0 0; font-family: 'Courier New', monospace; font-weight: bold;">{time_str}</h2>
-                    </div>
-                """, unsafe_allow_html=True)
-                st.progress(remaining_seconds / TOTAL_EXAM_SECONDS)
-                
-                time.sleep(1)
-                st.rerun()
-            else:
-                st.markdown("""
-                    <div class="timer-box" style="border: 2px solid #888888;">
-                        <h2 style="color: #ff3333; font-size: 28px; margin: 0; font-family: 'Courier New', monospace;">🚨 TIME EXPIRED</h2>
-                        <span style="color: #aaaaaa; font-size: 13px;">The 25-minute submission window has concluded.</span>
-                    </div>
-                """, unsafe_allow_html=True)
-
-            st.markdown("---")
-            st.markdown(f'<div class="print-content"> {st.session_state["current_paper"]} </div>', unsafe_allow_html=True)
-            st.markdown("---")
+            # RENDER TIMER AND QUESTIONS TOGETHER INSIDE FIXED STREAMLIT COLS
+            timer_col, paper_col = st.columns([1, 2])
             
-            # Submission Interface Script
-            st.subheader("✍ *Candidate Examination Script Submission Panel*")
-            
-            if remaining_seconds > 0:
-                student_work = st.text_area("Type or paste your complete mathematical workings, formula steps, and structural derivations here:", height=250)
-                submit_disabled = False
-            else:
-                st.warning("Submission deactivated. The 25-minute examination session time has run out.")
-                student_work = ""
-                submit_disabled = True
-            
-            if st.button("🚀 Submit Script for Automated Grading Evaluation", disabled=submit_disabled):
-                if student_work.strip() == "":
-                    st.warning("Please supply written workings or answers before evaluation mapping.")
+            with timer_col:
+                if remaining > 0:
+                    mins, secs = divmod(remaining, 60)
+                    st.markdown(f"""
+                        <div class="timer-container">
+                            <span style="color: #aaaaaa; font-size: 12px; font-family: monospace;">⏱️ TWIN-ITEM countdown</span>
+                            <h2 style="color: #ff3333; font-size: 42px; margin: 5px 0 0 0; font-family: monospace; font-weight: bold;">{mins:02d}:{secs:02d}</h2>
+                        </div>
+                    """, unsafe_allow_html=True)
                 else:
-                    with st.spinner("UNEB Matrix parsing engine evaluating calculations..."):
+                    st.markdown("""
+                        <div class="timer-container" style="border-color: #555555;">
+                            <h2 style="color: #ff3333; font-size: 26px; margin:0;">🚨 TIME ELAPSED</h2>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+                # Show visual aid diagram if it was previously uploaded for this seed
+                if selected_seed_question in st.session_state["diagram_vault"]:
+                    st.image(st.session_state["diagram_vault"][selected_seed_question], caption="Official Visual Aid Diagram for this Exam Item")
+
+            with paper_col:
+                st.markdown("### 📝 Active Candidate Examination Questions")
+                st.markdown(f'<div class="print-content">{st.session_state["twin_questions"]}</div>', unsafe_allow_html=True)
+
+            st.markdown("---")
+            
+            # Hand in Scripts Layout
+            st.subheader("✍️ Candidate Examination Script Submission Panel")
+            if remaining > 0:
+                student_work = st.text_area("Type or paste your step-by-step structural derivations and final values here:", height=200)
+                can_submit = True
+            else:
+                st.warning("Submission structural link locked. The 40-minute window for these twin items has concluded.")
+                student_work = ""
+                can_submit = False
+
+            if st.button("🚀 Submit Script for Automated Evaluation", disabled=not can_submit):
+                if student_work.strip() == "":
+                    st.warning("Please input workings before trying to submit.")
+                else:
+                    with st.spinner("UNEB Principal Examiner assessing your calculations..."):
                         review_prompt = (
-                            f"You are the UNEB Principal Examiner evaluating an academic script for Senior Five {subject_choice}.\n\n"
-                            f"EXAM QUESTION SHEET:\n{st.session_state['current_paper']}\n\n"
+                            f"You are the UNEB Principal Examiner evaluating an academic script for Senior Five {subject_choice}.\n"
+                            f"EXAM QUESTION SHEET:\n{st.session_state['twin_questions']}\n\n"
                             f"CANDIDATE'S SUBMITTED WORKING SCRIPTS:\n{student_work}\n\n"
                             f"GRADING DIRECTIVE:\n"
-                            f"Analyze their solution methodology step-by-step. If they passed all parameters correctly, congratulate them warmly.\n"
-                            f"If they committed mathematical mistakes, missed steps, or failed any questions, show them exactly where they went wrong, "
-                            f"followed by the complete step-by-step calculations and conceptual breakdowns."
+                            f"Check their solutions step-by-step. If they passed perfectly, congratulate them warmly.\n"
+                            f"If they made structural mathematical errors or failed any portion, highlight exactly where the calculation failed, "
+                            f"then provide the complete step-by-step markings, calculations, and explanations."
                         )
                         evaluation_result = generate_content(review_prompt, api_key)
                         st.markdown("### 📊 Official Script Evaluation Report")
                         st.info(evaluation_result)
+                        
+                        # STAGE 3: Unlock the Comprehensive 4-Item Printable Paper after submission
+                        with st.spinner("🤖 Compiling your standalone 4-Item Full Length Assessment Paper..."):
+                            four_item_prompt = (
+                                f"Generate a complete, official standalone educational examination paper for Senior Five {subject_choice} "
+                                f"conforming strictly to the new NCDC competence-based curriculum standard guidelines.\n"
+                                f"The paper must contain exactly FOUR (4) comprehensive competence scenario questions. "
+                                f"Output format: Strictly neat examination layout with instructions and marks distribution. No solutions included."
+                            )
+                            st.session_state["four_item_paper"] = generate_content(four_item_prompt, api_key)
 
-    # PAGE 2: FULLY OPERATIONAL MULTI-TURN CHAT ROOM
+            # Render the 4-Item Printable Exam Paper if Unlocked
+            if st.session_state.get("four_item_paper"):
+                st.markdown("---")
+                st.markdown("## 🖨️ Printable Full-Length 4-Item Exam Paper")
+                st.caption("This standard evaluation paper has been successfully generated for offline review or printing.")
+                st.markdown(f'<div style="background-color: #1a1a1a; padding: 25px; border-radius: 5px;" class="print-content">{st.session_state["four_item_paper"]}</div>', unsafe_allow_html=True)
+                
+                # JavaScript Print Trigger Button
+                st.button("🖨️ Open System Print Dialog", on_click=lambda: st.markdown("<script>window.print();</script>", unsafe_allow_html=True))
+
+            # Infinite loop trigger script to update timer display smoothly
+            if remaining > 0:
+                time.sleep(1)
+                st.rerun()
+
+    # PAGE 2: TRUE PEER-TO-PEER MULTIMEDIA SCHOLAR CHAT ROOM (Not a bot chat)
     elif choice == "💬 Study Room Chat":
         display_loading_brand()
-        st.title("💬 Private Scholar Study Room Engine")
-        st.caption("Active Session - Interactive Technical STEM Tutor Mode")
+        st.title("💬 Shared Scholar Communications Room")
+        st.caption("Live Communication Link between Setra Stones and Gideon Cheps")
+
+        # Render message stream
+        st.markdown("### 📬 Message Logs")
+        for message in st.session_state["p2p_chat_messages"]:
+            align_class = "chat-right" if message["sender"] == user else "chat-left"
+            st.markdown(f"""
+                <div class="chat-bubble {align_class}">
+                    <strong>{message['sender']}</strong> <span style='font-size:10px; color:#aaa;'>({message['time']})</span><br>
+                    {message['text']}
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Render media parameters if they exist in the data structure
+            if "media_file" in message:
+                if message["media_type"].startswith("image/"):
+                    st.image(message["media_file"])
+                elif message["media_type"].startswith("audio/"):
+                    st.audio(message["media_file"])
+                elif message["media_type"].startswith("video/"):
+                    st.video(message["media_file"])
+                else:
+                    st.download_button("Download Document Attachment", message["media_file"], file_name=message["media_name"])
+
+        st.markdown("---")
+        st.subheader("Send Message or Media")
         
-        for msg in st.session_state["chat_history"]:
-            with st.chat_message(msg["role"]):
-                st.write(msg["content"])
+        # Inputs layout
+        chat_text = st.text_input("Type your message here...", key="chat_input_msg")
+        uploaded_media = st.file_uploader("Attach Audio, Videos, Documents, or Images to chat stream:", type=["txt", "pdf", "png", "jpg", "jpeg", "mp3", "wav", "mp4", "mov"])
+        
+        if st.button("✉️ Broadcast to Scholar Room"):
+            timestamp = datetime.datetime.now().strftime("%H:%M")
+            if chat_text.strip() != "" or uploaded_media is not None:
+                new_msg = {"sender": user, "text": chat_text, "time": timestamp}
                 
-        user_query = st.chat_input("Inquire regarding equations, formulas, vectors or mechanics profiles...")
-        if user_query:
-            st.session_state["chat_history"].append({"role": "user", "content": user_query})
-            with st.chat_message("user"):
-                st.write(user_query)
+                if uploaded_media is not None:
+                    new_msg["media_file"] = uploaded_media.read()
+                    new_msg["media_type"] = uploaded_media.type
+                    new_msg["media_name"] = uploaded_media.name
+                    if chat_text.strip() == "":
+                        new_msg["text"] = f"Shared an attachment: *{uploaded_media.name}*"
                 
-            with st.spinner("Compiling solution profile..."):
-                chat_prompt = (
-                    f"You are an elite private STEM instructor analyzing a Senior Five candidate's question. "
-                    f"Break down the answer using clear conceptual steps and textbook annotations. Question: {user_query}"
-                )
-                bot_reply = generate_content(chat_prompt, api_key)
-                st.session_state["chat_history"].append({"role": "assistant", "content": bot_reply})
-                with st.chat_message("assistant"):
-                    st.write(bot_reply)
+                st.session_state["p2p_chat_messages"].append(new_msg)
+                st.success("Message dispatched.")
+                st.rerun()
 
     # PAGE 3: PROGRESS TRACKER
     elif choice == "📊 Progress Tracker":
@@ -242,36 +297,52 @@ if authenticated:
         if track_df is not None:
             st.table(track_df)
         else:
-            st.info("No historical script assessment records verified on 'Sheet1' yet.")
+            st.info("No records checked on 'Sheet1' yet.")
 
-    # PAGE 4: UPLOAD SAMPLES (Fully Functional Private Sandbox Storage)
-    elif choice == "📂 Upload Samples" and user == "Setra stones":
+    # PAGE 4: UPLOAD DIAGRAMS (Strictly uploads diagram to map against Google Sheets question column)
+    elif choice == "📂 Upload Diagrams" and user == "Setra stones":
         display_loading_brand()
-        st.header("📋 UNEB Reference Sample Vault Manager")
-        st.subheader("Stage New Source Material into Local Cache")
+        st.header("📂 Visual Aid Diagram Mapping Workspace")
+        st.subheader("Link Graphic Diagrams directly to Google Sheet Question Texts")
         
-        uploaded_file = st.file_uploader("Choose reference materials or text scripts to append:", type=["txt", "csv", "md", "json"])
-        if uploaded_file is not None:
-            current_timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            if not any(item['name'] == uploaded_file.name for item in st.session_state["uploaded_materials"]):
-                st.session_state["uploaded_materials"].append({"name": uploaded_file.name, "timestamp": current_timestamp})
-                st.success(f"📦 Successfully staged operational attachment: '{uploaded_file.name}' into internal cache.")
+        raw_bank = read_public_sheet(subject_choice)
+        if raw_bank is not None and not raw_bank.empty:
+            col_name = raw_bank.columns[0]
+            questions_list = raw_bank[col_name].dropna().tolist()
+            
+            target_q = st.selectbox("🎯 Select the precise worksheet question text this diagram matches:", questions_list)
+            diagram_file = st.file_uploader("Upload the exact structural visual aid diagram (.png, .jpg, .jpeg):", type=["png", "jpg", "jpeg"])
+            
+            if st.button("🔗 Bind Diagram to Question Column Record"):
+                if diagram_file is not None:
+                    st.session_state["diagram_vault"][target_q] = diagram_file.read()
+                    st.success(f"Successfully bound visual diagram file to question context: '{target_q[:50]}...'")
+                else:
+                    st.warning("Please upload an image file first.")
+        else:
+            st.error("Cannot pull row data names to perform graphic mapping configurations.")
 
-    # PAGE 5: VAULT ARCHIVES (Fully Functional Interactive Repository File System)
+    # PAGE 5: VAULT ARCHIVES (Fully visible embedded PDF simulated logs view)
     elif choice == "📁 Vault Archives":
         display_loading_brand()
         st.title("📁 Shared Candidate Vault Repositories")
-        st.markdown("### Complete Active File Index")
+        st.markdown("### 📄 Accessible Active Document Logs (PDF Format Layout)")
         
-        if st.session_state["uploaded_materials"]:
-            for file_obj in st.session_state["uploaded_materials"]:
-                col1, col2 = st.columns([3, 1])
-                with col1:
-                    st.markdown(f"📄 **{file_obj['name']}**")
-                with col2:
-                    st.caption(f"🗓️ {file_obj['timestamp']}")
-                st.markdown("---")
+        # Display simulated visible layout inside the application frame
+        if "twin_questions" in st.session_state:
+            st.markdown("#### 📥 Archived Active Twin-Question Component Log")
+            with st.container():
+                st.markdown(f"""
+                    <div style="background-color: white; color: black; padding: 20px; border-radius: 4px; font-family: serif; border: 1px solid #ddd;">
+                        <h3 style="text-align: center; color: black; margin:0;">ASP ARCHIVE SYSTEM DOCUMENT REPORT</h3>
+                        <hr style="border-color: black;">
+                        <p><strong>Subject:</strong> {st.session_state.get('exam_subject', 'STEM Standard')}</p>
+                        <p><strong>Generated Text Grid:</strong></p>
+                        <div style="font-size: 13px; line-height: 1.5;">{st.session_state['twin_questions']}</div>
+                    </div>
+                """, unsafe_allow_html=True)
+                st.caption("🚨 Document formatted dynamically to follow legal printable paper dimensions inside viewport.")
         else:
-            st.write("Repository vault is empty.")
+            st.info("Vault registry is clean. Generate an exam item inside the portal to populate archives.")
 else:
     st.sidebar.warning("Access Denied. Please input valid candidate authentication credentials.")
