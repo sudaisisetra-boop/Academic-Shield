@@ -3,6 +3,7 @@ import pandas as pd
 import datetime
 import random
 import requests
+import google.generativeai as genai
 
 st.set_page_config(page_title="Academic Shield Pro", layout="wide", page_icon="🛡️")
 
@@ -20,7 +21,7 @@ api_key = st.secrets.get("GEMINI_API_KEY", "")
 if not api_key:
     st.error("AI Engine configuration missing. Please add GEMINI_API_KEY to your Secrets panel.")
 
-# Streamlined URL Reader for Public Google Sheets
+# Streamlined URL Reader for Public Google Sheets with Optional Debugging (Section 13)
 def read_public_sheet(worksheet_name):
     try:
         sheet_id = "1xU80PotVALVM3sWt7PS3kLGbsivqzMvznXq0c8Cu44M"
@@ -33,33 +34,17 @@ def read_public_sheet(worksheet_name):
         st.error(f"Sheet Read Error [{worksheet_name}]: {e}")
         return None
 
-# CURRENT GENERATION MODULE FOR V1 INTERFACE TIER
+# PERMANENT OFFICIAL GEMINI SDK FUNCTION (Section 5 & 9 with fully qualified name)
 def generate_content(prompt_text, api_token):
-    # Using the standard production v1 api route which supports standard API Keys seamlessly
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_token}"
-    headers = {'Content-Type': 'application/json'}
-    payload = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": prompt_text}
-                ]
-            }
-        ]
-    }
-    
     try:
-        response = requests.post(url, headers=headers, json=payload)
-        response_json = response.json()
-        
-        if response.status_code == 200:
-            return response_json['candidates'][0]['content']['parts'][0]['text']
-        else:
-            # Captures exact structure errors cleanly instead of throwing a generic breakdown
-            error_msg = response_json.get('error', {}).get('message', 'Unknown Error Encountered')
-            return f"API Version Error: {error_msg} (Status Code {response.status_code})"
+        # Configure Gemini
+        genai.configure(api_key=api_token)
+        # Initialize supported model using the fully qualified name string
+        model = genai.GenerativeModel("models/gemini-1.5-flash")
+        response = model.generate_content(prompt_text)
+        return response.text
     except Exception as e:
-        return f"AI Connection Failure: {str(e)}"
+        return f"AI Engine Failure: {str(e)}"
 
 def display_loading_brand():
     st.markdown("""
@@ -126,6 +111,7 @@ if authenticated:
             
             with st.spinner("🤖 NCDC AI Expert is compiling the exam paper layout..."):
                 prompt = f"Construct an official standard competence examination paper for Senior Five {subject_choice} based on this topic seed: '{seed_text}' using real Ugandan educational contexts."
+                # Call modern SDK layout (Section 5)
                 active_paper_text = generate_content(prompt, api_key)
                 
                 st.markdown("---")
