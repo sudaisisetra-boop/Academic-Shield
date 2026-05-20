@@ -53,7 +53,9 @@ if authenticated:
     st.sidebar.success(f"Welcome, {user}")
     st.sidebar.markdown("---")
     
+    # Selection maps to display names, suffix logic is handled cleanly inside the reading block
     subject_choice = st.sidebar.selectbox("📚 Choose Subject", ["Physics", "Mathematics", "Chemistry"])
+    target_worksheet = f"{subject_choice}pro"
     
     if user == "Setra stones":
         menu = ["📝 Exam Center", "💬 Study Room Chat", "📊 Progress Tracker", "📂 Upload Samples", "📁 Vault Archives"]
@@ -63,7 +65,7 @@ if authenticated:
     choice = st.sidebar.radio("Navigate Pages", menu)
     st.sidebar.markdown("<br><br><br><div style='color:#aaaaaa; font-size:12px; font-weight:bold;'>⚙️ System Ownership:<br><span style='color:#ff3333;'>ASP by Sudaisi Setra</span></div>", unsafe_allow_html=True)
 
-    # PAGE 1: EXAM CENTER (Live Fetch)
+    # PAGE 1: EXAM CENTER (Reading modified tab names)
     if choice == "📝 Exam Center":
         display_loading_brand()
         current_date = datetime.date.today()
@@ -78,13 +80,13 @@ if authenticated:
 
         base_questions = []
         try:
-            raw_bank = conn.read(worksheet=subject_choice, ttl=0)
+            raw_bank = conn.read(worksheet=target_worksheet, ttl=0)
             if 'question_text' in raw_bank.columns:
                 base_questions = raw_bank['question_text'].dropna().tolist()
             else:
-                st.error(f"The '{subject_choice}' worksheet tab was found, but row cell A1 must be exactly named 'question_text'.")
+                st.error(f"The '{target_worksheet}' worksheet tab was found, but row cell A1 must be exactly named 'question_text'.")
         except Exception:
-            st.error(f"Could not connect to the '{subject_choice}' worksheet. Verify spelling.")
+            st.error(f"Could not connect to the '{target_worksheet}' worksheet. Verify spelling on your Google Sheet tab.")
 
         if base_questions:
             date_seed = current_date.strftime("%Y-%b") if is_assessment_week else current_date.strftime("%Y-%m-%d")
@@ -125,7 +127,7 @@ if authenticated:
                     except Exception:
                         st.error("Storage Sync Error: Please verify ScriptVault worksheet layout.")
 
-    # PAGE 2: MULTIMEDIA STUDY ROOM CHAT (Live Sync)
+    # PAGE 2: MULTIMEDIA STUDY ROOM CHAT
     elif choice == "💬 Study Room Chat":
         display_loading_brand()
         st.title("💬 Real-Time Scholar Study Room")
@@ -159,7 +161,7 @@ if authenticated:
                 except Exception: 
                     st.error("Message sync dropped. Check your configuration values.")
 
-    # PAGE 3: PROGRESS TRACKER (Live Fetch from Sheet1)
+    # PAGE 3: PROGRESS TRACKER
     elif choice == "📊 Progress Tracker":
         display_loading_brand()
         st.header("📊 Global Leaderboard")
