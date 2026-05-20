@@ -12,7 +12,7 @@ import google.generativeai as genai
 # Page configuration
 st.set_page_config(page_title="Academic Shield Pro", layout="wide", page_icon="🛡️")
 
-# Enforced Custom CSS Layout Mechanics
+# Custom Styles for Timers, Chats, and Document Layouts
 st.markdown("""
     <style>
     @media print {
@@ -46,7 +46,7 @@ if not api_key:
 # HARDCODED SPREADSHEET MASTER TARGET
 SHEET_ID = "1xU80PotVALVM3sWt7PS3kLGbsivqzMvznXq0c8Cu44M"
 
-# CORE DATABASE READ ENGINE: Reads public sheets cleanly
+# CORE DATABASE READ ENGINE
 def read_public_sheet(worksheet_name):
     clean_name = worksheet_name.strip()
     export_url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={clean_name}"
@@ -58,13 +58,8 @@ def read_public_sheet(worksheet_name):
     except Exception:
         return None
 
-# CORE DATABASE WRITE ENGINE: Appends Chat and Exam Logs permanently to your Google Sheet via API webhook
+# CORE DATABASE WRITE ENGINE
 def append_to_sheet_database(worksheet_name, payload_row):
-    """
-    To write entries live into your sheet tabs ('ChatLogs' and 'ExamArchives'), 
-    this routine handles pushing data structures directly.
-    """
-    # Fallback to local device state cache if your Google Sheets Apps Script API endpoint isn't mapped
     db_backup_file = f"local_db_{worksheet_name}.json"
     try:
         data = []
@@ -77,7 +72,7 @@ def append_to_sheet_database(worksheet_name, payload_row):
     except Exception:
         pass
 
-# Safe Reader for Permanent Records Cache (Survives complete browser or phone reboots)
+# Safe Reader for Permanent Records Cache
 def load_permanent_database(worksheet_name, default_val):
     db_backup_file = f"local_db_{worksheet_name}.json"
     remote_df = read_public_sheet(worksheet_name)
@@ -117,12 +112,16 @@ def display_loading_brand():
 # LOAD PERMANENT VAULT ARCHIVES AND PEER-TO-PEER MESSAGES DIRECTLY FROM DATA RESERVOIR
 if "p2p_chat_messages" not in st.session_state:
     st.session_state["p2p_chat_messages"] = load_permanent_database("ChatLogs", [
-        {"sender": "System", "text": "Permanent Archive Sync Active. Communications secured.", "time": "00:00", "media_file": None}
+        {"sender": "System", "text": "Permanent Archive Sync Active. Communications secured.", "time": "00:00", "timestamp_epoch": 0.0, "media_file": None}
     ])
 if "historical_exams_archive" not in st.session_state:
     st.session_state["historical_exams_archive"] = load_permanent_database("ExamArchives", [])
 if "diagram_vault" not in st.session_state:
     st.session_state["diagram_vault"] = []
+
+# Persistent cross-session user registry for handling unread message indicators
+if "user_last_viewed_chat" not in st.session_state:
+    st.session_state["user_last_viewed_chat"] = {"Setra stones": time.time(), "Gideon Cheps": time.time()}
 
 # Scholar Login Interface
 st.sidebar.title("🔐 Scholar Login")
@@ -136,7 +135,6 @@ elif user == "Gideon Cheps" and pwd == "Gideon2026":
     authenticated = True
 
 if not authenticated:
-    # PERMANENT MANDATORY DESCRIPTIVE SYSTEM SIGNATURE RENDERED AT THE ENTRY LOGIN WINDOW
     st.markdown("""
         <div style="text-align:center; margin-top:15%;">
             <h2 style="color:#ff3333; font-family:sans-serif; font-weight:bold; letter-spacing:2px;">🛡️ ACADEMIC SHIELD PRO PORTAL</h2>
@@ -153,15 +151,33 @@ else:
     
     subject_choice = st.sidebar.selectbox("📚 Choose Subject", ["Physics", "Mathematics", "Chemistry"])
     
+    # CALCULATE UNREAD NOTIFICATIONS STATUS FOR CURRENT USER
+    last_view_time = st.session_state["user_last_viewed_chat"].get(user, 0.0)
+    has_unread = False
+    unread_count = 0
+    
+    for msg in st.session_state["p2p_chat_messages"]:
+        if msg.get("sender") != user and msg.get("timestamp_epoch", 0.0) > last_view_time:
+            has_unread = True
+            unread_count += 1
+
+    # Dynamic notification indicator mapping for sidebar menu options
+    chat_label = f"💬 Study Room Chat (🔴 {unread_count} NEW)" if has_unread else "💬 Study Room Chat"
+    
     if user == "Setra stones":
-        menu = ["📝 Exam Center", "💬 Study Room Chat", "📊 Progress Tracker", "📂 Upload Diagrams", "📁 Vault Archives"]
+        menu = ["📝 Exam Center", chat_label, "📊 Progress Tracker", "📂 Upload Diagrams", "📁 Vault Archives"]
     else:
-        menu = ["📝 Exam Center", "💬 Study Room Chat", "📊 Progress Tracker", "📁 Vault Archives"]
+        menu = ["📝 Exam Center", chat_label, "📊 Progress Tracker", "📁 Vault Archives"]
         
     choice = st.sidebar.radio("Navigate Pages", menu)
     st.sidebar.markdown(f"<br><br><br><div style='color:#aaaaaa; font-size:12px; font-weight:bold;'>⚙️ System Ownership:<br><span style='color:#ff3333;'>Created by Sudaisi Setra</span></div>", unsafe_allow_html=True)
 
-    # PAGE 1: EXAM CENTER (With Permission Gate & Isolated Tracking Matrix)
+    # LIVE LIVE LIVE ACTIVE TOAST BROADCASTER
+    # Checks instantly if someone else drops a chat while you have another tab actively open
+    if has_unread and not choice.startswith("💬 Study Room Chat"):
+        st.toast(f"🔔 Scholar Room Alert: You have {unread_count} new unread structural messages waiting for verification!", icon="✉️")
+
+    # PAGE 1: EXAM CENTER
     if choice == "📝 Exam Center":
         display_loading_brand()
         current_date = datetime.date.today()
@@ -170,7 +186,6 @@ else:
         
         st.title(f"🏛️ UNEB S5 {subject_choice} Competence Portal")
         
-        # --- COMMAND PERMISSION GATE CHANNELS ---
         st.info("💡 **Security Gate:** Please declare your intent below before navigating educational metrics.")
         gate_action = st.radio("What is your purpose for launching the Exam Center right now?", 
                                ["🔍 Just checking around / reviewing historical archives", "✍️ I am here to sit an official scheduled examination item right now"])
@@ -180,7 +195,6 @@ else:
         if gate_action == "🔍 Just checking around / reviewing historical archives":
             st.warning("Assessment initialization held back. The AI Engine will not generate fresh twin papers without exam sitting validation.")
             
-            # Show historical copies of this specific subject if they exist in the database so they can always be seen
             subject_historical = [e for e in st.session_state["historical_exams_archive"] if e.get("subject") == subject_choice]
             if subject_historical:
                 st.subheader("📚 Saved Historical Scenarios Available for Permanent Offline Study")
@@ -191,10 +205,8 @@ else:
                 st.info("No historical entries logged under this subject category yet in permanent sync cloud rows.")
                 
         else:
-            # Active Exam Sitting Allowed - Render Action Command Trigger Button Explicitly
             st.success("Exam validation declared. Click the button component below to instruct the AI engine to generate your twin scenario tasks.")
             
-            # Read Google Sheet question bank records
             base_questions = []
             raw_bank = read_public_sheet(f"{subject_choice}pro")
             if raw_bank is None or raw_bank.empty:
@@ -212,7 +224,6 @@ else:
                 random.seed(date_seed)
                 selected_seed_question = random.choice(base_questions)
                 
-                # MANDATORY COMMAND BUTTON REQUIRING USER PERMISSION BEFORE GENERATING EXAM
                 if st.button("🔥 COMMAND ENGINE: Generate Twin Competence Exam Questions Now"):
                     if paper_key not in st.session_state:
                         with st.spinner("🤖 NCDC AI Expert compiling identical twin scenario tasks from sheet guidelines..."):
@@ -231,7 +242,6 @@ else:
                             generated_text = generate_content(prompt, api_key)
                             st.session_state[paper_key] = generated_text
                             
-                            # LOG PERMANENTLY TO BOTH RUNNING LOCAL AND REMOTE GOOGLE SPREADSHEET ARCHIVES
                             archive_row = {
                                 "id": paper_key,
                                 "subject": subject_choice,
@@ -243,17 +253,14 @@ else:
                                 st.session_state["historical_exams_archive"].append(archive_row)
                                 append_to_sheet_database("ExamArchives", archive_row)
 
-                # RENDER TIMER AND PAPER ONLY IF PAPER IS ACTIVE AND OPENED BY PERMISSION
                 if paper_key in st.session_state:
-                    # User-Isolated Private Timer Metrics Tracking Setup
                     timer_state_key = f"{user}_{paper_key}_remaining_seconds"
                     timer_running_key = f"{user}_{paper_key}_is_running"
 
                     if timer_state_key not in st.session_state:
-                        st.session_state[timer_state_key] = 40 * 60  # Independent 40-Minute window isolated strictly to this logged-in account
+                        st.session_state[timer_state_key] = 40 * 60  
                         st.session_state[timer_running_key] = True
 
-                    # Automated Bi-Weekly 4-Item Exam Structural Calculations
                     base_milestone_date = datetime.date(2026, 1, 1)
                     days_delta = (current_date - base_milestone_date).days
                     fortnight_cycle_index = days_delta // 14
@@ -278,7 +285,7 @@ else:
                             st.session_state["historical_exams_archive"].append(biweekly_row)
                             append_to_sheet_database("ExamArchives", biweekly_row)
 
-                    # --- TIMER GRID VISUAL LAYOUT CONTAINER ---
+                    # UI Grid rendering
                     timer_col, paper_col = st.columns([1, 2])
                     
                     with timer_col:
@@ -296,7 +303,6 @@ else:
                                 </div>
                             """, unsafe_allow_html=True)
                             
-                            # INTERRUPT PAUSE MECHANICS CONTROLS
                             c1, c2 = st.columns(2)
                             with c1:
                                 if st.button("⏸️ Pause Exam", key=f"p_{user}_btn"):
@@ -326,7 +332,6 @@ else:
 
                     st.markdown("---")
                     
-                    # Evaluation Panels
                     st.subheader("✍️ Candidate Examination Script Submission Panel")
                     if st.session_state[timer_state_key] > 0:
                         student_work = st.text_area("Supply structural steps for automatic grading metrics evaluation:", height=150, key=f"work_{user}_box")
@@ -344,7 +349,6 @@ else:
                                 st.markdown("### 📊 Official Script Evaluation Report")
                                 st.info(evaluation_result)
 
-                    # BI-WEEKLY COMPREHENSIVE OUTPUT SECTION
                     st.markdown("---")
                     st.markdown("## 📅 Automated Bi-Weekly 4-Item Assessment Section")
                     st.caption("Synchronized to NCDC curriculum framework rules.")
@@ -354,17 +358,20 @@ else:
                     html_formatted_biweekly = f"<html><body style='font-family:serif; padding:30px;'><h2>Senior Five {subject_choice} - 4-Item Standard Paper</h2><hr><p>{st.session_state.get(biweekly_paper_key, '')}</p></body></html>"
                     st.markdown(custom_pdf_download_link(html_formatted_biweekly, f"Official_BiWeekly_4_Item_{subject_choice}.html", "📥 Instant Download Bi-Weekly 4-Item Paper Document"), unsafe_allow_html=True)
 
-                    # Deduct clock states safely if status is running
                     if st.session_state[timer_state_key] > 0 and st.session_state[timer_running_key]:
                         time.sleep(1)
                         st.session_state[timer_state_key] -= 1
                         st.rerun()
 
     # PAGE 2: PERMANENT PEER-TO-PEER MULTIMEDIA SCHOLAR CHAT ROOM
-    elif choice == "💬 Study Room Chat":
+    elif choice.startswith("💬 Study Room Chat"):
         display_loading_brand()
+        
+        # CLEAR UNREAD NOTIFICATION BADGES IMMEDIATELY UPON OPENING THE ROOM TAB
+        st.session_state["user_last_viewed_chat"][user] = time.time()
+        
         st.title("💬 Shared Scholar Communications Room")
-        st.caption("Permanent Communication Logger for Setra Stones and Gideon Cheps (Survives Logout/Device Switches)")
+        st.caption("Permanent Communication Logger (Real-Time Counter Alerts Engaged)")
 
         st.markdown("### 📬 Message Logs Archive")
         for message in st.session_state["p2p_chat_messages"]:
@@ -378,7 +385,6 @@ else:
             
             if "media_file" in message and message["media_file"] is not None:
                 try:
-                    # Safely handle binary byte streams or reconstructed b64 caches
                     media_bytes = message["media_file"] if isinstance(message["media_file"], bytes) else base64.b64decode(message["media_file"])
                     if message["media_type"].startswith("image/"):
                         st.image(media_bytes)
@@ -398,13 +404,19 @@ else:
         uploaded_media = st.file_uploader("Attach Audio, Video, Diagrams, or text logs:", type=["txt", "pdf", "png", "jpg", "jpeg", "mp3", "wav", "mp4", "mov"])
         
         if st.button("✉️ Dispatch to Chat Board"):
+            current_time_epoch = time.time()
             timestamp = datetime.datetime.now().strftime("%H:%M")
             if chat_text.strip() != "" or uploaded_media is not None:
-                new_msg = {"sender": user, "text": chat_text, "time": timestamp, "media_file": None}
+                new_msg = {
+                    "sender": user, 
+                    "text": chat_text, 
+                    "time": timestamp, 
+                    "timestamp_epoch": current_time_epoch, # Added registry mapping index
+                    "media_file": None
+                }
                 
                 if uploaded_media is not None:
                     raw_bytes = uploaded_media.read()
-                    # Convert to string format for robust spreadsheet appending
                     new_msg["media_file"] = base64.b64encode(raw_bytes).decode()
                     new_msg["media_type"] = uploaded_media.type
                     new_msg["media_name"] = uploaded_media.name
@@ -412,8 +424,10 @@ else:
                         new_msg["text"] = f"Shared attachment: *{uploaded_media.name}*"
                 
                 st.session_state["p2p_chat_messages"].append(new_msg)
-                # PUSH TO PERMANENT SYNC LOGGER IMMEDIATELY
                 append_to_sheet_database("ChatLogs", new_msg)
+                
+                # Instantly reset your own last view mark so you don't ping yourself
+                st.session_state["user_last_viewed_chat"][user] = current_time_epoch
                 st.success("Log updated permanently.")
                 st.rerun()
 
@@ -427,7 +441,7 @@ else:
         else:
             st.info("No records checked on 'Sheet1' yet.")
 
-    # PAGE 4: UPLOAD DIAGRAMS (Permanent Support Media Repository)
+    # PAGE 4: UPLOAD DIAGRAMS
     elif choice == "📂 Upload Diagrams" and user == "Setra stones":
         display_loading_brand()
         st.header("📂 Visual Aid Support Material Sandbox")
@@ -451,11 +465,11 @@ else:
             else:
                 st.warning("Please fill out text details and attach a file.")
 
-    # PAGE 5: VAULT ARCHIVES (Permanent Download/Print Deck)
+    # PAGE 5: VAULT ARCHIVES
     elif choice == "📁 Vault Archives":
         display_loading_brand()
         st.title("📁 Shared Candidate Vault Repositories")
-        st.markdown("### 📄 Permanent Document Log Index (Accessible Anywhere, Anytime)")
+        st.markdown("### 📄 Permanent Document Log Index")
         
         if st.session_state["historical_exams_archive"]:
             for entry in st.session_state["historical_exams_archive"]:
@@ -463,7 +477,6 @@ else:
                     st.markdown(f'<div style="background-color:white; color:black; padding:20px; font-family:serif; border-radius:4px;">{entry.get("content","No content")}</div>', unsafe_allow_html=True)
                     st.markdown("<br>", unsafe_allow_html=True)
                     
-                    # Direct click tab download action construction
                     raw_html = f"<html><body style='font-family:serif; padding:30px;'><h2>{entry.get('type','Exam')} ({entry.get('subject','')})</h2><hr><p>{entry.get('content','')}</p></body></html>"
                     st.markdown(custom_pdf_download_link(raw_html, f"Archived_{entry.get('id','doc')}.html", "📥 Click to Print or Download PDF Layout File"), unsafe_allow_html=True)
         else:
