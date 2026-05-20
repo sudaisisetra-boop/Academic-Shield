@@ -213,3 +213,4 @@ if authenticated:
             except Exception: st.info("No records found inside 'SampleVault'.")
 else:
     st.sidebar.warning("Access Denied. Please enter your valid credentials.")
+# force reload
