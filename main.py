@@ -36,6 +36,20 @@ st.markdown("""
     }
     .chat-left { background-color: #262730; color: white; margin-right: auto; }
     .chat-right { background-color: #ff3333; color: white; margin-left: auto; text-align: right; }
+    
+    /* Calculator Specialized Interface Styling */
+    .calc-screen {
+        background-color: #1e2522 !important;
+        color: #39ff14 !important;
+        font-family: 'Courier New', monospace !important;
+        font-size: 20px !important;
+        font-weight: bold !important;
+        text-align: right !important;
+        padding: 10px !important;
+        border-radius: 5px !important;
+        border: 2px solid #333 !important;
+        margin-bottom: 10px !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -138,7 +152,7 @@ def display_loading_brand():
         </div>
         """, unsafe_allow_html=True)
 
-# LOAD VAULT REPOSITORIES
+# INITIALIZE MASTER REGISTER VAULTS
 if "p2p_chat_messages" not in st.session_state:
     st.session_state["p2p_chat_messages"] = load_permanent_database("ChatLogs", [
         {"sender": "System", "text": "Permanent Storage Sync Active.", "time": "00:00", "timestamp_epoch": 0.0, "media_file": None}
@@ -147,6 +161,12 @@ if "historical_exams_archive" not in st.session_state:
     st.session_state["historical_exams_archive"] = load_permanent_database("ExamArchives", [])
 if "diagram_vault" not in st.session_state:
     st.session_state["diagram_vault"] = []
+
+# Calculator Pad Memory String Holders
+if "calc_expression_string" not in st.session_state:
+    st.session_state["calc_expression_string"] = ""
+if "calc_result_string" not in st.session_state:
+    st.session_state["calc_result_string"] = "0"
 
 # View State Tracker Registry Map for Chat Alerts
 if "user_last_viewed_chat" not in st.session_state:
@@ -200,7 +220,7 @@ else:
     choice = st.sidebar.radio("Navigate Pages", menu)
     st.sidebar.markdown(f"<br><br><br><div style='color:#aaaaaa; font-size:12px; font-weight:bold;'>⚙️ System Ownership:<br><span style='color:#ff3333;'>Created by Sudaisi Setra</span></div>", unsafe_allow_html=True)
 
-    # ACTIVE LIVE TOAST POP-UP ALERTS (Triggers when browsing any other segment panel layout)
+    # ACTIVE LIVE TOAST POP-UP ALERTS
     if has_unread and not choice.startswith("💬 Study Room Chat"):
         st.toast(f"🔔 Scholar Room Alert: You have {unread_count} new unread structural messages waiting for verification!", icon="✉️")
 
@@ -312,8 +332,8 @@ else:
                             st.session_state["historical_exams_archive"].append(biweekly_row)
                             append_to_sheet_database("ExamArchives", biweekly_row)
 
-                    # THREE COLUMN MATRIX INTERFACE LAYOUT (Packs the side calculator deck beautifully)
-                    timer_col, paper_col, calc_col = st.columns([1.1, 1.8, 1.1])
+                    # THREE COLUMN MATRIX INTERFACE LAYOUT
+                    timer_col, paper_col, calc_col = st.columns([1.1, 1.8, 1.3])
                     
                     with timer_col:
                         st.markdown("### ⏱️ Private Clock Deck")
@@ -357,33 +377,105 @@ else:
                         html_formatted_twins = f"<html><body style='font-family:serif; padding:30px;'><h2>Senior Five {subject_choice} Twin Scenarios</h2><hr><p>{st.session_state[paper_key]}</p></body></html>"
                         st.markdown(custom_pdf_download_link(html_formatted_twins, f"{paper_key}.html", "📥 Instant Download Twin Questions Document"), unsafe_allow_html=True)
 
-                    # BRAND NEW ADDITION: SMART SCIENTIFIC CALCULATOR COMPONENT EXPANDER DECK
+                    # 🧮 UPGRADED: ADVANCED SCIENTIFIC KEYBOARD LAYOUT ENGINE
                     with calc_col:
-                        st.markdown("### 🧮 Exam Scientific Deck")
-                        with st.expander("📊 Launch Calculator Engine", expanded=False):
-                            st.caption("Perform complex calculations directly inside your workflow.")
-                            expr = st.text_input("Enter math expression (e.g., sin(45) * sqrt(180) or 2.5**3):", key=f"calc_{user}_input")
-                            if expr:
+                        st.markdown("### 🧮 Scientific Calculator Deck")
+                        with st.expander("📊 Launch Pad Panel", expanded=True):
+                            
+                            # Render Display Matrix Screen
+                            st.markdown(f"""
+                                <div style="background-color:#1a1f1c; padding:12px; border-radius:6px; border:1px solid #444; margin-bottom:10px;">
+                                    <div style="color:#888; font-family:monospace; font-size:11px; text-align:left; min-height:15px;">{st.session_state["calc_expression_string"] if st.session_state["calc_expression_string"] else "Ready"}</div>
+                                    <div style="color:#39ff14; font-family:monospace; font-size:24px; text-align:right; font-weight:bold; overflow:hidden;">{st.session_state["calc_result_string"]}</div>
+                                </div>
+                            """, unsafe_allow_html=True)
+                            
+                            # Define helper functions to process clicks locally without refiring Gemini
+                            def push_token(tok):
+                                st.session_state["calc_expression_string"] += str(tok)
+                            def clear_all():
+                                st.session_state["calc_expression_string"] = ""
+                                st.session_state["calc_result_string"] = "0"
+                            def compute_total():
+                                raw_expr = st.session_state["calc_expression_string"]
+                                if not raw_expr: return
                                 try:
-                                    # Create a safe mapping sandbox for evaluating scientific parameters locally
-                                    safe_env = {
-                                        "sin": lambda x: math.sin(math.radians(x)),
-                                        "cos": lambda x: math.cos(math.radians(x)),
-                                        "tan": lambda x: math.tan(math.radians(x)),
-                                        "sqrt": math.sqrt,
-                                        "log": math.log10,
-                                        "ln": math.log,
-                                        "pi": math.pi,
-                                        "e": math.e
-                                    }
-                                    calc_res = eval(expr, {"__builtins__": None}, safe_env)
-                                    st.success(f"Result: **{calc_res}**")
+                                    # Substitute display layouts safely into clean executable python code strings
+                                    process_string = raw_expr.replace("×", "*").replace("÷", "/")
+                                    process_string = process_string.replace("sin(", "math.sin(math.radians(")
+                                    process_string = process_string.replace("cos(", "math.cos(math.radians(")
+                                    process_string = process_string.replace("tan(", "math.tan(math.radians(")
+                                    process_string = process_string.replace("√(", "math.sqrt(")
+                                    process_string = process_string.replace("log(", "math.log10(")
+                                    process_string = process_string.replace("ln(", "math.log(")
+                                    process_string = process_string.replace("^", "**")
+                                    process_string = process_string.replace("π", "math.pi")
+                                    
+                                    # Balance trigonometry brackets implicitly if left open by student
+                                    if "math.radians(" in process_string:
+                                        open_braces = process_string.count("(")
+                                        close_braces = process_string.count(")")
+                                        if open_braces > close_braces:
+                                            process_string += ")" * (open_braces - close_braces)
+                                            
+                                    res = eval(process_string, {"math": math, "__builtins__": None}, {})
+                                    st.session_state["calc_result_string"] = str(round(res, 6) if isinstance(res, float) else res)
                                 except Exception:
-                                    st.error("Invalid Math Syntax")
+                                    st.session_state["calc_result_string"] = "Syntax Error"
+
+                            # Row 1: Scientific Functions Deck
+                            r1_1, r1_2, r1_3, r1_4, r1_5 = st.columns(5)
+                            if r1_1.button("sin", key="btn_sin"): push_token("sin("); st.rerun()
+                            if r1_2.button("cos", key="btn_cos"): push_token("cos("); st.rerun()
+                            if r1_3.button("tan", key="btn_tan"): push_token("tan("); st.rerun()
+                            if r1_4.button("log", key="btn_log"): push_token("log("); st.rerun()
+                            if r1_5.button("ln", key="btn_ln"): push_token("ln("); st.rerun()
+                            
+                            # Row 2: Powers and Roots Deck
+                            r2_1, r2_2, r2_3, r2_4, r2_5 = st.columns(5)
+                            if r2_1.button("x²", key="btn_sq"): push_token("^2"); st.rerun()
+                            if r2_2.button("x³", key="btn_cb"): push_token("^3"); st.rerun()
+                            if r2_3.button("xʸ", key="btn_pwr"): push_token("^"); st.rerun()
+                            if r2_4.button("√", key="btn_root"): push_token("√("); st.rerun()
+                            if r2_5.button("π", key="btn_pi"): push_token("π"); st.rerun()
+
+                            # Row 3: Command & Clear Operators Deck
+                            r3_1, r3_2, r3_3, r3_4, r3_5 = st.columns(5)
+                            if r3_1.button(" ( ", key="btn_op"): push_token("("); st.rerun()
+                            if r3_2.button(" ) ", key="btn_cl"): push_token(")"); st.rerun()
+                            if r3_3.button("AC", key="btn_ac"): clear_all(); st.rerun()
+                            if r3_4.button("÷", key="btn_div"): push_token("÷"); st.rerun()
+                            if r3_5.button("×", key="btn_mul"): push_token("×"); st.rerun()
+
+                            # Row 4: Numbers Grid Segment A
+                            r4_1, r4_2, r4_3, r4_4 = st.columns([1,1,1,2])
+                            if r4_1.button("7", key="btn_7"): push_token("7"); st.rerun()
+                            if r4_2.button("8", key="btn_8"): push_token("8"); st.rerun()
+                            if r4_3.button("9", key="btn_9"): push_token("9"); st.rerun()
+                            if r4_4.button("—", key="btn_sub"): push_token("-"); st.rerun()
+
+                            # Row 5: Numbers Grid Segment B
+                            r5_1, r5_2, r5_3, r5_4 = st.columns([1,1,1,2])
+                            if r5_1.button("4", key="btn_4"): push_token("4"); st.rerun()
+                            if r5_2.button("5", key="btn_5"): push_token("5"); st.rerun()
+                            if r5_3.button("6", key="btn_6"): push_token("6"); st.rerun()
+                            if r5_4.button("+", key="btn_add"): push_token("+"); st.rerun()
+
+                            # Row 6: Final Execution Grid Deck
+                            r6_1, r6_2, r6_3, r6_4 = st.columns([1,1,1,2])
+                            if r6_1.button("1", key="btn_1"): push_token("1"); st.rerun()
+                            if r6_2.button("2", key="btn_2"): push_token("2"); st.rerun()
+                            if r6_3.button("3", key="btn_3"): push_token("3"); st.rerun()
+                            if r6_4.button("=", key="btn_eq"): compute_total(); st.rerun()
+
+                            # Row 7: Decimal and Zero Ground Deck
+                            r7_1, r7_2 = st.columns([2,1])
+                            if r7_1.button("0", key="btn_0"): push_token("0"); st.rerun()
+                            if r7_2.button(".", key="btn_dot"): push_token("."); st.rerun()
 
                     st.markdown("---")
                     
-                    # SYSTEM PANEL UPGRADE: FLEXIBLE DUAL TEXT/PHOTO ASSIGNMENT SUBMISSION GATEWAY
+                    # FLEXIBLE DUAL TEXT/PHOTO ASSIGNMENT SUBMISSION GATEWAY
                     st.subheader("✍️ Candidate Examination Script Submission Panel")
                     if st.session_state[timer_state_key] > 0:
                         submission_mode = st.radio("Choose script compilation input style:", ["⌨️ Type answer text scripts directly", "📸 Upload a photo of handwritten structural calculations"])
@@ -406,7 +498,7 @@ else:
                         st.warning("Time window closed.")
                         can_submit = False
 
-                    # UPGRADED EVALUATION BLOCK: MARKS REVIEWS AND UNLOCKS CONDITIONAL NCDC SOLUTIONS UPON FAILURE
+                    # EVALUATION BLOCK: MARKS REVIEWS AND UNLOCKS CONDITIONAL NCDC SOLUTIONS UPON FAILURE
                     if st.button("🚀 Submit Script for Automated Grading Evaluation", disabled=not can_submit):
                         has_content = (student_work_text.strip() != "") or (uploaded_photo_bytes is not None)
                         if has_content:
@@ -430,11 +522,9 @@ else:
                                 
                                 st.markdown("### 📊 Official Script Evaluation Report")
                                 
-                                # Cleanly remove the hidden keyword flag string if present, before showing report text to scholars
                                 polished_report = evaluation_result.replace("[[MISFIRE_DETECTION_TRIGGERED]]", "")
                                 st.info(polished_report)
                                 
-                                # Auto-log the grade review to historical records database array rows
                                 log_payload = {
                                     "id": f"Review_{paper_key}_{user}",
                                     "subject": subject_choice,
@@ -462,7 +552,6 @@ else:
     elif choice.startswith("💬 Study Room Chat"):
         display_loading_brand()
         
-        # Clear view tracking registers safely
         st.session_state["user_last_viewed_chat"][user] = time.time()
         
         st.title("💬 Shared Scholar Communications Room")
