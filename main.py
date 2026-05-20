@@ -15,11 +15,10 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Initialize AI Brain Engine with corrected model string
-try:
+# Bulletproof Stable AI Engine Setup
+if "GEMINI_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    model = genai.GenerativeModel('gemini-1.5-flash-latest')
-except Exception:
+else:
     st.error("AI Engine configuration missing. Please add GEMINI_API_KEY to your Secrets panel.")
 
 # Bulletproof Public Sheet Reader
@@ -56,7 +55,7 @@ if authenticated:
     
     subject_choice = st.sidebar.selectbox("📚 Choose Subject", ["Physics", "Mathematics", "Chemistry"])
     
-    # Check both potential variations of tab names
+    # Check both potential variations of tab names dynamically
     target_worksheet = f"{subject_choice}pro"
     
     if user == "Setra stones":
@@ -83,35 +82,34 @@ if authenticated:
         base_questions = []
         raw_bank = read_public_sheet(target_worksheet)
         
-        if raw_bank is None:
+        if raw_bank is None or raw_bank.empty:
             raw_bank = read_public_sheet(subject_choice)
 
-        if raw_bank is not None:
+        if raw_bank is not None and not raw_bank.empty:
             if 'question_text' in raw_bank.columns:
                 base_questions = raw_bank['question_text'].dropna().tolist()
             else:
-                st.error(f"Worksheet tab found, but cell A1 must be named exactly 'question_text'.")
+                st.error(f"Worksheet tab found, but column A1 must be named exactly 'question_text'.")
         else:
-            st.error(f"Could not read from Google Sheets. Ensure your spreadsheet sharing settings are set to 'Anyone with the link can view'.")
+            st.error(f"Could not find data. Ensure sheet tabs are named '{subject_choice}pro' or '{subject_choice}' and contain a 'question_text' column.")
 
         if base_questions:
             date_seed = current_date.strftime("%Y-%b") if is_assessment_week else current_date.strftime("%Y-%m-%d")
             random.seed(date_seed)
             seed_text = " || ".join(random.sample(base_questions, min(2, len(base_questions)))) if is_assessment_week else random.choice(base_questions)
             
-            @st.cache_data(ttl=60)
-            def generate_paper(seed_source, subject, cycle_key, large_format):
-                prompt = f"Construct an official standard competence examination paper for Senior Five {subject} based on: '{seed_source}' using real Ugandan contexts."
-                return model.generate_content(prompt).text
-
             with st.spinner("🤖 NCDC AI Expert is compiling the exam paper layout..."):
                 try:
-                    active_paper_text = generate_paper(seed_text, subject_choice, date_seed, is_assessment_week)
+                    # Using models/gemini-1.5-flash prefix forces the library to bypass api version conflicts
+                    ai_handler = genai.GenerativeModel('models/gemini-1.5-flash')
+                    prompt = f"Construct an official standard competence examination paper for Senior Five {subject_choice} based on this topic seed: '{seed_text}' using real Ugandan educational contexts."
+                    response = ai_handler.generate_content(prompt)
+                    
                     st.markdown("---")
-                    st.markdown(f'<div class="print-content"> {active_paper_text} </div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="print-content"> {response.text} </div>', unsafe_allow_html=True)
                     st.markdown("---")
                 except Exception as ai_err:
-                    st.error(f"AI Generation Error: {str(ai_err)}. Please ensure your API key matches the requested model.")
+                    st.error(f"AI Generation Error: {str(ai_err)}. Let's check API keys or fallback alternatives.")
             
             st.subheader("✍️ Your Examination Submission Script")
             st.info("Form submission features are paused during public mode database tuning.")
@@ -127,7 +125,7 @@ if authenticated:
         display_loading_brand()
         st.header("📊 Global Leaderboard")
         track_df = read_public_sheet("Sheet1")
-        if track_df is not None:
+        if track_df is not None and not track_df.empty:
             st.table(track_df)
         else:
             st.write("No historical script grades recorded on 'Sheet1' yet.")
