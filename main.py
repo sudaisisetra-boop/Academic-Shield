@@ -24,7 +24,7 @@ try:
 except Exception:
     st.error("AI Engine configuration missing. Please add GEMINI_API_KEY to your Secrets panel.")
 
-# Database Connection Engine with Live Auto-Refresh (ttl=0)
+# Database Connection Engine
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
 except Exception:
@@ -53,7 +53,6 @@ if authenticated:
     st.sidebar.success(f"Welcome, {user}")
     st.sidebar.markdown("---")
     
-    # Selection maps to display names, suffix logic is handled cleanly inside the reading block
     subject_choice = st.sidebar.selectbox("📚 Choose Subject", ["Physics", "Mathematics", "Chemistry"])
     target_worksheet = f"{subject_choice}pro"
     
@@ -65,7 +64,7 @@ if authenticated:
     choice = st.sidebar.radio("Navigate Pages", menu)
     st.sidebar.markdown("<br><br><br><div style='color:#aaaaaa; font-size:12px; font-weight:bold;'>⚙️ System Ownership:<br><span style='color:#ff3333;'>ASP by Sudaisi Setra</span></div>", unsafe_allow_html=True)
 
-    # PAGE 1: EXAM CENTER (Reading modified tab names)
+    # PAGE 1: EXAM CENTER
     if choice == "📝 Exam Center":
         display_loading_brand()
         current_date = datetime.date.today()
@@ -80,13 +79,14 @@ if authenticated:
 
         base_questions = []
         try:
+            # Public spreadsheet read requires handling header strings cleanly
             raw_bank = conn.read(worksheet=target_worksheet, ttl=0)
             if 'question_text' in raw_bank.columns:
                 base_questions = raw_bank['question_text'].dropna().tolist()
             else:
                 st.error(f"The '{target_worksheet}' worksheet tab was found, but row cell A1 must be exactly named 'question_text'.")
         except Exception:
-            st.error(f"Could not connect to the '{target_worksheet}' worksheet. Verify spelling on your Google Sheet tab.")
+            st.error(f"Could not connect to the '{target_worksheet}' worksheet. Verify that your Google Sheet general access is set to 'Anyone with the link' and that your tab names match exactly.")
 
         if base_questions:
             date_seed = current_date.strftime("%Y-%b") if is_assessment_week else current_date.strftime("%Y-%m-%d")
@@ -113,53 +113,13 @@ if authenticated:
                 uploaded_photo = st.file_uploader("Snap or upload answer script sheets here:", type=["jpg", "jpeg", "png"])
 
             if st.button("📤 Submit Competence Script to Cloud Vault"):
-                with st.spinner("📝 Archiving script file..."):
-                    encoded_img = base64.b64encode(uploaded_photo.read()).decode("utf-8") if uploaded_photo else ""
-                    try:
-                        vault_df = conn.read(worksheet="ScriptVault", ttl=0)
-                    except Exception:
-                        vault_df = pd.DataFrame(columns=["Date", "Student", "Subject", "ImageData"])
-                    
-                    new_row = pd.DataFrame([{"Date": date_seed, "Student": user, "Subject": subject_choice, "ImageData": encoded_img}])
-                    try:
-                        conn.update(worksheet="ScriptVault", data=pd.concat([vault_df, new_row], ignore_index=True))
-                        st.success("Script securely archived in your cloud repository!")
-                    except Exception:
-                        st.error("Storage Sync Error: Please verify ScriptVault worksheet layout.")
+                st.warning("Note: Writing operations are disabled in public connection fallback mode. Please submit your completed handwritten scripts directly to your peer review team.")
 
     # PAGE 2: MULTIMEDIA STUDY ROOM CHAT
     elif choice == "💬 Study Room Chat":
         display_loading_brand()
         st.title("💬 Real-Time Scholar Study Room")
-        try: 
-            chat_df = conn.read(worksheet="ChatLog", ttl=0)
-        except Exception: 
-            chat_df = pd.DataFrame(columns=["Timestamp", "Sender", "Text", "MediaType", "MediaData", "FileName"])
-
-        for idx, row in chat_df.tail(25).iterrows():
-            with st.chat_message("user" if row["Sender"] == user else "assistant"):
-                st.markdown(f"**{row['Sender']}** <span style='font-size:11px; color:gray;'>({row['Timestamp']})</span>", unsafe_allow_html=True)
-                if pd.notna(row["Text"]) and str(row["Text"]).strip() != "": st.write(row["Text"])
-                if pd.notna(row["MediaType"]) and pd.notna(row["MediaData"]) and str(row["MediaData"]).strip() != "":
-                    try:
-                        st.image(base64.b64decode(row["MediaData"]), width=300)
-                    except Exception: pass
-        st.markdown("---")
-
-        with st.form("chat_form", clear_on_submit=True):
-            msg_text = st.text_input("Type text here...")
-            attached_file = st.file_uploader("Upload attachment", type=["jpg", "jpeg", "png"])
-            submit_msg = st.form_submit_button("🚀 Send Message")
-            
-            if submit_msg and (msg_text.strip() != "" or attached_file is not None):
-                timestamp_now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-                media_type, encoded_string, filename = ("Image", base64.b64encode(attached_file.read()).decode("utf-8"), attached_file.name) if attached_file else ("None", "", "")
-                new_msg = pd.DataFrame([{"Timestamp": timestamp_now, "Sender": user, "Text": msg_text, "MediaType": media_type, "MediaData": encoded_string, "FileName": filename}])
-                try:
-                    conn.update(worksheet="ChatLog", data=pd.concat([chat_df, new_msg], ignore_index=True))
-                    st.rerun()
-                except Exception: 
-                    st.error("Message sync dropped. Check your configuration values.")
+        st.info("The chat engine is offline during public database maintenance mode.")
 
     # PAGE 3: PROGRESS TRACKER
     elif choice == "📊 Progress Tracker":
@@ -174,43 +134,12 @@ if authenticated:
     elif choice == "📂 Upload Samples" and user == "Setra stones":
         display_loading_brand()
         st.header("📋 UNEB Reference Sample Vault")
-        sample_file = st.file_uploader("Upload past paper layout:", type=["jpg", "jpeg", "png"])
-        if sample_file and st.button("💾 Confirm Permanent Save to Cloud Vault"):
-            with st.spinner("Locking resource string into SampleVault..."):
-                encoded_sample = base64.b64encode(sample_file.read()).decode("utf-8")
-                try:
-                    try:
-                        sample_df = conn.read(worksheet="SampleVault", ttl=0)
-                    except Exception:
-                        sample_df = pd.DataFrame(columns=["Subject", "FileName", "ImageData"])
-                    new_sample_row = pd.DataFrame([{"Subject": subject_choice, "FileName": sample_file.name, "ImageData": encoded_sample}])
-                    conn.update(worksheet="SampleVault", data=pd.concat([sample_df, new_sample_row], ignore_index=True))
-                    st.success("Reference item saved to cloud successfully!")
-                except Exception:
-                    st.error("Upload failed. Verify your SampleVault worksheet columns.")
+        st.info("Upload operations are paused during public configuration mode.")
 
     # PAGE 5: VAULT ARCHIVES
     elif choice == "📁 Vault Archives":
         display_loading_brand()
         st.title("📁 Shared Candidate Vault Archives")
-        view_mode = st.selectbox("Filter Vault Files By Type", ["Show Exam Script Submissions", "Show Uploaded Reference Sample Papers"])
-        
-        if view_mode == "Show Exam Script Submissions":
-            try:
-                scripts = conn.read(worksheet="ScriptVault", ttl=0)
-                for idx, row in scripts.iterrows():
-                    if pd.notna(row["ImageData"]) and str(row["ImageData"]).strip() != "":
-                        st.markdown(f"**📝 Candidate Script:** `{row['Student']}` | **Subject:** `{row['Subject']}`")
-                        st.image(base64.b64decode(row["ImageData"]), width=450)
-            except Exception: st.info("No records found inside 'ScriptVault'.")
-                
-        elif view_mode == "Show Uploaded Reference Sample Papers":
-            try:
-                samples = conn.read(worksheet="SampleVault", ttl=0)
-                for idx, row in samples.iterrows():
-                    if row["Subject"] == subject_choice and pd.notna(row["ImageData"]) and str(row["ImageData"]).strip() != "":
-                        st.markdown(f"**📐 Reference Source:** `{row['FileName']}`")
-                        st.image(base64.b64decode(row["ImageData"]), width=450)
-            except Exception: st.info("No records found inside 'SampleVault'.")
+        st.info("Vault rendering is temporarily unavailable.")
 else:
     st.sidebar.warning("Access Denied. Please enter your valid credentials.")
