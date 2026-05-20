@@ -33,10 +33,10 @@ def read_public_sheet(worksheet_name):
         st.error(f"Sheet Read Error [{worksheet_name}]: {e}")
         return None
 
-# DIRECT BULLETPROOF REST API CALL TIER (Bypasses SDK Library Errors Completely)
+# DIRECT REST API CALL TIER - SPECIFIED MODEL: gemini-3.5-flash
 def generate_content(prompt_text, api_token):
-    # Using the verified live API path and official stable model endpoint
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_token}"
+    # Using the exact URL template with gemini-3.5-flash as instructed
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={api_token}"
     headers = {'Content-Type': 'application/json'}
     payload = {
         "contents": [
@@ -53,9 +53,9 @@ def generate_content(prompt_text, api_token):
         response_json = response.json()
         
         if response.status_code == 200:
-            # Navigate Google's standard JSON response structure directly
             return response_json['candidates'][0]['content']['parts'][0]['text']
         else:
+            # Captures exact server error response details to see what happens live
             error_msg = response_json.get('error', {}).get('message', 'Unknown Verification Error')
             return f"Gemini API Error: {error_msg} (Status Code {response.status_code})"
     except Exception as e:
