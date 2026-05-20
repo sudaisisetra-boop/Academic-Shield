@@ -15,10 +15,10 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Fetch OpenAI API Key Safely from Secrets
-api_key = st.secrets.get("OPENAI_API_KEY", "")
+# Fetch Gemini API Key Safely from Streamlit Secrets
+api_key = st.secrets.get("GEMINI_API_KEY", "")
 if not api_key:
-    st.error("AI Engine configuration missing. Please add OPENAI_API_KEY to your Secrets panel.")
+    st.error("AI Engine configuration missing. Please add GEMINI_API_KEY to your Secrets panel.")
 
 # Streamlined URL Reader for Public Google Sheets
 def read_public_sheet(worksheet_name):
@@ -33,37 +33,31 @@ def read_public_sheet(worksheet_name):
         st.error(f"Sheet Read Error [{worksheet_name}]: {e}")
         return None
 
-# CORRECTED OPENAI API GATEWAY
+# DIRECT BULLETPROOF REST API CALL TIER (Bypasses SDK Library Errors Completely)
 def generate_content(prompt_text, api_token):
-    url = "https://api.openai.com/v1/chat/completions"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_token}"
+    # Using the verified live API path and official stable model endpoint
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_token}"
+    headers = {'Content-Type': 'application/json'}
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": prompt_text}
+                ]
+            }
+        ]
     }
     
-    # Corrected nested payload structure matching OpenAI's developer specification
-    payload = {
-        "model": "gpt-4o-mini",
-        "messages": [
-            {
-                "role": "user",
-                "content": prompt_text
-            }
-        ],
-        "temperature": 0.7
-    }
-
     try:
         response = requests.post(url, headers=headers, json=payload)
         response_json = response.json()
         
         if response.status_code == 200:
-            # Safely navigate the choices dictionary
-            return response_json['choices'][0]['message']['content']
+            # Navigate Google's standard JSON response structure directly
+            return response_json['candidates'][0]['content']['parts'][0]['text']
         else:
-            # Fallback to show clear message if key lacks credits or permissions
-            error_details = response_json.get('error', {}).get('message', 'Unknown Gateway Error')
-            return f"OpenAI Gateway Alert: {error_details} (Status Code {response.status_code})"
+            error_msg = response_json.get('error', {}).get('message', 'Unknown Verification Error')
+            return f"Gemini API Error: {error_msg} (Status Code {response.status_code})"
     except Exception as e:
         return f"AI Connection Failure: {str(e)}"
 
