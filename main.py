@@ -12,6 +12,16 @@ import math
 # Page configuration
 st.set_page_config(page_title="Academic Shield Pro", layout="wide", page_icon="🛡️")
 
+# Progressive Web App (PWA) Manifest Injection
+st.markdown("""
+    <head>
+        <link rel="manifest" href="manifest.json">
+        <meta name="theme-color" content="#ff3333">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    </head>
+    """, unsafe_allow_html=True)
+
 # Enforced Layout CSS Mechanics
 st.markdown("""
     <style>
@@ -166,7 +176,7 @@ def generate_content(prompt_text, dummy_api_token=None, image_bytes_data=None, m
                 if 'choices' in res_json and len(res_json['choices']) > 0:
                     return res_json['choices'][0]['message']['content']
         except Exception:
-            pass # Suppress and drop down seamlessly into the Groq Backup Engine
+            pass 
 
     # -------------------------------------------------------------------------
     # PROVIDER 2: Groq Cloud (Backup - Llama 3.2 Vision Native Protocol)
