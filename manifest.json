@@ -1,0 +1,17 @@
+{
+  "short_name": "AcademicShield",
+  "name": "Academic Shield Pro Portal",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/5087/5087579.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#111111",
+  "theme_color": "#ff3333",
+  "display": "standalone",
+  "orientation": "portrait"
+}
