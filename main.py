@@ -57,10 +57,9 @@ st.markdown("""
 
 # Fetch API Keys from Streamlit Secrets
 or_key = st.secrets.get("OPENROUTER_API_KEY", "")
-anthropic_key = st.secrets.get("ANTHROPIC_API_KEY", "")
 groq_key = st.secrets.get("GROQ_API_KEY", "")
 
-if not or_key and not anthropic_key and not groq_key:
+if not or_key and not groq_key:
     st.error("AI Engine configurations missing. Please verify your keys in the Secrets panel.")
 
 # HARDCODED SPREADSHEET MASTER TARGET
@@ -124,12 +123,11 @@ def load_permanent_database(worksheet_name, default_val):
             return default_val
     return default_val
 
-# ULTIMATE 3-PROVIDER NATIVE FALLBACK CORE ENGINE (OpenRouter -> Anthropic -> Groq)
+# ULTIMATE 2-PROVIDER HIGH-SPEED FALLBACK CORE ENGINE (OpenRouter -> Groq)
 def generate_content(prompt_text, dummy_api_token=None, image_bytes_data=None, mime_type=None):
     base64_img = ""
     if image_bytes_data is not None:
         base64_img = base64.b64encode(image_bytes_data).decode('utf-8')
-        # Standardize matching mime type structures
         if not mime_type:
             mime_type = "image/jpeg"
 
@@ -166,54 +164,10 @@ def generate_content(prompt_text, dummy_api_token=None, image_bytes_data=None, m
                 if 'choices' in res_json and len(res_json['choices']) > 0:
                     return res_json['choices'][0]['message']['content']
         except Exception:
-            pass # Suppress and forward directly to Backup 1
+            pass # Suppress and drop down seamlessly into the Groq Backup Engine
 
     # -------------------------------------------------------------------------
-    # PROVIDER 2: Anthropic Claude (Backup 1 - Claude 3.5 Sonnet Native Layout)
-    # -------------------------------------------------------------------------
-    if anthropic_key:
-        try:
-            url = "https://api.anthropic.com/v1/messages"
-            headers = {
-                "x-api-key": anthropic_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json"
-            }
-            
-            if image_bytes_data is not None:
-                # Format specific to Anthropic image standards block
-                anthropic_mime = mime_type if mime_type in ["image/jpeg", "image/png", "image/gif", "image/webp"] else "image/jpeg"
-                content_payload = [
-                    {
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": anthropic_mime,
-                            "data": base64_img
-                        }
-                    },
-                    {"type": "text", "text": prompt_text}
-                ]
-            else:
-                content_payload = [{"type": "text", "text": prompt_text}]
-
-            payload = {
-                "model": "claude-3-5-sonnet-20241022",
-                "max_tokens": 4000,
-                "temperature": 0.3,
-                "messages": [{"role": "user", "content": content_payload}]
-            }
-            
-            response = requests.post(url, json=payload, headers=headers, timeout=25)
-            if response.status_code == 200:
-                res_json = response.json()
-                if 'content' in res_json and len(res_json['content']) > 0:
-                    return res_json['content'][0]['text']
-        except Exception:
-            pass # Forward directly to Backup 2
-
-    # -------------------------------------------------------------------------
-    # PROVIDER 3: Groq Cloud (Backup 2 - Llama 3.2 Vision Native Layout)
+    # PROVIDER 2: Groq Cloud (Backup - Llama 3.2 Vision Native Protocol)
     # -------------------------------------------------------------------------
     if groq_key:
         try:
@@ -257,7 +211,7 @@ def display_loading_brand():
     st.markdown("""
         <div style="background-color:#111111; padding:20px; border-radius:10px; border-left: 8px solid #ff0000; text-align:center; margin-bottom:25px;">
             <h1 style="color:#ff0000; font-family:'Arial Black', Gadget, sans-serif; letter-spacing:3px; margin:0; font-size:28px;">🛡️ ACADEMIC SHIELD PRO</h1>
-            <p style="color:#ffffff; font-family:'Courier New', monospace; font-size:14px; margin:5px 0 0 0;">System Core Activated | Direct Triple Provider Redundancy On</p>
+            <p style="color:#ffffff; font-family:'Courier New', monospace; font-size:14px; margin:5px 0 0 0;">System Core Activated | Direct Dual Provider Protection</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -499,7 +453,7 @@ else:
                             <div class="timer-container" style="border-color: #ff3333;">
                                 <span style="color:#aaa; font-size:11px; font-family:monospace;">📝 LOGGED CANDIDATE</span>
                                 <h2 style="color:#ff3333; font-size:24px; margin:5px 0 0 0; font-family:monospace; font-weight:bold;">PORTAL LIVE</h2>
-                                <p style="margin:2px 0 0 0; font-size:11px; color:#aaa;">Candidate: <b>{user}</b><br>Core Matrix: Multi-API Redundancy</p>
+                                <p style="margin:2px 0 0 0; font-size:11px; color:#aaa;">Candidate: <b>{user}</b><br>Core Matrix: OpenRouter ➔ Groq</p>
                             </div>
                         """, unsafe_allow_html=True)
 
@@ -516,7 +470,7 @@ else:
 
                     st.markdown("---")
                     
-                    # FLEXIBLE DUAL TEXT/PHOTO ASSIGNMENT SUBMISSION GATEWAY (VISION DYNAMIC CHANNELS ACTIVE)
+                    # FLEXIBLE DUAL TEXT/PHOTO ASSIGNMENT SUBMISSION GATEWAY
                     st.subheader("✍️ Candidate Examination Script Submission Panel")
                     submission_mode = st.radio("Choose script compilation input style:", ["⌨️ Type answer text scripts directly", "📸 Upload a photo of handwritten structural calculations"])
                     
