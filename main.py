@@ -55,10 +55,13 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Fetch OpenRouter API Key from Streamlit Secrets
-or_api_key = st.secrets.get("OPENROUTER_API_KEY", "")
-if not or_api_key:
-    st.error("AI Engine configuration missing. Please add OPENROUTER_API_KEY to your Secrets panel.")
+# Fetch API Keys from Streamlit Secrets
+or_key = st.secrets.get("OPENROUTER_API_KEY", "")
+anthropic_key = st.secrets.get("ANTHROPIC_API_KEY", "")
+groq_key = st.secrets.get("GROQ_API_KEY", "")
+
+if not or_key and not anthropic_key and not groq_key:
+    st.error("AI Engine configurations missing. Please verify your keys in the Secrets panel.")
 
 # HARDCODED SPREADSHEET MASTER TARGET
 SHEET_ID = "1xU80PotVALVM3sWt7PS3kLGbsivqzMvznXq0c8Cu44M"
@@ -121,83 +124,129 @@ def load_permanent_database(worksheet_name, default_val):
             return default_val
     return default_val
 
-# HIGHLY STABLE OPENROUTER CORE ENGINE (With Fixed Structure, Exponential Backoff, Jitter, and Fallback Routing)
-def generate_content(prompt_text, api_token, image_bytes_data=None, mime_type=None):
-    if not api_token:
-        return "Error: OpenRouter API key is missing configuration setup parameters."
-    
-    url = "https://openrouter.ai/api/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {api_token}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://streamlit.app",
-        "X-Title": "Academic Shield Pro"
-    }
-    
-    # Cascade list of fallback models to ensure zero operational failure
-    models_pool = [
-        "google/gemini-1.5-flash:free",
-        "meta-llama/llama-3-8b-instruct:free",
-        "google/gemma-2-9b-it:free"
-    ]
+# ULTIMATE 3-PROVIDER NATIVE FALLBACK CORE ENGINE (OpenRouter -> Anthropic -> Groq)
+def generate_content(prompt_text, dummy_api_token=None, image_bytes_data=None, mime_type=None):
+    base64_img = ""
+    if image_bytes_data is not None:
+        base64_img = base64.b64encode(image_bytes_data).decode('utf-8')
+        # Standardize matching mime type structures
+        if not mime_type:
+            mime_type = "image/jpeg"
 
-    # Cycle through available models if any hit limits
-    for current_model in models_pool:
-        # Re-structure payload for each fallback attempt to meet OpenRouter specifications
-        if image_bytes_data is not None and current_model == "google/gemini-1.5-flash:free":
-            base64_image = base64.b64encode(image_bytes_data).decode('utf-8')
-            content_payload = [
-                {"type": "text", "text": prompt_text},
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": f"data:{mime_type};base64,{base64_image}"
-                    }
-                }
-            ]
-        elif image_bytes_data is not None:
-            # Fallback text mode redirection if model doesn't support multimodal vision
-            content_payload = [{"type": "text", "text": f"[Handwritten Image Uploaded but Processed via Fallback Engine Text Mode]\n\n{prompt_text}"}]
-        else:
-            # Clean uniform structure for standard text generation requests
-            content_payload = [{"type": "text", "text": prompt_text}]
+    # -------------------------------------------------------------------------
+    # PROVIDER 1: OpenRouter (Primary Choice - Gemini 1.5 Flash Free)
+    # -------------------------------------------------------------------------
+    if or_key:
+        try:
+            url = "https://openrouter.ai/api/v1/chat/completions"
+            headers = {
+                "Authorization": f"Bearer {or_key}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://streamlit.app",
+                "X-Title": "Academic Shield Pro"
+            }
+            
+            if image_bytes_data is not None:
+                content_payload = [
+                    {"type": "text", "text": prompt_text},
+                    {"type": "image_url", "image_url": {"url": f"data:{mime_type};base64,{base64_img}"}}
+                ]
+            else:
+                content_payload = [{"type": "text", "text": prompt_text}]
 
-        payload = {
-            "model": current_model,
-            "messages": [
-                {"role": "user", "content": content_payload}
-            ],
-            "temperature": 0.3
-        }
+            payload = {
+                "model": "google/gemini-1.5-flash:free",
+                "messages": [{"role": "user", "content": content_payload}],
+                "temperature": 0.3
+            }
+            
+            response = requests.post(url, json=payload, headers=headers, timeout=25)
+            if response.status_code == 200:
+                res_json = response.json()
+                if 'choices' in res_json and len(res_json['choices']) > 0:
+                    return res_json['choices'][0]['message']['content']
+        except Exception:
+            pass # Suppress and forward directly to Backup 1
 
-        max_retries = 4
-        backoff_delay = 2.0  # Starting delay of 2 seconds
-        
-        for attempt in range(max_retries):
-            try:
-                response = requests.post(url, json=payload, headers=headers, timeout=30)
-                
-                # Check for rate limits (429) or capacity boundaries
-                if response.status_code == 429 or "quota" in response.text.lower():
-                    jitter = random.uniform(0.2, 0.9)
-                    sleep_time = backoff_delay + jitter
-                    time.sleep(sleep_time)
-                    backoff_delay *= 2  # Exponential progression multiplier
-                    continue
-                
-                if response.status_code == 200:
-                    res_json = response.json()
-                    if 'choices' in res_json and len(res_json['choices']) > 0:
-                        return res_json['choices'][0]['message']['content']
-                
-                # Break internal loop to try the next system fallback option if a non-429 error occurs
-                break
-                    
-            except Exception:
-                time.sleep(1.5)
-                continue
-                
-    return "API System Update Notice: The engine network is heavily congested right now. Please wait a brief moment and submit your command again."
+    # -------------------------------------------------------------------------
+    # PROVIDER 2: Anthropic Claude (Backup 1 - Claude 3.5 Sonnet Native Layout)
+    # -------------------------------------------------------------------------
+    if anthropic_key:
+        try:
+            url = "https://api.anthropic.com/v1/messages"
+            headers = {
+                "x-api-key": anthropic_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json"
+            }
+            
+            if image_bytes_data is not None:
+                # Format specific to Anthropic image standards block
+                anthropic_mime = mime_type if mime_type in ["image/jpeg", "image/png", "image/gif", "image/webp"] else "image/jpeg"
+                content_payload = [
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": anthropic_mime,
+                            "data": base64_img
+                        }
+                    },
+                    {"type": "text", "text": prompt_text}
+                ]
+            else:
+                content_payload = [{"type": "text", "text": prompt_text}]
+
+            payload = {
+                "model": "claude-3-5-sonnet-20241022",
+                "max_tokens": 4000,
+                "temperature": 0.3,
+                "messages": [{"role": "user", "content": content_payload}]
+            }
+            
+            response = requests.post(url, json=payload, headers=headers, timeout=25)
+            if response.status_code == 200:
+                res_json = response.json()
+                if 'content' in res_json and len(res_json['content']) > 0:
+                    return res_json['content'][0]['text']
+        except Exception:
+            pass # Forward directly to Backup 2
+
+    # -------------------------------------------------------------------------
+    # PROVIDER 3: Groq Cloud (Backup 2 - Llama 3.2 Vision Native Layout)
+    # -------------------------------------------------------------------------
+    if groq_key:
+        try:
+            url = "https://api.groq.com/openai/v1/chat/completions"
+            headers = {
+                "Authorization": f"Bearer {groq_key}",
+                "Content-Type": "application/json"
+            }
+            
+            if image_bytes_data is not None:
+                content_payload = [
+                    {"type": "text", "text": prompt_text},
+                    {"type": "image_url", "image_url": {"url": f"data:{mime_type};base64,{base64_img}"}}
+                ]
+            else:
+                content_payload = [{"type": "text", "text": prompt_text}]
+
+            payload = {
+                "model": "llama-3.2-11b-vision-preview",
+                "messages": [{"role": "user", "content": content_payload}],
+                "temperature": 0.3
+            }
+            
+            response = requests.post(url, json=payload, headers=headers, timeout=25)
+            if response.status_code == 200:
+                res_json = response.json()
+                if 'choices' in res_json and len(res_json['choices']) > 0:
+                    return res_json['choices'][0]['message']['content']
+        except Exception:
+            pass
+
+    # CRITICAL FAILURE ACROSS ALL CHANNELS
+    return "API System Update Notice: All independent engine servers are currently heavily congested or undergoing maintenance. Please wait a brief moment and re-submit your script verification."
 
 # Custom Browser Document Layout Constructor
 def custom_pdf_download_link(html_content, filename, button_text):
@@ -208,7 +257,7 @@ def display_loading_brand():
     st.markdown("""
         <div style="background-color:#111111; padding:20px; border-radius:10px; border-left: 8px solid #ff0000; text-align:center; margin-bottom:25px;">
             <h1 style="color:#ff0000; font-family:'Arial Black', Gadget, sans-serif; letter-spacing:3px; margin:0; font-size:28px;">🛡️ ACADEMIC SHIELD PRO</h1>
-            <p style="color:#ffffff; font-family:'Courier New', monospace; font-size:14px; margin:5px 0 0 0;">System Core Activated | Rate Limiting Guard Enabled</p>
+            <p style="color:#ffffff; font-family:'Courier New', monospace; font-size:14px; margin:5px 0 0 0;">System Core Activated | Direct Triple Provider Redundancy On</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -346,7 +395,7 @@ else:
                                 f"1. Both questions must share the exact same conceptual setups and formula parameters as the sheet seed.\n"
                                 f"2. Output ONLY the clear new NCDC question scenarios, sub-sections, and marks allocation. Absolutely no responses or solutions output."
                             )
-                            generated_text = generate_content(prompt, or_api_key)
+                            generated_text = generate_content(prompt)
                             st.session_state[paper_key] = generated_text
                             
                             archive_row = {
@@ -450,7 +499,7 @@ else:
                             <div class="timer-container" style="border-color: #ff3333;">
                                 <span style="color:#aaa; font-size:11px; font-family:monospace;">📝 LOGGED CANDIDATE</span>
                                 <h2 style="color:#ff3333; font-size:24px; margin:5px 0 0 0; font-family:monospace; font-weight:bold;">PORTAL LIVE</h2>
-                                <p style="margin:2px 0 0 0; font-size:11px; color:#aaa;">Candidate: <b>{user}</b><br>API Core: Safe Throttle</p>
+                                <p style="margin:2px 0 0 0; font-size:11px; color:#aaa;">Candidate: <b>{user}</b><br>Core Matrix: Multi-API Redundancy</p>
                             </div>
                         """, unsafe_allow_html=True)
 
@@ -467,7 +516,7 @@ else:
 
                     st.markdown("---")
                     
-                    # FLEXIBLE DUAL TEXT/PHOTO ASSIGNMENT SUBMISSION GATEWAY (VISION REMAINS ACTIVE VIA OPENROUTER)
+                    # FLEXIBLE DUAL TEXT/PHOTO ASSIGNMENT SUBMISSION GATEWAY (VISION DYNAMIC CHANNELS ACTIVE)
                     st.subheader("✍️ Candidate Examination Script Submission Panel")
                     submission_mode = st.radio("Choose script compilation input style:", ["⌨️ Type answer text scripts directly", "📸 Upload a photo of handwritten structural calculations"])
                     
@@ -488,7 +537,7 @@ else:
                     if st.button("🚀 Submit Script for Automated Grading Evaluation"):
                         has_content = (student_work_text.strip() != "") or (uploaded_photo_bytes is not None)
                         if has_content:
-                            with st.spinner("UNEB Principal Examiner assessing calculations and cross-matching logic structures via OpenRouter Gateway..."):
+                            with st.spinner("UNEB Principal Examiner assessing calculations and cross-matching logic structures via API Protection Gate..."):
                                 
                                 review_prompt = (
                                     f"You are a Senior UNEB Principal Examiner grading an S5 {subject_choice} exam based strictly on these target questions:\n"
@@ -501,10 +550,10 @@ else:
                                 )
                                 
                                 if uploaded_photo_bytes is not None:
-                                    evaluation_result = generate_content(review_prompt, or_api_key, uploaded_photo_bytes, photo_mime)
+                                    evaluation_result = generate_content(review_prompt, None, uploaded_photo_bytes, photo_mime)
                                 else:
                                     full_text_prompt = f"{review_prompt}\n\nCandidate typed answer script content:\n{student_work_text}"
-                                    evaluation_result = generate_content(full_text_prompt, or_api_key)
+                                    evaluation_result = generate_content(full_text_prompt)
                                 
                                 st.markdown("### 📊 Official Script Evaluation Report")
                                 polished_report = evaluation_result.replace("[[MISFIRE_DETECTION_TRIGGERED]]", "")
@@ -529,7 +578,7 @@ else:
                                 f"Generate a full-length assessment paper for Senior Five {subject_choice} conforming to NCDC standards. "
                                 f"It must consist of exactly FOUR (4) separate comprehensive competence scenarios. Do not include solution markings."
                             )
-                            compiled_biweekly_text = generate_content(biweekly_prompt, or_api_key)
+                            compiled_biweekly_text = generate_content(biweekly_prompt)
                             st.session_state[biweekly_paper_key] = compiled_biweekly_text
                             
                             biweekly_row = {
