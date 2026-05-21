@@ -140,32 +140,32 @@ def generate_content(prompt_text, api_token, image_bytes_data=None, mime_type=No
         "meta-llama/llama-3-8b-instruct:free",
         "google/gemma-2-9b-it:free"
     ]
-    
-    # Text or vision structural preparation
-    if image_bytes_data is not None:
-        base64_image = base64.b64encode(image_bytes_data).decode('utf-8')
-        content_payload = [
-            {"type": "text", "text": prompt_text},
-            {
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:{mime_type};base64,{base64_image}"
-                }
-            }
-        ]
-    else:
-        content_payload = [{"type": "text", "text": prompt_text}]
 
     # Cycle through available models if any hit limits
     for current_model in models_pool:
-        active_payload = content_payload
-        if current_model != "google/gemini-1.5-flash:free" and image_bytes_data is not None:
-            active_payload = [{"type": "text", "text": f"[Handwritten Image Uploaded but Processed via Fallback Engine Text Mode]\n\n{prompt_text}"}]
+        # Re-structure payload for each fallback attempt to meet OpenRouter specifications
+        if image_bytes_data is not None and current_model == "google/gemini-1.5-flash:free":
+            base64_image = base64.b64encode(image_bytes_data).decode('utf-8')
+            content_payload = [
+                {"type": "text", "text": prompt_text},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:{mime_type};base64,{base64_image}"
+                    }
+                }
+            ]
+        elif image_bytes_data is not None:
+            # Fallback text mode redirection if model doesn't support multimodal vision
+            content_payload = [{"type": "text", "text": f"[Handwritten Image Uploaded but Processed via Fallback Engine Text Mode]\n\n{prompt_text}"}]
+        else:
+            # Clean uniform structure for standard text generation requests
+            content_payload = [{"type": "text", "text": prompt_text}]
 
         payload = {
             "model": current_model,
             "messages": [
-                {"role": "user", "content": active_payload}
+                {"role": "user", "content": content_payload}
             ],
             "temperature": 0.3
         }
@@ -177,12 +177,12 @@ def generate_content(prompt_text, api_token, image_bytes_data=None, mime_type=No
             try:
                 response = requests.post(url, json=payload, headers=headers, timeout=30)
                 
-                # Check for rate limits (429) or explicit platform capacity errors
+                # Check for rate limits (429) or capacity boundaries
                 if response.status_code == 429 or "quota" in response.text.lower():
                     jitter = random.uniform(0.2, 0.9)
                     sleep_time = backoff_delay + jitter
                     time.sleep(sleep_time)
-                    backoff_delay *= 2  # Double the wait time
+                    backoff_delay *= 2  # Exponential progression multiplier
                     continue
                 
                 if response.status_code == 200:
@@ -190,6 +190,7 @@ def generate_content(prompt_text, api_token, image_bytes_data=None, mime_type=No
                     if 'choices' in res_json and len(res_json['choices']) > 0:
                         return res_json['choices'][0]['message']['content']
                 
+                # Break internal loop to try the next system fallback option if a non-429 error occurs
                 break
                     
             except Exception:
