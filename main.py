@@ -121,7 +121,7 @@ def load_permanent_database(worksheet_name, default_val):
             return default_val
     return default_val
 
-# HIGHLY STABLE OPENROUTER CORE ENGINE (With Exponential Backoff, Jitter, and Fallback Routing)
+# HIGHLY STABLE OPENROUTER CORE ENGINE (With Fixed Structure, Exponential Backoff, Jitter, and Fallback Routing)
 def generate_content(prompt_text, api_token, image_bytes_data=None, mime_type=None):
     if not api_token:
         return "Error: OpenRouter API key is missing configuration setup parameters."
@@ -129,7 +129,9 @@ def generate_content(prompt_text, api_token, image_bytes_data=None, mime_type=No
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {api_token}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://streamlit.app",
+        "X-Title": "Academic Shield Pro"
     }
     
     # Cascade list of fallback models to ensure zero operational failure
@@ -152,14 +154,13 @@ def generate_content(prompt_text, api_token, image_bytes_data=None, mime_type=No
             }
         ]
     else:
-        content_payload = prompt_text
+        content_payload = [{"type": "text", "text": prompt_text}]
 
-    # Cycle through available models if any hit 429 limits
+    # Cycle through available models if any hit limits
     for current_model in models_pool:
-        # If model is not Gemini, it cannot read images; redirect to text context
         active_payload = content_payload
         if current_model != "google/gemini-1.5-flash:free" and image_bytes_data is not None:
-            active_payload = f"[Handwritten Image Uploaded but Processed via Fallback Engine Text Mode]\n\n{prompt_text}"
+            active_payload = [{"type": "text", "text": f"[Handwritten Image Uploaded but Processed via Fallback Engine Text Mode]\n\n{prompt_text}"}]
 
         payload = {
             "model": current_model,
@@ -169,29 +170,30 @@ def generate_content(prompt_text, api_token, image_bytes_data=None, mime_type=No
             "temperature": 0.3
         }
 
-        max_retries = 3
+        max_retries = 4
         backoff_delay = 2.0  # Starting delay of 2 seconds
         
         for attempt in range(max_retries):
             try:
                 response = requests.post(url, json=payload, headers=headers, timeout=30)
                 
-                # Check for rate limits (429)
-                if response.status_code == 429:
-                    # Apply Exponential Backoff with Jitter
-                    jitter = random.uniform(0.1, 0.7)
+                # Check for rate limits (429) or explicit platform capacity errors
+                if response.status_code == 429 or "quota" in response.text.lower():
+                    jitter = random.uniform(0.2, 0.9)
                     sleep_time = backoff_delay + jitter
                     time.sleep(sleep_time)
-                    backoff_delay *= 2  # Double the wait time for the next potential hit
+                    backoff_delay *= 2  # Double the wait time
                     continue
                 
                 if response.status_code == 200:
-                    return response.json()['choices'][0]['message']['content']
-                else:
-                    break  # If it's another type of error, break to try the next fallback model
+                    res_json = response.json()
+                    if 'choices' in res_json and len(res_json['choices']) > 0:
+                        return res_json['choices'][0]['message']['content']
+                
+                break
                     
             except Exception:
-                time.sleep(1.0)
+                time.sleep(1.5)
                 continue
                 
     return "API System Update Notice: The engine network is heavily congested right now. Please wait a brief moment and submit your command again."
@@ -406,8 +408,8 @@ else:
                         if row1_cols[3].button("4", key="m_4"): push_token("4"); st.rerun()
                         if row1_cols[4].button("5", key="m_5"): push_token("5"); st.rerun()
                         if row1_cols[5].button("6", key="m_6"): push_token("6"); st.rerun()
-                        if row1_cols[6].button("7", key="m_7"): push_token("7"); st.rerun()
                         if row1_cols[7].button("8", key="m_8"): push_token("8"); st.rerun()
+                        if row1_cols[6].button("7", key="m_7"): push_token("7"); st.rerun()
                         if row1_cols[8].button("9", key="m_9"): push_token("9"); st.rerun()
                         if row1_cols[9].button("0", key="m_0"): push_token("0"); st.rerun()
 
