@@ -58,8 +58,9 @@ st.markdown("""
 # Fetch API Keys from Streamlit Secrets
 or_key = st.secrets.get("OPENROUTER_API_KEY", "")
 groq_key = st.secrets.get("GROQ_API_KEY", "")
+cohere_key = st.secrets.get("COHERE_API_KEY", "")
 
-if not or_key and not groq_key:
+if not or_key and not groq_key and not cohere_key:
     st.error("AI Engine configurations missing. Please verify your keys in the Secrets panel.")
 
 # HARDCODED SPREADSHEET MASTER TARGET
@@ -123,7 +124,7 @@ def load_permanent_database(worksheet_name, default_val):
             return default_val
     return default_val
 
-# ULTIMATE 2-PROVIDER HIGH-SPEED FALLBACK CORE ENGINE (OpenRouter -> Groq)
+# ULTIMATE HYBRID 3-PROVIDER FALLBACK CORE ENGINE (OpenRouter -> Groq -> Cohere)
 def generate_content(prompt_text, dummy_api_token=None, image_bytes_data=None, mime_type=None):
     base64_img = ""
     if image_bytes_data is not None:
@@ -133,6 +134,7 @@ def generate_content(prompt_text, dummy_api_token=None, image_bytes_data=None, m
 
     # -------------------------------------------------------------------------
     # PROVIDER 1: OpenRouter (Primary Choice - Gemini 1.5 Flash Free)
+    # Handles BOTH Text and Handwritten Photos
     # -------------------------------------------------------------------------
     if or_key:
         try:
@@ -168,6 +170,7 @@ def generate_content(prompt_text, dummy_api_token=None, image_bytes_data=None, m
 
     # -------------------------------------------------------------------------
     # PROVIDER 2: Groq Cloud (Backup - Llama 3.2 Vision Native Protocol)
+    # Handles BOTH Text and Handwritten Photos
     # -------------------------------------------------------------------------
     if groq_key:
         try:
@@ -199,6 +202,30 @@ def generate_content(prompt_text, dummy_api_token=None, image_bytes_data=None, m
         except Exception:
             pass
 
+    # -------------------------------------------------------------------------
+    # PROVIDER 3: Cohere API (Final Text Fortress - Command R+)
+    # Handles TEXT ONLY requests (Twin generation, Papers, typed scripts)
+    # -------------------------------------------------------------------------
+    if cohere_key and image_bytes_data is None:
+        try:
+            url = "https://api.cohere.com/v1/chat"
+            headers = {
+                "Authorization": f"Bearer {cohere_key}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": "command-r-plus",
+                "message": prompt_text,
+                "temperature": 0.3
+            }
+            response = requests.post(url, json=payload, headers=headers, timeout=25)
+            if response.status_code == 200:
+                res_json = response.json()
+                if 'text' in res_json:
+                    return res_json['text']
+        except Exception:
+            pass
+
     # CRITICAL FAILURE ACROSS ALL CHANNELS
     return "API System Update Notice: All independent engine servers are currently heavily congested or undergoing maintenance. Please wait a brief moment and re-submit your script verification."
 
@@ -211,7 +238,7 @@ def display_loading_brand():
     st.markdown("""
         <div style="background-color:#111111; padding:20px; border-radius:10px; border-left: 8px solid #ff0000; text-align:center; margin-bottom:25px;">
             <h1 style="color:#ff0000; font-family:'Arial Black', Gadget, sans-serif; letter-spacing:3px; margin:0; font-size:28px;">🛡️ ACADEMIC SHIELD PRO</h1>
-            <p style="color:#ffffff; font-family:'Courier New', monospace; font-size:14px; margin:5px 0 0 0;">System Core Activated | Direct Dual Provider Protection</p>
+            <p style="color:#ffffff; font-family:'Courier New', monospace; font-size:14px; margin:5px 0 0 0;">System Core Activated | Direct Triple Provider Protection</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -453,7 +480,7 @@ else:
                             <div class="timer-container" style="border-color: #ff3333;">
                                 <span style="color:#aaa; font-size:11px; font-family:monospace;">📝 LOGGED CANDIDATE</span>
                                 <h2 style="color:#ff3333; font-size:24px; margin:5px 0 0 0; font-family:monospace; font-weight:bold;">PORTAL LIVE</h2>
-                                <p style="margin:2px 0 0 0; font-size:11px; color:#aaa;">Candidate: <b>{user}</b><br>Core Matrix: OpenRouter ➔ Groq</p>
+                                <p style="margin:2px 0 0 0; font-size:11px; color:#aaa;">Candidate: <b>{user}</b><br>Core Matrix: Dynamic Triple Fallback</p>
                             </div>
                         """, unsafe_allow_html=True)
 
