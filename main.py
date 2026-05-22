@@ -7,7 +7,7 @@ import json
 import time
 
 # =========================================================================
-# 1. PLATFORM CONFIGURATIONS, SECURITY HEADERS & VISUAL STYLING
+# 1. PLATFORM CONFIGURATIONS, SECURITY HEADERS & WHATSAPP VISUAL STYLING
 # =========================================================================
 st.set_page_config(page_title="Academic Shield Pro", layout="wide", page_icon="🛡️")
 
@@ -30,34 +30,69 @@ st.markdown("""
         text-align: center;
         margin-bottom: 15px;
     }
+    
+    /* --- WhatsApp Realistic Layout CSS --- */
     .chat-container {
-        max-height: 400px;
+        max-height: 500px;
         overflow-y: auto;
-        padding: 10px;
+        padding: 15px;
         background-color: #0b141a; 
-        border-radius: 8px;
-        margin-bottom: 10px;
+        background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+        background-repeat: repeat;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #222;
     }
     .chat-bubble {
-        padding: 10px 14px;
-        border-radius: 12px;
-        margin-bottom: 8px;
-        max-width: 75%;
-        font-family: sans-serif;
-        font-size: 14px;
+        padding: 8px 12px;
+        border-radius: 7px;
+        margin-bottom: 10px;
+        max-width: 65%;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-size: 14.5px;
         line-height: 1.4;
+        position: relative;
+        box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
     }
-    .chat-left { background-color: #202c33; color: #e9edef; margin-right: auto; text-align: left; border-top-left-radius: 0px;}
-    .chat-right { background-color: #005c4b; color: #e9edef; margin-left: auto; text-align: left; border-top-right-radius: 0px;}
+    .chat-left { 
+        background-color: #202c33; 
+        color: #e9edef; 
+        margin-right: auto; 
+        text-align: left; 
+        border-top-left-radius: 0px;
+    }
+    .chat-right { 
+        background-color: #005c4b; 
+        color: #e9edef; 
+        margin-left: auto; 
+        text-align: left; 
+        border-top-right-radius: 0px;
+    }
+    .chat-timestamp {
+        font-size: 10px;
+        color: rgba(233, 237, 239, 0.6);
+        text-align: right;
+        margin-top: 4px;
+        display: block;
+    }
+    .chat-media-box {
+        margin-top: 6px;
+        padding: 4px;
+        background-color: rgba(0,0,0,0.15);
+        border-radius: 4px;
+        font-size: 12px;
+    }
+    
     .system-warn-box { background-color: #3b1111; border: 2px solid #ff3333; padding: 15px; border-radius: 8px; margin-bottom: 15px; color: #ff9999; font-weight: bold;}
     .top-profile-pic { border-radius: 50%; border: 2px solid #ff3333; object-fit: cover; width: 55px; height: 55px; }
     .admin-broadcast-banner { background-color: #ff3333; color: white; padding: 12px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 20px; }
+    
     div.stButton > button { width: 100% !important; font-weight: bold !important; background-color: #1e1e1e !important; color: #ffffff !important; border: 1px solid #444444 !important; border-radius: 4px !important; }
     div.stButton > button:hover { background-color: #ff3333 !important; color: white !important; border-color: #ff3333 !important; }
     
-    /* Elegant UI tweaks for tabs and blocks */
     .metric-card { background-color: #1a1a1a; padding: 15px; border-radius: 6px; border-left: 4px solid #ff3333; margin-bottom: 10px; }
     .notes-box { background-color: #111111; padding: 20px; border: 1px dashed #444; border-radius: 8px; margin-bottom: 15px; }
+    .suggestion-card { background-color: #151515; padding: 12px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #005c4b; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -109,7 +144,7 @@ def load_cache_from_disk(filename, default_val):
 if "users_registry" not in st.session_state:
     st.session_state["users_registry"] = load_cache_from_disk("db_users.json", {
         "0000": {"username": "Admin", "pwd": "SudaisiAdmin2026", "name": "Sudaisi Setra", "class": "Senior Five", "school": "St Marys", "phone": "0752047103", "email": "admin@shield.com", "gender": "Male", "location": "Kampala", "subjects": ["Mathematics", "Physics", "Chemistry", "Biology"], "status": "Approved", "warning_msg": "", "avatar": "SUDAISI_BAKED", "partner": ""},
-        "6601": {"username": "Setra stones", "pwd": "Amazima2026", "name": "Setra Stones", "class": "Senior Five", "school": "St Marys", "phone": "0752047103", "email": "setra@shield.com", "gender": "Male", "location": "Kampala", "subjects": ["Mathematics", "Physics", "Chemistry"], "status": "Approved", "warning_msg": "Initial warning template look.", "avatar": AVATAR_OPTIONS[0], "partner": ""}
+        "6601": {"username": "Setra stones", "pwd": "Amazima2026", "name": "Setra Stones", "class": "Senior Five", "school": "St Marys", "phone": "0752047103", "email": "setra@shield.com", "gender": "Male", "location": "Kampala", "subjects": ["Mathematics", "Physics", "Chemistry"], "status": "Approved", "warning_msg": "", "avatar": AVATAR_OPTIONS[0], "partner": ""}
     })
 
 if "pending_registrations" not in st.session_state: st.session_state["pending_registrations"] = load_cache_from_disk("db_pending.json", [])
@@ -121,9 +156,11 @@ if "exam_vault" not in st.session_state: st.session_state["exam_vault"] = load_c
 if "last_read_tracker" not in st.session_state: st.session_state["last_read_tracker"] = load_cache_from_disk("db_readtrack.json", {})
 if "generated_registration_codes" not in st.session_state: st.session_state["generated_registration_codes"] = load_cache_from_disk("db_regcodes.json", ["SHIELD2026", "ASP2026"])
 if "custom_admin_photo" not in st.session_state: st.session_state["custom_admin_photo"] = load_cache_from_disk("db_admin_photo.json", DEFAULT_SUDAISI_IMAGE)
-if "revision_notes_db" not in st.session_state: st.session_state["revision_notes_db"] = load_cache_from_disk("db_notes.json", [
-    {"Title": "Pure Mathematics Vectors Blueprint", "Subject": "Mathematics", "Content": "Vectors core revision summary notes: Unit tracks, relative parameters, and Cartesian projections for P425/1 standards."}
-])
+
+if "revision_notes_db" not in st.session_state:
+    st.session_state["revision_notes_db"] = [
+        {"Title": "Pure Mathematics Vectors Blueprint", "Subject": "Mathematics", "Content": "Vectors core revision summary notes: Unit tracks, relative parameters, and Cartesian projections for P425/1 standards."}
+    ]
 
 # =========================================================================
 # 4. GLOBAL AUTHENTICATION & SECURITY STATE SYNC
@@ -163,7 +200,7 @@ if app_mode == "Login Page Panel":
             account_warning_text = node.get("warning_msg", "")
             
             if user_account_status in ["Banned", "Locked"]:
-                st.sidebar.error("❌ Access Terminated! Contact administration lines.")
+                st.sidebar.error(f"❌ Access Terminated! Status: {user_account_status}. Contact administration.")
             else:
                 is_authenticated = True
                 session_user = login_user
@@ -180,10 +217,13 @@ with col_head_title:
     st.markdown("<h5 style='color:#aaaaaa; font-style:italic; margin:0;'>“Conceptual Mastery Terminal Engine”</h5>", unsafe_allow_html=True)
 
 with col_head_pic:
+    admin_img = st.session_state.get("custom_admin_photo", DEFAULT_SUDAISI_IMAGE)
+    if not admin_img.strip():
+        admin_img = DEFAULT_SUDAISI_IMAGE
     if session_user == "Admin" or current_avatar_url == "SUDAISI_BAKED":
-        st.markdown(f'<img src="{st.session_state["custom_admin_photo"]}" class="top-profile-pic"/>', unsafe_allow_html=True)
+        st.image(admin_img, width=55)
     else:
-        st.markdown(f'<img src="{current_avatar_url}" class="top-profile-pic"/>', unsafe_allow_html=True)
+        st.image(current_avatar_url if current_avatar_url else AVATAR_OPTIONS[0], width=55)
 
 # =========================================================================
 # MODULE A: REGISTRATION TERMINAL
@@ -292,7 +332,7 @@ elif app_mode == "Login Page Panel":
                 st.markdown(f"""
                     <div class='timer-container'>
                         <span style='color:#ff3333; font-size:18px; font-weight:bold;'>Started at: {st.session_state[f'exam_start_{session_uid}']}</span><br>
-                        <span style='color:#ffffff; font-size:13px;'>⚠️ Evaluation markers will calculate results in microseconds upon execution submission. Displaying 2 items per batch.</span>
+                        <span style='color:#ffffff; font-size:13px;'>⚠️ Evaluation markers calculate results in microseconds. Displaying 2 items per batch.</span>
                     </div>
                 """, unsafe_allow_html=True)
 
@@ -330,9 +370,8 @@ elif app_mode == "Login Page Panel":
                         {"question": "Calculate fluid velocity mechanics variation patterns instance Beta.", "solution": "Configure vector parameters, and compute numerical limits.", "numerical": "1177.2", "keywords": "vector, limits", "topic": "General Concepts"}
                     ]
 
-                # --- 2-QUESTION BATCH SLICING MECHANIC ---
+                # --- 2-QUESTION BATCH SLICING ---
                 batch_start = st.session_state[f"current_exam_batch_{session_uid}"] * 2
-                # If selection runs out of index scope bounds, loop back safely
                 if batch_start >= len(active_exam_list):
                     batch_start = 0
                     st.session_state[f"current_exam_batch_{session_uid}"] = 0
@@ -346,13 +385,11 @@ elif app_mode == "Login Page Panel":
                 typed_work = st.text_area("Type your step-by-step structural analytical solutions for both items here:", key=f"exam_text_{batch_start}")
                 uploaded_photo = st.file_uploader("📸 Upload Handwritten Script Photo:", type=["jpg", "jpeg", "png"], key=f"exam_img_{batch_start}")
 
-                # Submit script button
                 if not st.session_state[f"exam_submitted_{session_uid}"]:
                     if st.button("🚀 Transmit Answers Script"):
                         if typed_work.strip() or uploaded_photo is not None:
                             start_eval_time = time.time()
                             
-                            # Combine validation metadata parameters across the active 2 questions
                             all_keywords = ",".join([item['keywords'] for item in current_two_items])
                             keywords_list = [k.strip().lower() for k in all_keywords.split(",") if k.strip()]
                             matched_keys = [k for k in keywords_list if k in typed_work.lower()]
@@ -400,7 +437,8 @@ elif app_mode == "Login Page Panel":
                                     st.session_state["private_chats"].append({
                                         "sender": "SYSTEM_SHIELD_BOT", "to": session_partner,
                                         "text": f"🚨 EMERGENCY ACADEMIC ALERT: Your partner '{session_user}' failed a test batch in {selected_subject} ({current_two_items[0]['topic']}) with a score of {calculated_score}% (Grade E).",
-                                        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                                        "media": None
                                     })
                                     save_cache_to_disk("db_p2pchat.json", st.session_state["private_chats"])
                             
@@ -412,8 +450,6 @@ elif app_mode == "Login Page Panel":
                             
                             st.session_state[f"exam_submitted_{session_uid}"] = True
                             st.rerun()
-
-                # --- NEXT RANDOM BATCH BUTTON MECHANIC ---
                 else:
                     st.warning("🎉 Current batch submitted successfully!")
                     if st.button("🔄 Load Next 2 Random Questions"):
@@ -421,10 +457,14 @@ elif app_mode == "Login Page Panel":
                         st.session_state[f"exam_submitted_{session_uid}"] = False
                         st.rerun()
 
-        # --- REVISION NOTES ONE-TAP DOWNLOADER HUB ---
+        # --- REVISION NOTES HUB (CATCH TYPEERROR) ---
         elif client_tab_choice == "📚 Read Revision Notes":
             st.title("📚 Academic Revision Notes Hub")
-            notes_filtered = [n for n in st.session_state["revision_notes_db"] if n["Subject"] == selected_subject]
+            
+            try:
+                notes_filtered = [n for n in st.session_state.get("revision_notes_db", []) if isinstance(n, dict) and n.get("Subject") == selected_subject]
+            except Exception:
+                notes_filtered = []
             
             if not notes_filtered:
                 st.info(f"No active summary study materials filed for {selected_subject} yet.")
@@ -432,31 +472,43 @@ elif app_mode == "Login Page Panel":
                 for idx, note in enumerate(notes_filtered):
                     st.markdown(f"""
                     <div class="notes-box">
-                        <h4 style="color:#ff3333; margin:0;">📄 {note['Title']}</h4>
-                        <p style="color:#888; font-size:12px;">Subject Category: {note['Subject']}</p>
-                        <p style="color:#ddd; font-size:14px; line-height:1.5;">{note['Content']}</p>
+                        <h4 style="color:#ff3333; margin:0;">📄 {note.get('Title','Untitled Note')}</h4>
+                        <p style="color:#888; font-size:12px;">Subject Category: {note.get('Subject','')}</p>
+                        <p style="color:#ddd; font-size:14px; line-height:1.5;">{note.get('Content','')}</p>
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    note_payload = f"ACADEMIC SHIELD PRO STUDY GUIDE\nTitle: {note['Title']}\nSubject: {note['Subject']}\nContent:\n{note['Content']}"
+                    note_payload = f"ACADEMIC SHIELD PRO STUDY GUIDE\nTitle: {note.get('Title')}\nSubject: {note.get('Subject')}\nContent:\n{note.get('Content')}"
                     st.download_button(
                         label="📥 Download This Study Note (One-Tap)",
                         data=note_payload,
-                        file_name=f"Revision_Note_{note['Title'].replace(' ', '_')}.txt",
+                        file_name=f"Revision_Note_{str(note.get('Title')).replace(' ', '_')}.txt",
                         mime="text/plain",
                         key=f"dl_note_{idx}"
                     )
 
-        # --- PROGRESS TRACKER VISUAL OVERHAUL ---
+        # --- PROGRESS TRACKER LOGS (CATCH INDEXERROR & PARSE SAFE) ---
         elif client_tab_choice == "📊 Progress Tracker Logs":
-            st.title("📊 Crystal-Clear Performance Performance Analytics")
+            st.title("📊 Crystal-Clear Performance Analytics")
             user_history = st.session_state["exam_vault"].get(session_uid, [])
             
             if not user_history:
                 st.info("No records completed to build analytics tracks yet.")
             else:
                 col_m1, col_m2, col_m3 = st.columns(3)
-                scores_list = [entry.get("Score_Raw", int(entry["Status"].split(":")[1].replace("%","").strip())) for entry in user_history if "Status" in entry]
+                scores_list = []
+                
+                for entry in user_history:
+                    if "Score_Raw" in entry:
+                        scores_list.append(int(entry["Score_Raw"]))
+                    elif "Status" in entry and ":" in str(entry["Status"]):
+                        try:
+                            raw_val = str(entry["Status"]).split(":")[1].replace("%","").strip()
+                            scores_list.append(int(raw_val))
+                        except Exception:
+                            scores_list.append(0)
+                    else:
+                        scores_list.append(0) # Safeguard forwarded items
                 
                 with col_m1:
                     st.markdown(f'<div class="metric-card"><h5>📝 Total Exams Attempted</h5><h2>{len(user_history)} Items</h2></div>', unsafe_allow_html=True)
@@ -475,7 +527,8 @@ elif app_mode == "Login Page Panel":
                 
                 st.markdown("### 📋 Historic Registry Log Columns")
                 df_logs = pd.DataFrame(user_history)
-                st.dataframe(df_logs[["Subject", "Topic", "Date", "Grade", "Status"]], use_container_width=True)
+                display_cols = [c for c in ["Subject", "Topic", "Date", "Grade", "Status"] if c in df_logs.columns]
+                st.dataframe(df_logs[display_cols], use_container_width=True)
 
         # --- FINISHED EXAM INTERACTIVE VAULT PORTAL ---
         elif client_tab_choice == "📁 Finished Exam Vault":
@@ -486,7 +539,7 @@ elif app_mode == "Login Page Panel":
                 st.info("Your historical completed script archive is currently empty.")
             else:
                 st.markdown("##### 🎯 Choose a completed exam script instance to review configurations:")
-                exam_options = [f"[{entry['Date']}] {entry['Subject']} — {entry['Topic']} ({entry['Grade']})" for entry in user_history]
+                exam_options = [f"[{entry.get('Date','')} ] {entry.get('Subject','')} — {entry.get('Topic','')} ({entry.get('Grade','')})" for entry in user_history]
                 selected_exam_index = st.selectbox("Select Done Exam Assignment:", range(len(exam_options)), format_func=lambda x: exam_options[x])
                 
                 target_entry = user_history[selected_exam_index]
@@ -496,28 +549,28 @@ elif app_mode == "Login Page Panel":
                 
                 with v_tab1:
                     st.markdown(f"#### 📝 Evaluation Performance Metrics")
-                    st.markdown(f"- **Subject Profile:** {target_entry['Subject']}\n- **Topic Focus Layer:** {target_entry['Topic']}\n- **Execution Status Score:** `{target_entry.get('Status','')}`\n- **Assigned Grade Rank:** `{target_entry['Grade']}`")
+                    st.markdown(f"- **Subject Profile:** {target_entry.get('Subject','')}\n- **Topic Focus Layer:** {target_entry.get('Topic','')}\n- **Execution Status Score:** `{target_entry.get('Status','')}`\n- **Assigned Grade Rank:** `{target_entry.get('Grade','')}`")
                     st.markdown("##### 👤 Your Submitted Answers Draft:")
                     st.info(target_entry.get('Your_Work',''))
                     
                 with v_tab2:
                     st.markdown("#### 💡 Corrective Action Model Blueprint")
-                    st.markdown(f"<div style='background-color:#112211; padding:15px; border-radius:6px; border:1px solid #22aa22;'>{target_entry.get('Feedback_Solution','')}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='background-color:#112211; padding:15px; border-radius:6px; border:1px solid #22aa22;'>{target_entry.get('Feedback_Solution','No custom feedback filed.')}</div>", unsafe_allow_html=True)
                     
                 with v_tab3:
                     st.markdown("#### 📥 Instant Structural Script Exporter")
                     st.write("Generate a local text copy of this complete evaluation model record safely.")
-                    report_string = f"ACADEMIC SHIELD PRO REPORT\nDate: {target_entry['Date']}\nSubject: {target_entry['Subject']}\nTopic: {target_entry['Topic']}\nQuestions: {target_entry.get('Questions','')}\nScore Rank: {target_entry['Grade']} ({target_entry.get('Status','')})\nSolution Blueprint: {target_entry.get('Feedback_Solution','')}"
+                    report_string = f"ACADEMIC SHIELD PRO REPORT\nDate: {target_entry.get('Date','')}\nSubject: {target_entry.get('Subject','')}\nTopic: {target_entry.get('Topic','')}\nQuestions: {target_entry.get('Questions','')}\nScore Rank: {target_entry.get('Grade','')} ({target_entry.get('Status','')})\nSolution Blueprint: {target_entry.get('Feedback_Solution','')}"
                     
                     st.download_button(
                         label="📥 Click to Download Complete Script Log",
                         data=report_string,
-                        file_name=f"ASP_Script_{target_entry['Subject']}_{target_entry['Topic'].replace(' ', '_')}.txt",
+                        file_name=f"ASP_Script_{target_entry.get('Subject','')}_{str(target_entry.get('Topic','')).replace(' ', '_')}.txt",
                         mime="text/plain",
                         key=f"vault_dl_{selected_exam_index}"
                     )
 
-        # --- OTHER CHANNELS SYSTEM SETTINGS UNTOUCHED ---
+        # --- WHATSAPP DESIGN INTERACTIVE GENERAL LOUNGE CHAT ---
         elif client_tab_choice.startswith("🌐 General Lounge Chat"):
             st.title("🌐 General Lounge Chat Channel")
             st.session_state["last_read_tracker"][session_user] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -526,16 +579,34 @@ elif app_mode == "Login Page Panel":
             st.markdown('<div class="chat-container">', unsafe_allow_html=True)
             for msg in st.session_state["general_chat"]:
                 align_cls = "chat-right" if msg["sender"] == session_user else "chat-left"
-                st.markdown(f"<div class='chat-bubble {align_cls}'><strong>{msg['sender']}</strong>:<br>{msg['text']}</div>", unsafe_allow_html=True)
+                media_html = f"<div class='chat-media-box'>📎 Attached File Component: {msg['media']}</div>" if msg.get("media") else ""
+                st.markdown(f"""
+                <div class='chat-bubble {align_cls}'>
+                    <strong>{msg['sender']}</strong><br>
+                    {msg['text']}
+                    {media_html}
+                    <span class='chat-timestamp'>{msg.get('timestamp','')}</span>
+                </div>
+                """, unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
                 
-            in_gen_msg = st.text_input("Type general chat string message:", key="in_gen_chat_box")
+            col_in_txt, col_in_media = st.columns([3, 1])
+            with col_in_txt:
+                in_gen_msg = st.text_input("Type general chat string message:", key="in_gen_chat_box")
+            with col_in_media:
+                gen_media_file = st.file_uploader("📎 Upload Media", type=["jpg","png","pdf","txt","zip"], key="gen_media_upload")
+                
             if st.button("Send to Lounge Channel"):
-                if in_gen_msg.strip():
-                    st.session_state["general_chat"].append({"sender": session_user, "text": in_gen_msg.strip(), "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+                if in_gen_msg.strip() or gen_media_file is not None:
+                    m_name = gen_media_file.name if gen_media_file else None
+                    st.session_state["general_chat"].append({
+                        "sender": session_user, "text": in_gen_msg.strip(), 
+                        "timestamp": datetime.datetime.now().strftime("%I:%M %p"), "media": m_name
+                    })
                     save_cache_to_disk("db_genchat.json", st.session_state["general_chat"])
                     st.rerun()
 
+        # --- WHATSAPP DESIGN INTERACTIVE PRIVATE PEER CHAT ---
         elif client_tab_choice.startswith("🔒 Private Peer Chatroom"):
             st.title("🔒 Isolated Private Chat Room Matrix")
             st.session_state["last_read_tracker"][session_user] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -548,13 +619,30 @@ elif app_mode == "Login Page Panel":
             isolated_thread = [m for m in st.session_state["private_chats"] if (m["sender"] == session_user and m["to"] == target_p) or (m["sender"] == target_p and m["to"] == session_user)]
             for msg in isolated_thread:
                 align_cls = "chat-right" if msg["sender"] == session_user else "chat-left"
-                st.markdown(f"<div class='chat-bubble {align_cls}'><strong>{msg['sender']}</strong>:<br>{msg['text']}</div>", unsafe_allow_html=True)
+                media_html = f"<div class='chat-media-box'>📎 Attached File Component: {msg['media']}</div>" if msg.get("media") else ""
+                st.markdown(f"""
+                <div class='chat-bubble {align_cls}'>
+                    <strong>{msg['sender']}</strong><br>
+                    {msg['text']}
+                    {media_html}
+                    <span class='chat-timestamp'>{msg.get('timestamp','')}</span>
+                </div>
+                """, unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
                 
-            in_priv_msg = st.text_input("Type secure message string:", key="in_p2p_box")
+            col_priv_txt, col_priv_media = st.columns([3, 1])
+            with col_priv_txt:
+                in_priv_msg = st.text_input("Type secure message string:", key="in_p2p_box")
+            with col_priv_media:
+                priv_media_file = st.file_uploader("📎 Upload Media", type=["jpg","png","pdf","txt","zip"], key="priv_media_upload")
+                
             if st.button("Send Secure Private Message"):
-                if in_priv_msg.strip() and target_p:
-                    st.session_state["private_chats"].append({"sender": session_user, "to": target_p, "text": in_priv_msg.strip(), "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+                if (in_priv_msg.strip() or priv_media_file is not None) and target_p:
+                    m_name = priv_media_file.name if priv_media_file else None
+                    st.session_state["private_chats"].append({
+                        "sender": session_user, "to": target_p, "text": in_priv_msg.strip(), 
+                        "timestamp": datetime.datetime.now().strftime("%I:%M %p"), "media": m_name
+                    })
                     save_cache_to_disk("db_p2pchat.json", st.session_state["private_chats"])
                     st.rerun()
 
@@ -598,33 +686,48 @@ elif app_mode == "System Administrator Hub":
     if admin_token == "SudaisiAdmin2026":
         st.success("✔ Root Privileges Fully Activated.")
         
-        adm_t0, adm_t1, adm_t2, adm_t3, adm_t4 = st.tabs([
+        adm_t0, adm_t1, adm_t2, adm_t3, adm_t4, adm_t5 = st.tabs([
             "🛑 Account Flags Control", 
             "📋 Registrations Queue", 
             "🔑 Registration Code Generator", 
             "📢 Global Announcements",
+            "📩 View User Suggestions",
             "📸 Change Master Profile Photo"
         ])
         
+        # --- FIXED ACCOUNT COMMAND SWITCH CONTROLS ENGINE ---
         with adm_t0:
-            st.subheader("🛑 Master User Warning Flag Management Engine")
+            st.subheader("🛑 Master User Account Management Hub")
             for uid_key, user_node in list(st.session_state["users_registry"].items()):
                 if uid_key == "0000": continue 
                 
-                col_u1, col_u2, col_u3 = st.columns([4, 4, 4])
-                with col_u1:
-                    st.markdown(f"👤 **{user_node['username']}** (`ID: {uid_key}`)<br>Active Status Tag: <code style='color:#ff9999;'>{user_node.get('warning_msg','None Active')}</code>", unsafe_allow_html=True)
-                with col_u2:
-                    warn_input = st.text_input("Set Flag text string:", key=f"w_in_{uid_key}")
-                    if st.button("⚠️ Inject/Update Warning", key=f"w_btn_{uid_key}"):
-                        st.session_state["users_registry"][uid_key]["warning_msg"] = warn_input
+                st.markdown(f"👤 **{user_node['username']}** (ID: `{uid_key}`) | Current Status: `{user_node.get('status','Approved')}`")
+                
+                col_btn1, col_btn2, col_btn3, col_btn4 = st.columns(4)
+                with col_btn1:
+                    if st.button("🚫 Ban Account", key=f"ban_{uid_key}"):
+                        st.session_state["users_registry"][uid_key]["status"] = "Banned"
                         save_cache_to_disk("db_users.json", st.session_state["users_registry"])
+                        st.warning(f"User {uid_key} has been Banned.")
                         st.rerun()
-                with col_u3:
-                    if st.button("✅ Drop Warning & Tags Completely", key=f"clr_btn_{uid_key}"):
+                with col_btn2:
+                    if st.button("🔒 Lock Account", key=f"lock_{uid_key}"):
+                        st.session_state["users_registry"][uid_key]["status"] = "Locked"
+                        save_cache_to_disk("db_users.json", st.session_state["users_registry"])
+                        st.warning(f"User {uid_key} has been Locked.")
+                        st.rerun()
+                with col_btn3:
+                    if st.button("❌ Delete User", key=f"del_{uid_key}"):
+                        del st.session_state["users_registry"][uid_key]
+                        save_cache_to_disk("db_users.json", st.session_state["users_registry"])
+                        st.error(f"User {uid_key} removed permanently.")
+                        st.rerun()
+                with col_btn4:
+                    if st.button("✅ Reset Status", key=f"rst_{uid_key}"):
+                        st.session_state["users_registry"][uid_key]["status"] = "Approved"
                         st.session_state["users_registry"][uid_key]["warning_msg"] = ""
                         save_cache_to_disk("db_users.json", st.session_state["users_registry"])
-                        st.success("Warning tags completely dropped and synchronized.")
+                        st.success(f"User {uid_key} reset cleanly.")
                         st.rerun()
                 st.markdown("---")
 
@@ -651,12 +754,12 @@ elif app_mode == "System Administrator Hub":
             st.subheader("🔑 Access Token Generator")
             st.write("Active Verification Tokens:", st.session_state["generated_registration_codes"])
             
-            new_code_token = st.text_input("Create Secret Registration Token String (e.g. SHIELD2026):")
+            new_code_token = st.text_input("Create Secret Registration Token String:")
             if st.button("💾 Append Token to System Memory"):
                 if new_code_token.strip() and new_code_token.strip() not in st.session_state["generated_registration_codes"]:
                     st.session_state["generated_registration_codes"].append(new_code_token.strip())
                     save_cache_to_disk("db_regcodes.json", st.session_state["generated_registration_codes"])
-                    st.success(f"✔ Token '{new_code_token.strip()}' is now active and ready for student registrations!")
+                    st.success(f"✔ Token active for student registrations!")
                     st.rerun()
 
         with adm_t3:
@@ -668,16 +771,30 @@ elif app_mode == "System Administrator Hub":
                     save_cache_to_disk("db_alerts.json", st.session_state["global_alerts"])
                     st.success("✔ Notification broadcast injected successfully.")
 
-        # --- ADMIN MASTER PROFILE GRAPHICS SYNC PANEL ---
+        # --- ADMIN INBOX FOR USER SUGGESTIONS ---
         with adm_t4:
+            st.subheader("📩 Incoming Student Suggestion Logs")
+            sug_list = st.session_state.get("suggestions", [])
+            if not sug_list:
+                st.info("No app feedback has been logged yet.")
+            else:
+                for item in sug_list:
+                    st.markdown(f"""
+                    <div class="suggestion-card">
+                        <strong>User:</strong> {item.get('user','Anonymous')} | <span style='color:#888;'>{item.get('time','')}</span><br>
+                        <p style='margin-top:5px; color:#ddd;'>{item.get('text','')}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+        # --- ADMIN MASTER PROFILE GRAPHICS SYNC PANEL ---
+        with adm_t5:
             st.subheader("📸 Change Master UI Profile Image")
-            st.write("Input a direct web image URL link or type a dedicated stream path below to set your global headshot profile frame.")
-            uploaded_img_url = st.text_input("Profile Picture Image URL:", value=st.session_state["custom_admin_photo"])
+            uploaded_img_url = st.text_input("Profile Picture Image URL:", value=st.session_state.get("custom_admin_photo", DEFAULT_SUDAISI_IMAGE))
             
             if st.button("💾 Apply Image Link Across UI Panels"):
                 if uploaded_img_url.strip():
                     st.session_state["custom_admin_photo"] = uploaded_img_url.strip()
                     save_cache_to_disk("db_admin_photo.json", st.session_state["custom_admin_photo"])
-                    st.success("✔ Master photo link saved permanently to cache arrays! Updating display engines instantly.")
+                    st.success("✔ Master photo link saved permanently to cache arrays!")
                     time.sleep(0.5)
                     st.rerun()
