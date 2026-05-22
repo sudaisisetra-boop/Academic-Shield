@@ -169,7 +169,10 @@ if "suggestions" not in st.session_state: st.session_state["suggestions"] = load
 if "global_alerts" not in st.session_state: st.session_state["global_alerts"] = load_cache_from_disk("db_alerts.json", ["🚀 Platform Online. Hardened Dual Mirror Protection Active."])
 if "revision_notes" not in st.session_state: st.session_state["revision_notes"] = load_cache_from_disk("db_notes.json", {"Mathematics": [], "Physics": [], "Chemistry": [], "Biology": [], "S4_General": []})
 if "exam_vault" not in st.session_state: st.session_state["exam_vault"] = load_cache_from_disk("db_exams.json", {})
-if "generated_registration_codes" not in st.session_state["generated_registration_codes"] = load_cache_from_disk("db_regcodes.json", ["SHIELD2026", "ASP2026"])
+
+if "generated_registration_codes" not in st.session_state:
+    st.session_state["generated_registration_codes"] = load_cache_from_disk("db_regcodes.json", ["SHIELD2026", "ASP2026"])
+
 if "online_users" not in st.session_state: st.session_state["online_users"] = {}
 if "live_exam_invites" not in st.session_state: st.session_state["live_exam_invites"] = load_cache_from_disk("db_invites.json", {})
 
@@ -316,21 +319,18 @@ elif app_mode == "Login Page Panel":
                     st.rerun()
 
         # =========================================================================
-        # RE-ENGINEERED HIGH-DENSITY ASSESSMENT CENTER WITH CRRICULUM PRE-LOADS
+        # RE-ENGINEERED HIGH-DENSITY ASSESSMENT CENTER WITH CURRICULUM PRE-LOADS
         # =========================================================================
         if client_tab_choice == "📝 Access Exam Center":
             st.title("📝 Precision Topic Exam Center")
             
-            # Map curriculum key to track if user is O-Level (S4) or A-Level
             lookup_key = f"S4_{selected_subject}" if session_class == "Senior Four" else selected_subject
             
-            # Extract standard dropdown outline list from internal master database dictionary
             official_topics = NCDC_CURRICULUM_MAP.get(lookup_key, ["General Concepts"])
             dropdown_options = ["All Topics / Mix Scenario"] + official_topics
             
             selected_topic_target = st.selectbox("🎯 Target Challenge Topic Filter:", dropdown_options)
             
-            # Trigger sheet connection extraction pipelines
             sheet_data = read_public_sheet(lookup_key)
             
             parsed_questions_bank = []
@@ -345,7 +345,6 @@ elif app_mode == "Login Page Panel":
                     if len(row) > 1 and pd.notna(row.iloc[1]): answer_keys[q_text] = str(row.iloc[1]).strip().lower()
                     if len(row) > 2 and pd.notna(row.iloc[2]): illustrations[q_text] = str(row.iloc[2]).strip()
 
-            # Execute High-Capacity Fallback Sorting Logic
             filtered_pool = []
             fallback_triggered = False
             fallback_reason = ""
@@ -353,14 +352,12 @@ elif app_mode == "Login Page Panel":
             if selected_topic_target == "All Topics / Mix Scenario":
                 filtered_pool = [str(r.iloc[0]).strip() for r in parsed_questions_bank]
             else:
-                # Level 1: Look for exact or integrated strings in Column D
                 for row_node in parsed_questions_bank:
                     if len(row_node) > 3 and pd.notna(row_node.iloc[3]):
                         cell_topics = str(row_node.iloc[3]).strip()
                         if selected_topic_target.lower() in cell_topics.lower():
                             filtered_pool.append(str(row_node.iloc[0]).strip())
                 
-                # Level 2: If Column D is dry, execute keyword match within question text strings
                 if not filtered_pool:
                     for row_node in parsed_questions_bank:
                         q_string = str(row_node.iloc[0]).strip()
@@ -370,14 +367,12 @@ elif app_mode == "Login Page Panel":
                         fallback_triggered = True
                         fallback_reason = "Keyword Connection Extraction Match"
 
-                # Level 3: Absolute dry fallback. Display alert banner and dump general random questions
                 if not filtered_pool:
                     filtered_pool = [str(r.iloc[0]).strip() for r in parsed_questions_bank]
                     if filtered_pool:
                         fallback_triggered = True
                         fallback_reason = "Random Global Subject Pool Injection"
 
-            # Ultimate emergency check if spreadsheet tab completely lacks questions
             if not filtered_pool:
                 filtered_pool = [
                     f"Analyze the real-world operational challenges connected with {selected_topic_target} in Uganda [NCDC Core Scenario Level A].", 
@@ -386,7 +381,6 @@ elif app_mode == "Login Page Panel":
                 fallback_triggered = True
                 fallback_reason = "System Synthetic Scenario Generator Engine"
 
-            # If fallback ran, display clear visual layout alert banner
             if fallback_triggered:
                 st.markdown(f"""
                 <div class="fallback-alert-box">
