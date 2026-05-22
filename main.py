@@ -268,25 +268,31 @@ elif app_mode == "Login Page Panel":
             "📩 Submit App Suggestions"
         ])
 
-        # --- EXAM CENTER WITH STATED EVALUATION LOGIC ---
+        # --- EXAM CENTER WITH STATED EVALUATION LOGIC & 2-QUESTION BATCHING ---
         if client_tab_choice == "📝 Access Exam Center":
             st.title("📝 Precision Topic Exam Center")
             
             if f"exam_active_{session_uid}" not in st.session_state:
                 st.session_state[f"exam_active_{session_uid}"] = False
+            if f"exam_submitted_{session_uid}" not in st.session_state:
+                st.session_state[f"exam_submitted_{session_uid}"] = False
+            if f"current_exam_batch_{session_uid}" not in st.session_state:
+                st.session_state[f"current_exam_batch_{session_uid}"] = 0
 
             if not st.session_state[f"exam_active_{session_uid}"]:
                 st.markdown("### 🛑 Security Access Gateway Check")
                 st.info("Exam questions are safely concealed. Confirm authorization parameters below to display items.")
                 if st.button("👉 YES, I am here to take a test!"):
                     st.session_state[f"exam_active_{session_uid}"] = True
+                    st.session_state[f"exam_submitted_{session_uid}"] = False
+                    st.session_state[f"current_exam_batch_{session_uid}"] = 0
                     st.session_state[f"exam_start_{session_uid}"] = datetime.datetime.now().strftime("%I:%M:%S %p")
                     st.rerun()
             else:
                 st.markdown(f"""
                     <div class='timer-container'>
                         <span style='color:#ff3333; font-size:18px; font-weight:bold;'>Started at: {st.session_state[f'exam_start_{session_uid}']}</span><br>
-                        <span style='color:#ffffff; font-size:13px;'>⚠️ Evaluation markers will calculate results in microseconds upon execution submission.</span>
+                        <span style='color:#ffffff; font-size:13px;'>⚠️ Evaluation markers will calculate results in microseconds upon execution submission. Displaying 2 items per batch.</span>
                     </div>
                 """, unsafe_allow_html=True)
 
@@ -319,71 +325,103 @@ elif app_mode == "Login Page Panel":
                     except Exception: pass
 
                 if not active_exam_list:
-                    active_exam_list = [{
-                        "question": "Calculate the fluid velocity mechanics variation patterns for advanced NCDC criteria.",
-                        "solution": "Establish uniform coordinate tracks, configure vector parameters, and compute numerical limits.",
-                        "numerical": "1497.6", "keywords": "mass, velocity, pressure, calculate, vector", "topic": "General Concepts"
-                    }]
+                    active_exam_list = [
+                        {"question": "Calculate fluid velocity mechanics variation patterns instance Alpha.", "solution": "Establish uniform coordinate tracks, configure vector parameters.", "numerical": "1497.6", "keywords": "velocity, parameters", "topic": "General Concepts"},
+                        {"question": "Calculate fluid velocity mechanics variation patterns instance Beta.", "solution": "Configure vector parameters, and compute numerical limits.", "numerical": "1177.2", "keywords": "vector, limits", "topic": "General Concepts"}
+                    ]
 
-                st.markdown("### ✍️ Active Test Assignment")
-                for index, item in enumerate(active_exam_list, 1):
+                # --- 2-QUESTION BATCH SLICING MECHANIC ---
+                batch_start = st.session_state[f"current_exam_batch_{session_uid}"] * 2
+                # If selection runs out of index scope bounds, loop back safely
+                if batch_start >= len(active_exam_list):
+                    batch_start = 0
+                    st.session_state[f"current_exam_batch_{session_uid}"] = 0
+                    
+                current_two_items = active_exam_list[batch_start:batch_start + 2]
+
+                st.markdown("### ✍️ Active Test Assignment (2 Questions Active)")
+                for index, item in enumerate(current_two_items, 1):
                     st.markdown(f"<div style='background-color:#1e1e1e; padding:15px; border-radius:6px; margin-top:10px; border-left:4px solid #ff3333;'><strong>Question {index}:</strong> {item['question']}</div>", unsafe_allow_html=True)
                 
-                typed_work = st.text_area("Type your step-by-step structural analytical solution here:")
-                uploaded_photo = st.file_uploader("📸 Upload Handwritten Script Photo:", type=["jpg", "jpeg", "png"])
+                typed_work = st.text_area("Type your step-by-step structural analytical solutions for both items here:", key=f"exam_text_{batch_start}")
+                uploaded_photo = st.file_uploader("📸 Upload Handwritten Script Photo:", type=["jpg", "jpeg", "png"], key=f"exam_img_{batch_start}")
 
-                if st.button("🚀 Transmit Answers Script"):
-                    if typed_work.strip() or uploaded_photo is not None:
-                        start_eval_time = time.time()
-                        
-                        keywords_list = [k.strip().lower() for k in active_exam_list[0]['keywords'].split(",") if k.strip()]
-                        matched_keys = [k for k in keywords_list if k in typed_work.lower()]
-                        
-                        expected_min_length = max(60, len(active_exam_list[0]['solution']) // 2)
-                        actual_length = len(typed_work.strip())
-                        
-                        keyword_ratio = len(matched_keys) / len(keywords_list) if keywords_list else 1.0
-                        length_ratio = min(1.0, actual_length / expected_min_length) if expected_min_length > 0 else 1.0
-                        
-                        calculated_score = int((keyword_ratio * 60) + (length_ratio * 40))
-                        if calculated_score > 100: calculated_score = 100
-                        
-                        if calculated_score >= 80: grade = "A (Distinction)"
-                        elif calculated_score >= 60: grade = "B (Credit)"
-                        elif calculated_score >= 50: grade = "C (Pass)"
-                        else: grade = "E (Failure)"
-                        
-                        eval_duration = (time.time() - start_eval_time) * 1000
-                        full_structured_sol = f"**[NCDC Solution Blueprint]** Target Numerical: {active_exam_list[0]['numerical']} / Guidelines: {active_exam_list[0]['solution']}"
-                        
-                        if session_uid not in st.session_state["exam_vault"]:
-                            st.session_state["exam_vault"][session_uid] = []
+                # Submit script button
+                if not st.session_state[f"exam_submitted_{session_uid}"]:
+                    if st.button("🚀 Transmit Answers Script"):
+                        if typed_work.strip() or uploaded_photo is not None:
+                            start_eval_time = time.time()
                             
-                        exam_record = {
-                            "Subject": selected_subject, "Topic": active_exam_list[0]['topic'], "Date": str(datetime.date.today()),
-                            "Questions": active_exam_list[0]['question'], "Your_Work": typed_work, "Grade": grade,
-                            "Status": f"Scored: {calculated_score}%", "Score_Raw": calculated_score, "Feedback_Solution": full_structured_sol
-                        }
-                        st.session_state["exam_vault"][session_uid].append(exam_record)
-                        save_cache_to_disk("db_exams.json", st.session_state["exam_vault"])
-                        
-                        if calculated_score < 50:
-                            st.error(f"⚠️ Score dropped below 50% ({calculated_score}%). Forwarding failure payload to partner tracks.")
-                            if session_partner:
-                                st.session_state["private_chats"].append({
-                                    "sender": "SYSTEM_SHIELD_BOT", "to": session_partner,
-                                    "text": f"🚨 EMERGENCY ACADEMIC ALERT: Your partner '{session_user}' failed a test in {selected_subject} ({active_exam_list[0]['topic']}) with a score of {calculated_score}% (Grade E). Revise their script work: '{typed_work}'",
-                                    "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                                })
-                                save_cache_to_disk("db_p2pchat.json", st.session_state["private_chats"])
-                        
-                        st.success(f"✔ Transmitted! Evaluated in {eval_duration:.2f} ms. Result: {grade} ({calculated_score}%)")
-                        if calculated_score < 100:
-                            st.markdown("### 💡 Corrections & Blueprint Feedback")
-                            st.markdown(f"<div style='background-color:#112211; padding:15px; border-radius:6px; border:1px solid #22aa22;'>{full_structured_sol}</div>", unsafe_allow_html=True)
-                        st.session_state[f"exam_active_{session_uid}"] = False
+                            # Combine validation metadata parameters across the active 2 questions
+                            all_keywords = ",".join([item['keywords'] for item in current_two_items])
+                            keywords_list = [k.strip().lower() for k in all_keywords.split(",") if k.strip()]
+                            matched_keys = [k for k in keywords_list if k in typed_work.lower()]
+                            
+                            combined_solution_len = sum([len(item['solution']) for item in current_two_items])
+                            expected_min_length = max(60, combined_solution_len // 2)
+                            actual_length = len(typed_work.strip())
+                            
+                            keyword_ratio = len(matched_keys) / len(keywords_list) if keywords_list else 1.0
+                            length_ratio = min(1.0, actual_length / expected_min_length) if expected_min_length > 0 else 1.0
+                            
+                            calculated_score = int((keyword_ratio * 60) + (length_ratio * 40))
+                            if calculated_score > 100: calculated_score = 100
+                            
+                            if calculated_score >= 80: grade = "A (Distinction)"
+                            elif calculated_score >= 60: grade = "B (Credit)"
+                            elif calculated_score >= 50: grade = "C (Pass)"
+                            else: grade = "E (Failure)"
+                            
+                            eval_duration = (time.time() - start_eval_time) * 1000
+                            
+                            blueprints = " | ".join([f"[Q{i+1} Numerical: {item['numerical']} Guide: {item['solution']}]" for i, item in enumerate(current_two_items)])
+                            full_structured_sol = f"**[NCDC Solution Blueprint]** {blueprints}"
+                            
+                            if session_uid not in st.session_state["exam_vault"]:
+                                st.session_state["exam_vault"][session_uid] = []
+                                
+                            exam_record = {
+                                "Subject": selected_subject, 
+                                "Topic": current_two_items[0]['topic'], 
+                                "Date": str(datetime.date.today()),
+                                "Questions": " & ".join([item['question'] for item in current_two_items]), 
+                                "Your_Work": typed_work, 
+                                "Grade": grade,
+                                "Status": f"Scored: {calculated_score}%", 
+                                "Score_Raw": calculated_score, 
+                                "Feedback_Solution": full_structured_sol
+                            }
+                            st.session_state["exam_vault"][session_uid].append(exam_record)
+                            save_cache_to_disk("db_exams.json", st.session_state["exam_vault"])
+                            
+                            if calculated_score < 50:
+                                st.error(f"⚠️ Score dropped below 50% ({calculated_score}%). Forwarding failure payload to partner tracks.")
+                                if session_partner:
+                                    st.session_state["private_chats"].append({
+                                        "sender": "SYSTEM_SHIELD_BOT", "to": session_partner,
+                                        "text": f"🚨 EMERGENCY ACADEMIC ALERT: Your partner '{session_user}' failed a test batch in {selected_subject} ({current_two_items[0]['topic']}) with a score of {calculated_score}% (Grade E).",
+                                        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                    })
+                                    save_cache_to_disk("db_p2pchat.json", st.session_state["private_chats"])
+                            
+                            st.success(f"✔ Transmitted! Evaluated in {eval_duration:.2f} ms. Result: {grade} ({calculated_score}%)")
+                            
+                            if calculated_score < 100:
+                                st.markdown("### 💡 Corrections & Blueprint Feedback")
+                                st.markdown(f"<div style='background-color:#112211; padding:15px; border-radius:6px; border:1px solid #22aa22;'>{full_structured_sol}</div>", unsafe_allow_html=True)
+                            
+                            st.session_state[f"exam_submitted_{session_uid}"] = True
+                            st.rerun()
 
-        # --- REVISION NOTES ONE-TAP DOWNLOADER HUB (UPGRADED) ---
+                # --- NEXT RANDOM BATCH BUTTON MECHANIC ---
+                else:
+                    st.warning("🎉 Current batch submitted successfully!")
+                    if st.button("🔄 Load Next 2 Random Questions"):
+                        st.session_state[f"current_exam_batch_{session_uid}"] += 1
+                        st.session_state[f"exam_submitted_{session_uid}"] = False
+                        st.rerun()
+
+        # --- REVISION NOTES ONE-TAP DOWNLOADER HUB ---
         elif client_tab_choice == "📚 Read Revision Notes":
             st.title("📚 Academic Revision Notes Hub")
             notes_filtered = [n for n in st.session_state["revision_notes_db"] if n["Subject"] == selected_subject]
@@ -400,7 +438,6 @@ elif app_mode == "Login Page Panel":
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    # One-Tap Download Engine Hook
                     note_payload = f"ACADEMIC SHIELD PRO STUDY GUIDE\nTitle: {note['Title']}\nSubject: {note['Subject']}\nContent:\n{note['Content']}"
                     st.download_button(
                         label="📥 Download This Study Note (One-Tap)",
@@ -410,7 +447,7 @@ elif app_mode == "Login Page Panel":
                         key=f"dl_note_{idx}"
                     )
 
-        # --- PROGRESS TRACKER VISUAL OVERHAUL (UPGRADED) ---
+        # --- PROGRESS TRACKER VISUAL OVERHAUL ---
         elif client_tab_choice == "📊 Progress Tracker Logs":
             st.title("📊 Crystal-Clear Performance Performance Analytics")
             user_history = st.session_state["exam_vault"].get(session_uid, [])
@@ -418,7 +455,6 @@ elif app_mode == "Login Page Panel":
             if not user_history:
                 st.info("No records completed to build analytics tracks yet.")
             else:
-                # Top Level Clear Metrics Dashboard Layout
                 col_m1, col_m2, col_m3 = st.columns(3)
                 scores_list = [entry.get("Score_Raw", int(entry["Status"].split(":")[1].replace("%","").strip())) for entry in user_history if "Status" in entry]
                 
@@ -431,7 +467,6 @@ elif app_mode == "Login Page Panel":
                     highest = max(scores_list) if scores_list else 0
                     st.markdown(f'<div class="metric-card"><h5>🏆 Peak Evaluation Score</h5><h2>{highest}% Target</h2></div>', unsafe_allow_html=True)
                 
-                # Highly intuitive trend chart mapping
                 if scores_list:
                     st.markdown("### 📈 Sequential Score Growth Trend Chart")
                     chart_df = pd.DataFrame({"Your Score (%)": scores_list})
@@ -442,7 +477,7 @@ elif app_mode == "Login Page Panel":
                 df_logs = pd.DataFrame(user_history)
                 st.dataframe(df_logs[["Subject", "Topic", "Date", "Grade", "Status"]], use_container_width=True)
 
-        # --- FINISHED EXAM INTERACTIVE VAULT PORTAL (UPGRADED) ---
+        # --- FINISHED EXAM INTERACTIVE VAULT PORTAL ---
         elif client_tab_choice == "📁 Finished Exam Vault":
             st.title("📁 Historic Interactive Done Exam Script Vault")
             user_history = st.session_state["exam_vault"].get(session_uid, [])
@@ -457,7 +492,6 @@ elif app_mode == "Login Page Panel":
                 target_entry = user_history[selected_exam_index]
                 st.markdown("---")
                 
-                # Dedicated Feature Option Control Tabs
                 v_tab1, v_tab2, v_tab3 = st.tabs(["📊 Attained Scores & Script", "💡 NCDC Solution Brain", "📥 Download Package File"])
                 
                 with v_tab1:
@@ -634,7 +668,7 @@ elif app_mode == "System Administrator Hub":
                     save_cache_to_disk("db_alerts.json", st.session_state["global_alerts"])
                     st.success("✔ Notification broadcast injected successfully.")
 
-        # --- ADMIN MASTER PROFILE GRAPHICS SYNC PANEL (UPGRADED) ---
+        # --- ADMIN MASTER PROFILE GRAPHICS SYNC PANEL ---
         with adm_t4:
             st.subheader("📸 Change Master UI Profile Image")
             st.write("Input a direct web image URL link or type a dedicated stream path below to set your global headshot profile frame.")
