@@ -301,7 +301,7 @@ elif app_mode == "Login Page Panel":
         
         client_tab_choice = st.sidebar.radio("Workspace Channels", [
             "📝 Access Exam Center", 
-            f"🤝 Partner Connection Hub", 
+            "🤝 Partner Connection Hub", 
             "📖 Revision Notes Portal", 
             f"🌐 General Lounge Chat {gen_badge}", 
             f"🔒 Private Peer Chatroom {p2p_badge}", 
@@ -312,12 +312,11 @@ elif app_mode == "Login Page Panel":
         ])
 
         # =========================================================================
-        # CLASSIC MODULE UPGRADE: EXAM GATEWAY, COUNTDOWN TIMER, UPLOADER & MARKING BRAIN
+        # RESTORED & OPTIMIZED EXAM CENTER (DATA FRIENDLY)
         # =========================================================================
         if client_tab_choice == "📝 Access Exam Center":
             st.title("📝 Precision Topic Exam Center")
             
-            # Reset active assessment sessions clean if navigating away
             if "exam_session_active" not in st.session_state:
                 st.session_state["exam_session_active"] = False
 
@@ -326,48 +325,27 @@ elif app_mode == "Login Page Panel":
                 st.info("Greetings scholar! Before launching our high-precision evaluation matrices, you must confirm your choice.")
                 
                 # Dedicated Permission Gateway Button
-                col_gate1, col_gate2 = st.columns([2, 5])
-                with col_gate1:
-                    permission_granted = st.button("👉 YES, I am here to take a test!")
-                
-                if permission_granted:
+                if st.button("👉 YES, I am here to take a test!"):
                     st.session_state["exam_session_active"] = True
-                    st.session_state["exam_start_time"] = time.time()
+                    st.session_state["exam_start_str"] = datetime.datetime.now().strftime("%I:%M:%S %p")
                     st.rerun()
                 else:
                     st.warning("Awaiting authorization confirmation... Questions will remain concealed to prevent leakage.")
             
             else:
-                # Active 20 Minute Countdown Core Engine (20 min = 1200 seconds)
-                elapsed_seconds = int(time.time() - st.session_state["exam_start_time"])
-                remaining_seconds = max(0, 1200 - elapsed_seconds)
-                
-                mins, secs = divmod(remaining_seconds, 60)
-                
-                # Visual Timer Block Stream
+                # Clean, Data-friendly Info Tracker (Zero Data Overhead)
                 st.markdown(f"""
                     <div class='timer-container'>
-                        <span style='color:#aaaaaa; font-weight:bold; font-size:14px;'>⏱️ RUNNING EXAMINATION COUNTDOWN</span><br>
-                        <span style='color:#ff3333; font-size:28px; font-weight:bold;'>{mins:02d}:{secs:02d}</span>
+                        <span style='color:#aaaaaa; font-weight:bold; font-size:14px;'>⏱️ ASSESSMENT PROFILE STATUS</span><br>
+                        <span style='color:#ff3333; font-size:18px; font-weight:bold;'>Started at: {st.session_state["exam_start_str"]}</span><br>
+                        <span style='color:#ffffff; font-size:13px;'>⚠️ Please submit your scripts within 20 minutes of start time.</span>
                     </div>
                 """, unsafe_allow_html=True)
-                
-                # Check for Time Relapse / Timeout
-                if remaining_seconds <= 0:
-                    st.markdown("""
-                        <div class='system-warn-box' style='text-align:center;'>
-                            💥 <strong>TIME EXPIRED! TERMINAL RELAPSE TRIGGERED.</strong>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    # Instant Audio Alarm injection
-                    st.audio("https://www.soundjay.com/buttons/sounds/beep-04.mp3", autoplay=True)
-                else:
-                    # Auto-refresh loop to keep countdown precise without sticking
-                    time.sleep(1)
-                    st.rerun()
 
                 lookup_key = f"S4_{selected_subject}" if session_class == "Senior Four" else selected_subject
                 official_topics = NCDC_CURRICULUM_MAP.get(lookup_key, ["General Concepts"])
+                
+                # RESTORED: Core Topic Selection Dropdowns
                 selected_topic_target = st.selectbox("🎯 Target Challenge Topic Filter:", ["All Topics"] + official_topics)
                 
                 sheet_data = read_public_sheet(lookup_key)
@@ -376,7 +354,10 @@ elif app_mode == "Login Page Panel":
                     filtered_pool = [str(r.iloc[0]).strip() for idx, r in sheet_data.iterrows()]
                 
                 if not filtered_pool:
-                    filtered_pool = [f"Evaluate the properties of systems involving {selected_topic_target} inside Advanced curriculum models."]
+                    filtered_pool = [
+                        f"Analyze the structural properties and core evaluation conditions governing {selected_topic_target} within Advanced structural modules.",
+                        f"Derive or compute foundational expressions corresponding to {selected_topic_target} assessment criteria."
+                    ]
                     
                 st.markdown("### ✍️ Pull Evaluation Tasks")
                 if st.button("🚀 Load Targeted Matrix Exam Paper"):
@@ -386,31 +367,30 @@ elif app_mode == "Login Page Panel":
                 random.seed(st.session_state.get(f"seed_{lookup_key}", 42))
                 selected_questions = random.sample(filtered_pool, min(len(filtered_pool), 2))
                 
+                # RESTORED: Unconditional Question Display Matrix
                 for i, q in enumerate(selected_questions, 1):
                     st.markdown(f"<div style='background-color:#1e1e1e; padding:15px; border-radius:6px; margin-top:10px; border-left:4px solid #ff3333;'><strong>Item {i}:</strong> {q}</div>", unsafe_allow_html=True)
 
                 # Classical dual input framework
                 typed_work = st.text_area("Type your explanations or numerical step strings below:")
                 
-                # NEW FEATURE: Handwritten Answer Photo File Uploader
+                # Handwritten Answer Photo File Uploader
                 uploaded_photo = st.file_uploader("📸 Upload your Handwritten Answer Sheet Photo (JPEG/PNG):", type=["jpg", "jpeg", "png"])
                 if uploaded_photo is not None:
                     st.image(uploaded_photo, caption="📸 Captured Answer Script Matrix Linked", width=300)
 
                 if st.button("🚀 Transmit Answers Script"):
                     if typed_work.strip() or uploaded_photo is not None:
-                        # 🧠 REAL-TIME SYSTEM MARKING ENGINE BRAIN
-                        # Evaluation heuristic based on structural logic depth, key formula indicators, and completeness
+                        # 🧠 AUTOMATED REAL-TIME SYSTEM MARKING ENGINE BRAIN
                         score_weight = 0
                         all_inputs = typed_work.lower() + (" handwritten_file" if uploaded_photo else "")
                         
                         if any(k in all_inputs for k in ["let", "hence", "therefore", "imply", "equal", "substitute", "since"]): score_weight += 35
-                        if any(k in all_inputs for k in ["matrix", "vector", "constant", "integral", "force", "mol", "reaction"]): score_weight += 30
+                        if any(k in all_inputs for k in ["matrix", "vector", "constant", "integral", "force", "mol", "reaction", "cell"]): score_weight += 30
                         if len(typed_work) > 40 or uploaded_photo: score_weight += 25
-                        score_weight += random.randint(5, 10) # Dynamic error margin buffer
+                        score_weight += random.randint(5, 10)
                         score_final = min(score_weight, 100)
                         
-                        # Grading Scale mapping rules
                         if score_final >= 80: grade_symbol = "A (Distinction 1)"
                         elif score_final >= 70: grade_symbol = "B (Distinction 2)"
                         elif score_final >= 60: grade_symbol = "C (Credit 3)"
@@ -420,7 +400,6 @@ elif app_mode == "Login Page Panel":
                         if session_uid not in st.session_state["exam_vault"]: 
                             st.session_state["exam_vault"][session_uid] = []
                             
-                        # Insert complete entry back to live state arrays
                         st.session_state["exam_vault"][session_uid].append({
                             "Subject": selected_subject, 
                             "Topic": selected_topic_target, 
@@ -432,7 +411,6 @@ elif app_mode == "Login Page Panel":
                         save_cache_to_disk("db_exams.json", st.session_state["exam_vault"])
                         st.success(f"✔ Exam script secured and instantly evaluated by marking brain! Result: {grade_symbol}")
                         
-                        # Reset exam state scope
                         st.session_state["exam_session_active"] = False
                         st.rerun()
 
