@@ -308,7 +308,7 @@ elif app_mode == "Login Page Panel":
             "📩 Submit App Suggestions"
         ])
 
-        # --- EXAM CENTER WITH STATED EVALUATION LOGIC & 2-QUESTION BATCHING ---
+        # --- EXAM CENTER WITH INSTATED EVALUATION LOGIC & 2-QUESTION BATCHING ---
         if client_tab_choice == "📝 Access Exam Center":
             st.title("📝 Precision Topic Exam Center")
             
@@ -318,6 +318,8 @@ elif app_mode == "Login Page Panel":
                 st.session_state[f"exam_submitted_{session_uid}"] = False
             if f"current_exam_batch_{session_uid}" not in st.session_state:
                 st.session_state[f"current_exam_batch_{session_uid}"] = 0
+            if f"last_instant_feedback_{session_uid}" not in st.session_state:
+                st.session_state[f"last_instant_feedback_{session_uid}"] = ""
 
             if not st.session_state[f"exam_active_{session_uid}"]:
                 st.markdown("### 🛑 Security Access Gateway Check")
@@ -326,6 +328,7 @@ elif app_mode == "Login Page Panel":
                     st.session_state[f"exam_active_{session_uid}"] = True
                     st.session_state[f"exam_submitted_{session_uid}"] = False
                     st.session_state[f"current_exam_batch_{session_uid}"] = 0
+                    st.session_state[f"last_instant_feedback_{session_uid}"] = ""
                     st.session_state[f"exam_start_{session_uid}"] = datetime.datetime.now().strftime("%I:%M:%S %p")
                     st.rerun()
             else:
@@ -385,6 +388,7 @@ elif app_mode == "Login Page Panel":
                 typed_work = st.text_area("Type your step-by-step structural analytical solutions for both items here:", key=f"exam_text_{batch_start}")
                 uploaded_photo = st.file_uploader("📸 Upload Handwritten Script Photo:", type=["jpg", "jpeg", "png"], key=f"exam_img_{batch_start}")
 
+                # --- INSTANT ERROR CHECK & IMMEDIATE CORRECTION ENGINE ---
                 if not st.session_state[f"exam_submitted_{session_uid}"]:
                     if st.button("🚀 Transmit Answers Script"):
                         if typed_work.strip() or uploaded_photo is not None:
@@ -411,8 +415,8 @@ elif app_mode == "Login Page Panel":
                             
                             eval_duration = (time.time() - start_eval_time) * 1000
                             
-                            blueprints = " | ".join([f"[Q{i+1} Numerical: {item['numerical']} Guide: {item['solution']}]" for i, item in enumerate(current_two_items)])
-                            full_structured_sol = f"**[NCDC Solution Blueprint]** {blueprints}"
+                            blueprints = " | ".join([f"[Q{i+1} Numerical Answer: {item['numerical']} -> Marking Guide Checklist: {item['solution']}]" for i, item in enumerate(current_two_items)])
+                            full_structured_sol = f"**[OFFICIAL NCDC SOLUTION BLUEPRINT]** {blueprints}"
                             
                             if session_uid not in st.session_state["exam_vault"]:
                                 st.session_state["exam_vault"][session_uid] = []
@@ -432,7 +436,6 @@ elif app_mode == "Login Page Panel":
                             save_cache_to_disk("db_exams.json", st.session_state["exam_vault"])
                             
                             if calculated_score < 50:
-                                st.error(f"⚠️ Score dropped below 50% ({calculated_score}%). Forwarding failure payload to partner tracks.")
                                 if session_partner:
                                     st.session_state["private_chats"].append({
                                         "sender": "SYSTEM_SHIELD_BOT", "to": session_partner,
@@ -442,19 +445,29 @@ elif app_mode == "Login Page Panel":
                                     })
                                     save_cache_to_disk("db_p2pchat.json", st.session_state["private_chats"])
                             
-                            st.success(f"✔ Transmitted! Evaluated in {eval_duration:.2f} ms. Result: {grade} ({calculated_score}%)")
-                            
-                            if calculated_score < 100:
-                                st.markdown("### 💡 Corrections & Blueprint Feedback")
-                                st.markdown(f"<div style='background-color:#112211; padding:15px; border-radius:6px; border:1px solid #22aa22;'>{full_structured_sol}</div>", unsafe_allow_html=True)
-                            
+                            st.session_state[f"last_instant_feedback_{session_uid}"] = full_structured_sol
                             st.session_state[f"exam_submitted_{session_uid}"] = True
                             st.rerun()
                 else:
-                    st.warning("🎉 Current batch submitted successfully!")
+                    st.markdown(f"### 📊 Initial Evaluation Breakdown Result")
+                    latest_rec = st.session_state["exam_vault"][session_uid][-1]
+                    st.info(f"**Grade:** {latest_rec['Grade']} | **Status:** {latest_rec['Status']}")
+                    
+                    # Force render instant solutions immediately below sub status layout
+                    st.markdown("### 💡 INSTANT NCDC STANDARD CORRECTIVE SOLUTIONS")
+                    feedback_to_show = st.session_state[f"last_instant_feedback_{session_uid}"] if st.session_state[f"last_instant_feedback_{session_uid}"] else latest_rec['Feedback_Solution']
+                    st.markdown(f"""
+                        <div style='background-color:#112211; padding:18px; border-radius:6px; border:2px solid #22aa22; color:#ddffdd;'>
+                            <strong>Marking Keys & Detailed Blueprint Explanations:</strong><br><br>
+                            {feedback_to_show}
+                        </div>
+                    """, unsafe_allow_html=True)
+                    
+                    st.write("")
                     if st.button("🔄 Load Next 2 Random Questions"):
                         st.session_state[f"current_exam_batch_{session_uid}"] += 1
                         st.session_state[f"exam_submitted_{session_uid}"] = False
+                        st.session_state[f"last_instant_feedback_{session_uid}"] = ""
                         st.rerun()
 
         # --- REVISION NOTES HUB (CATCH TYPEERROR) ---
@@ -508,7 +521,7 @@ elif app_mode == "Login Page Panel":
                         except Exception:
                             scores_list.append(0)
                     else:
-                        scores_list.append(0) # Safeguard forwarded items
+                        scores_list.append(0)
                 
                 with col_m1:
                     st.markdown(f'<div class="metric-card"><h5>📝 Total Exams Attempted</h5><h2>{len(user_history)} Items</h2></div>', unsafe_allow_html=True)
@@ -695,7 +708,6 @@ elif app_mode == "System Administrator Hub":
             "📸 Change Master Profile Photo"
         ])
         
-        # --- FIXED ACCOUNT COMMAND SWITCH CONTROLS ENGINE ---
         with adm_t0:
             st.subheader("🛑 Master User Account Management Hub")
             for uid_key, user_node in list(st.session_state["users_registry"].items()):
@@ -771,7 +783,6 @@ elif app_mode == "System Administrator Hub":
                     save_cache_to_disk("db_alerts.json", st.session_state["global_alerts"])
                     st.success("✔ Notification broadcast injected successfully.")
 
-        # --- ADMIN INBOX FOR USER SUGGESTIONS ---
         with adm_t4:
             st.subheader("📩 Incoming Student Suggestion Logs")
             sug_list = st.session_state.get("suggestions", [])
@@ -786,7 +797,6 @@ elif app_mode == "System Administrator Hub":
                     </div>
                     """, unsafe_allow_html=True)
 
-        # --- ADMIN MASTER PROFILE GRAPHICS SYNC PANEL ---
         with adm_t5:
             st.subheader("📸 Change Master UI Profile Image")
             uploaded_img_url = st.text_input("Profile Picture Image URL:", value=st.session_state.get("custom_admin_photo", DEFAULT_SUDAISI_IMAGE))
