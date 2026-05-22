@@ -54,6 +54,10 @@ st.markdown("""
     .admin-broadcast-banner { background-color: #ff3333; color: white; padding: 12px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 20px; }
     div.stButton > button { width: 100% !important; font-weight: bold !important; background-color: #1e1e1e !important; color: #ffffff !important; border: 1px solid #444444 !important; border-radius: 4px !important; }
     div.stButton > button:hover { background-color: #ff3333 !important; color: white !important; border-color: #ff3333 !important; }
+    
+    /* Elegant UI tweaks for tabs and blocks */
+    .metric-card { background-color: #1a1a1a; padding: 15px; border-radius: 6px; border-left: 4px solid #ff3333; margin-bottom: 10px; }
+    .notes-box { background-color: #111111; padding: 20px; border: 1px dashed #444; border-radius: 8px; margin-bottom: 15px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -67,7 +71,7 @@ NCDC_CURRICULUM_MAP = {
     "Biology": ["Cell Biology", "Nutrition", "Transport", "Respiration", "Homeostasis", "Coordination", "Ecology"]
 }
 
-SUDAISI_IMAGE_STREAM = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200"
+DEFAULT_SUDAISI_IMAGE = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200"
 AVATAR_OPTIONS = [
     "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
     "https://cdn-icons-png.flaticon.com/512/4140/4140037.png",
@@ -116,6 +120,10 @@ if "global_alerts" not in st.session_state: st.session_state["global_alerts"] = 
 if "exam_vault" not in st.session_state: st.session_state["exam_vault"] = load_cache_from_disk("db_exams.json", {})
 if "last_read_tracker" not in st.session_state: st.session_state["last_read_tracker"] = load_cache_from_disk("db_readtrack.json", {})
 if "generated_registration_codes" not in st.session_state: st.session_state["generated_registration_codes"] = load_cache_from_disk("db_regcodes.json", ["SHIELD2026", "ASP2026"])
+if "custom_admin_photo" not in st.session_state: st.session_state["custom_admin_photo"] = load_cache_from_disk("db_admin_photo.json", DEFAULT_SUDAISI_IMAGE)
+if "revision_notes_db" not in st.session_state: st.session_state["revision_notes_db"] = load_cache_from_disk("db_notes.json", [
+    {"Title": "Pure Mathematics Vectors Blueprint", "Subject": "Mathematics", "Content": "Vectors core revision summary notes: Unit tracks, relative parameters, and Cartesian projections for P425/1 standards."}
+])
 
 # =========================================================================
 # 4. GLOBAL AUTHENTICATION & SECURITY STATE SYNC
@@ -165,6 +173,7 @@ if app_mode == "Login Page Panel":
                 allowed_subjects = node["subjects"]
                 current_avatar_url = node.get("avatar", AVATAR_OPTIONS[0])
 
+# --- UNIFIED PERMANENT TOP PICTURE SYNC FRAME ---
 col_head_title, col_head_pic = st.columns([11, 1])
 with col_head_title:
     st.markdown("<h2 style='color:#ff3333; margin:0;'>🛡️ Academic Shield Pro</h2>", unsafe_allow_html=True)
@@ -172,7 +181,7 @@ with col_head_title:
 
 with col_head_pic:
     if session_user == "Admin" or current_avatar_url == "SUDAISI_BAKED":
-        st.markdown(f'<img src="{SUDAISI_IMAGE_STREAM}" class="top-profile-pic"/>', unsafe_allow_html=True)
+        st.markdown(f'<img src="{st.session_state["custom_admin_photo"]}" class="top-profile-pic"/>', unsafe_allow_html=True)
     else:
         st.markdown(f'<img src="{current_avatar_url}" class="top-profile-pic"/>', unsafe_allow_html=True)
 
@@ -249,6 +258,7 @@ elif app_mode == "Login Page Panel":
         
         client_tab_choice = st.sidebar.radio("Workspace Channels", [
             "📝 Access Exam Center", 
+            "📚 Read Revision Notes",
             "🤝 Partner Connection Hub", 
             f"🌐 General Lounge Chat {gen_badge}", 
             f"🔒 Private Peer Chatroom {p2p_badge}", 
@@ -258,9 +268,7 @@ elif app_mode == "Login Page Panel":
             "📩 Submit App Suggestions"
         ])
 
-        # =========================================================================
-        # UPGRADED HIGH-STANDARD EXAM EVALUATION CENTER
-        # =========================================================================
+        # --- EXAM CENTER WITH STATED EVALUATION LOGIC ---
         if client_tab_choice == "📝 Access Exam Center":
             st.title("📝 Precision Topic Exam Center")
             
@@ -312,7 +320,7 @@ elif app_mode == "Login Page Panel":
 
                 if not active_exam_list:
                     active_exam_list = [{
-                        "question": f"Calculate the systemic variation patterns for advanced NCDC {selected_subject} criteria.",
+                        "question": "Calculate the fluid velocity mechanics variation patterns for advanced NCDC criteria.",
                         "solution": "Establish uniform coordinate tracks, configure vector parameters, and compute numerical limits.",
                         "numerical": "1497.6", "keywords": "mass, velocity, pressure, calculate, vector", "topic": "General Concepts"
                     }]
@@ -326,124 +334,156 @@ elif app_mode == "Login Page Panel":
 
                 if st.button("🚀 Transmit Answers Script"):
                     if typed_work.strip() or uploaded_photo is not None:
-                        # --- STRICT MICROSECOND GRADING ALGORITHM ---
                         start_eval_time = time.time()
                         
                         keywords_list = [k.strip().lower() for k in active_exam_list[0]['keywords'].split(",") if k.strip()]
                         matched_keys = [k for k in keywords_list if k in typed_work.lower()]
                         
-                        # High standards length validation (halfway answers penalty check)
                         expected_min_length = max(60, len(active_exam_list[0]['solution']) // 2)
                         actual_length = len(typed_work.strip())
                         
                         keyword_ratio = len(matched_keys) / len(keywords_list) if keywords_list else 1.0
                         length_ratio = min(1.0, actual_length / expected_min_length) if expected_min_length > 0 else 1.0
                         
-                        # Combined strict score evaluation
                         calculated_score = int((keyword_ratio * 60) + (length_ratio * 40))
                         if calculated_score > 100: calculated_score = 100
                         
-                        # Exact requested grading scale loops
-                        if calculated_score >= 80:
-                            grade = "A (Distinction)"
-                        elif calculated_score >= 60:
-                            grade = "B (Credit)"
-                        elif calculated_score >= 50:
-                            grade = "C (Pass)"
-                        else:
-                            grade = "E (Failure)"
+                        if calculated_score >= 80: grade = "A (Distinction)"
+                        elif calculated_score >= 60: grade = "B (Credit)"
+                        elif calculated_score >= 50: grade = "C (Pass)"
+                        else: grade = "E (Failure)"
                         
-                        eval_duration = (time.time() - start_eval_time) * 1000 # Microseconds/milliseconds translation
-                        
+                        eval_duration = (time.time() - start_eval_time) * 1000
                         full_structured_sol = f"**[NCDC Solution Blueprint]** Target Numerical: {active_exam_list[0]['numerical']} / Guidelines: {active_exam_list[0]['solution']}"
                         
-                        # Commit automatically to Done Exam Vault
                         if session_uid not in st.session_state["exam_vault"]:
                             st.session_state["exam_vault"][session_uid] = []
                             
                         exam_record = {
-                            "Subject": selected_subject,
-                            "Topic": active_exam_list[0]['topic'],
-                            "Date": str(datetime.date.today()),
-                            "Questions": active_exam_list[0]['question'],
-                            "Your_Work": typed_work,
-                            "Grade": grade,
-                            "Status": f"Scored: {calculated_score}%",
-                            "Feedback_Solution": full_structured_sol
+                            "Subject": selected_subject, "Topic": active_exam_list[0]['topic'], "Date": str(datetime.date.today()),
+                            "Questions": active_exam_list[0]['question'], "Your_Work": typed_work, "Grade": grade,
+                            "Status": f"Scored: {calculated_score}%", "Score_Raw": calculated_score, "Feedback_Solution": full_structured_sol
                         }
                         st.session_state["exam_vault"][session_uid].append(exam_record)
                         save_cache_to_disk("db_exams.json", st.session_state["exam_vault"])
                         
-                        # --- AUTOMATIC FAILURE PARTNER FORWARDING ENGINE ---
                         if calculated_score < 50:
-                            st.error(f"⚠️ Score dropped below 50% ({calculated_score}%). Forwarding exam payload to partner channels.")
+                            st.error(f"⚠️ Score dropped below 50% ({calculated_score}%). Forwarding failure payload to partner tracks.")
                             if session_partner:
                                 st.session_state["private_chats"].append({
-                                    "sender": "SYSTEM_SHIELD_BOT",
-                                    "to": session_partner,
-                                    "text": f"🚨 EMERGENCY ACADEMIC ALERT: Your partner '{session_user}' failed a test in {selected_subject} ({active_exam_list[0]['topic']}) with a score of {calculated_score}% (Grade E). Here is their work for immediate peer review revision: '{typed_work}'",
+                                    "sender": "SYSTEM_SHIELD_BOT", "to": session_partner,
+                                    "text": f"🚨 EMERGENCY ACADEMIC ALERT: Your partner '{session_user}' failed a test in {selected_subject} ({active_exam_list[0]['topic']}) with a score of {calculated_score}% (Grade E). Revise their script work: '{typed_work}'",
                                     "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                                 })
                                 save_cache_to_disk("db_p2pchat.json", st.session_state["private_chats"])
                         
                         st.success(f"✔ Transmitted! Evaluated in {eval_duration:.2f} ms. Result: {grade} ({calculated_score}%)")
-                        
-                        # Instant solution reveal if not perfect 100% score
                         if calculated_score < 100:
                             st.markdown("### 💡 Corrections & Blueprint Feedback")
                             st.markdown(f"<div style='background-color:#112211; padding:15px; border-radius:6px; border:1px solid #22aa22;'>{full_structured_sol}</div>", unsafe_allow_html=True)
-                        
                         st.session_state[f"exam_active_{session_uid}"] = False
 
-        # --- PROGRESS TRACKER ---
-        elif client_tab_choice == "📊 Progress Tracker Logs":
-            st.title("📊 Personal Performance Progress Chart")
-            user_history = st.session_state["exam_vault"].get(session_uid, [])
-            if not user_history:
-                st.info("No records completed to build performance tracking logs yet.")
+        # --- REVISION NOTES ONE-TAP DOWNLOADER HUB (UPGRADED) ---
+        elif client_tab_choice == "📚 Read Revision Notes":
+            st.title("📚 Academic Revision Notes Hub")
+            notes_filtered = [n for n in st.session_state["revision_notes_db"] if n["Subject"] == selected_subject]
+            
+            if not notes_filtered:
+                st.info(f"No active summary study materials filed for {selected_subject} yet.")
             else:
-                df_logs = pd.DataFrame(user_history)
-                st.dataframe(df_logs[["Subject", "Topic", "Date", "Grade", "Status"]])
-                try:
-                    scores_list = [int(s.split(":")[1].replace("%","").strip()) for s in df_logs["Status"] if "Scored" in s]
-                    if scores_list:
-                        st.markdown("### 📈 Trend Track Graph Analysis")
-                        st.line_chart(scores_list)
-                except Exception: pass
-
-        # --- DONE EXAM VAULT WITH EXPORT DOWNLOAD HOOKS ---
-        elif client_tab_choice == "📁 Finished Exam Vault":
-            st.title("📁 Historic Done Exam Script Vault")
-            user_history = st.session_state["exam_vault"].get(session_uid, [])
-            if not user_history:
-                st.info("Your historical exam script archive is currently empty.")
-            else:
-                for idx, entry in enumerate(user_history):
+                for idx, note in enumerate(notes_filtered):
                     st.markdown(f"""
-                    <div style='background-color:#1e1e1e; padding:16px; border-radius:8px; border:1px solid #333; margin-bottom:12px;'>
-                        <h4 style='color:#ff3333; margin:0;'>📝 {entry['Subject']} — {entry['Topic']}</h4>
-                        <p style='color:#888; font-size:12px;'>Attempted on: {entry['Date']} | Status: <strong>{entry['Grade']} ({entry.get('Status','')})</strong></p>
-                        <hr style='border-color:#333; margin:8px 0;'>
-                        <p><strong>Question Paper Profile:</strong><br><code style='color:#ff9999;'>{entry.get('Questions','')}</code></p>
-                        <p><strong>Your Submitted Script:</strong><br><i style='color:#aaa;'>"{entry.get('Your_Work','')}"</i></p>
-                        <div style='background-color:#112211; padding:12px; border-radius:4px; margin-top:8px;'>
-                            <span style='color:#25D366; font-weight:bold;'>💡 Automated Correction Brain Solution:</span><br>
-                            <span style='font-size:13px;'>{entry.get('Feedback_Solution','')}</span>
-                        </div>
+                    <div class="notes-box">
+                        <h4 style="color:#ff3333; margin:0;">📄 {note['Title']}</h4>
+                        <p style="color:#888; font-size:12px;">Subject Category: {note['Subject']}</p>
+                        <p style="color:#ddd; font-size:14px; line-height:1.5;">{note['Content']}</p>
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    report_string = f"ACADEMIC SHIELD PRO REPORT\nDate: {entry['Date']}\nSubject: {entry['Subject']}\nTopic: {entry['Topic']}\nQuestions: {entry.get('Questions','')}\nScore Rank: {entry['Grade']} ({entry.get('Status','')})\nSolution Blueprint: {entry.get('Feedback_Solution','')}"
-                    
+                    # One-Tap Download Engine Hook
+                    note_payload = f"ACADEMIC SHIELD PRO STUDY GUIDE\nTitle: {note['Title']}\nSubject: {note['Subject']}\nContent:\n{note['Content']}"
                     st.download_button(
-                        label="📥 Download Script Data",
-                        data=report_string,
-                        file_name=f"Exam_Script_{entry['Subject']}_{idx}.txt",
+                        label="📥 Download This Study Note (One-Tap)",
+                        data=note_payload,
+                        file_name=f"Revision_Note_{note['Title'].replace(' ', '_')}.txt",
                         mime="text/plain",
-                        key=f"dl_{idx}"
+                        key=f"dl_note_{idx}"
                     )
 
-        # --- CHAT & ACCOUNT SETTINGS CHANNELS ---
+        # --- PROGRESS TRACKER VISUAL OVERHAUL (UPGRADED) ---
+        elif client_tab_choice == "📊 Progress Tracker Logs":
+            st.title("📊 Crystal-Clear Performance Performance Analytics")
+            user_history = st.session_state["exam_vault"].get(session_uid, [])
+            
+            if not user_history:
+                st.info("No records completed to build analytics tracks yet.")
+            else:
+                # Top Level Clear Metrics Dashboard Layout
+                col_m1, col_m2, col_m3 = st.columns(3)
+                scores_list = [entry.get("Score_Raw", int(entry["Status"].split(":")[1].replace("%","").strip())) for entry in user_history if "Status" in entry]
+                
+                with col_m1:
+                    st.markdown(f'<div class="metric-card"><h5>📝 Total Exams Attempted</h5><h2>{len(user_history)} Items</h2></div>', unsafe_allow_html=True)
+                with col_m2:
+                    avg_score = sum(scores_list)/len(scores_list) if scores_list else 0
+                    st.markdown(f'<div class="metric-card"><h5>📈 Mean Mastery Percentage</h5><h2>{avg_score:.1f}%</h2></div>', unsafe_allow_html=True)
+                with col_m3:
+                    highest = max(scores_list) if scores_list else 0
+                    st.markdown(f'<div class="metric-card"><h5>🏆 Peak Evaluation Score</h5><h2>{highest}% Target</h2></div>', unsafe_allow_html=True)
+                
+                # Highly intuitive trend chart mapping
+                if scores_list:
+                    st.markdown("### 📈 Sequential Score Growth Trend Chart")
+                    chart_df = pd.DataFrame({"Your Score (%)": scores_list})
+                    chart_df.index = [f"Exam #{i+1}" for i in range(len(scores_list))]
+                    st.line_chart(chart_df, y="Your Score (%)")
+                
+                st.markdown("### 📋 Historic Registry Log Columns")
+                df_logs = pd.DataFrame(user_history)
+                st.dataframe(df_logs[["Subject", "Topic", "Date", "Grade", "Status"]], use_container_width=True)
+
+        # --- FINISHED EXAM INTERACTIVE VAULT PORTAL (UPGRADED) ---
+        elif client_tab_choice == "📁 Finished Exam Vault":
+            st.title("📁 Historic Interactive Done Exam Script Vault")
+            user_history = st.session_state["exam_vault"].get(session_uid, [])
+            
+            if not user_history:
+                st.info("Your historical completed script archive is currently empty.")
+            else:
+                st.markdown("##### 🎯 Choose a completed exam script instance to review configurations:")
+                exam_options = [f"[{entry['Date']}] {entry['Subject']} — {entry['Topic']} ({entry['Grade']})" for entry in user_history]
+                selected_exam_index = st.selectbox("Select Done Exam Assignment:", range(len(exam_options)), format_func=lambda x: exam_options[x])
+                
+                target_entry = user_history[selected_exam_index]
+                st.markdown("---")
+                
+                # Dedicated Feature Option Control Tabs
+                v_tab1, v_tab2, v_tab3 = st.tabs(["📊 Attained Scores & Script", "💡 NCDC Solution Brain", "📥 Download Package File"])
+                
+                with v_tab1:
+                    st.markdown(f"#### 📝 Evaluation Performance Metrics")
+                    st.markdown(f"- **Subject Profile:** {target_entry['Subject']}\n- **Topic Focus Layer:** {target_entry['Topic']}\n- **Execution Status Score:** `{target_entry.get('Status','')}`\n- **Assigned Grade Rank:** `{target_entry['Grade']}`")
+                    st.markdown("##### 👤 Your Submitted Answers Draft:")
+                    st.info(target_entry.get('Your_Work',''))
+                    
+                with v_tab2:
+                    st.markdown("#### 💡 Corrective Action Model Blueprint")
+                    st.markdown(f"<div style='background-color:#112211; padding:15px; border-radius:6px; border:1px solid #22aa22;'>{target_entry.get('Feedback_Solution','')}</div>", unsafe_allow_html=True)
+                    
+                with v_tab3:
+                    st.markdown("#### 📥 Instant Structural Script Exporter")
+                    st.write("Generate a local text copy of this complete evaluation model record safely.")
+                    report_string = f"ACADEMIC SHIELD PRO REPORT\nDate: {target_entry['Date']}\nSubject: {target_entry['Subject']}\nTopic: {target_entry['Topic']}\nQuestions: {target_entry.get('Questions','')}\nScore Rank: {target_entry['Grade']} ({target_entry.get('Status','')})\nSolution Blueprint: {target_entry.get('Feedback_Solution','')}"
+                    
+                    st.download_button(
+                        label="📥 Click to Download Complete Script Log",
+                        data=report_string,
+                        file_name=f"ASP_Script_{target_entry['Subject']}_{target_entry['Topic'].replace(' ', '_')}.txt",
+                        mime="text/plain",
+                        key=f"vault_dl_{selected_exam_index}"
+                    )
+
+        # --- OTHER CHANNELS SYSTEM SETTINGS UNTOUCHED ---
         elif client_tab_choice.startswith("🌐 General Lounge Chat"):
             st.title("🌐 General Lounge Chat Channel")
             st.session_state["last_read_tracker"][session_user] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -524,11 +564,12 @@ elif app_mode == "System Administrator Hub":
     if admin_token == "SudaisiAdmin2026":
         st.success("✔ Root Privileges Fully Activated.")
         
-        adm_t0, adm_t1, adm_t2, adm_t3 = st.tabs([
+        adm_t0, adm_t1, adm_t2, adm_t3, adm_t4 = st.tabs([
             "🛑 Account Flags Control", 
             "📋 Registrations Queue", 
             "🔑 Registration Code Generator", 
-            "📢 Global Announcements"
+            "📢 Global Announcements",
+            "📸 Change Master Profile Photo"
         ])
         
         with adm_t0:
@@ -592,3 +633,17 @@ elif app_mode == "System Administrator Hub":
                     st.session_state["global_alerts"].append(alert_msg.strip())
                     save_cache_to_disk("db_alerts.json", st.session_state["global_alerts"])
                     st.success("✔ Notification broadcast injected successfully.")
+
+        # --- ADMIN MASTER PROFILE GRAPHICS SYNC PANEL (UPGRADED) ---
+        with adm_t4:
+            st.subheader("📸 Change Master UI Profile Image")
+            st.write("Input a direct web image URL link or type a dedicated stream path below to set your global headshot profile frame.")
+            uploaded_img_url = st.text_input("Profile Picture Image URL:", value=st.session_state["custom_admin_photo"])
+            
+            if st.button("💾 Apply Image Link Across UI Panels"):
+                if uploaded_img_url.strip():
+                    st.session_state["custom_admin_photo"] = uploaded_img_url.strip()
+                    save_cache_to_disk("db_admin_photo.json", st.session_state["custom_admin_photo"])
+                    st.success("✔ Master photo link saved permanently to cache arrays! Updating display engines instantly.")
+                    time.sleep(0.5)
+                    st.rerun()
