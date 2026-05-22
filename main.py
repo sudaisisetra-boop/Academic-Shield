@@ -428,7 +428,6 @@ elif app_mode == "Login Page Panel":
             p_new2 = st.text_input("Confirm Brand New Password:", type="password", key="pwd_chg_n2")
             
             if st.button("🔄 Commit Password Sync Payload"):
-                # Pull active real-time data structure records directly
                 current_matching_pwd = st.session_state["users_registry"][session_uid]["pwd"]
                 
                 if p_old != current_matching_pwd:
@@ -440,7 +439,6 @@ elif app_mode == "Login Page Panel":
                 elif p_new1 == current_matching_pwd:
                     st.warning("⚠️ Optimization Check: The new password cannot be identical to your old password.")
                 else:
-                    # Inject variables cleanly back into system dictionaries
                     st.session_state["users_registry"][session_uid]["pwd"] = p_new1.strip()
                     save_cache_to_disk("db_users.json", st.session_state["users_registry"])
                     st.success("✔ Secure Sync Complete! Your password has been updated across all mirrors successfully.")
