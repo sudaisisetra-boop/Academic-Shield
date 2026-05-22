@@ -10,14 +10,14 @@ import json
 # =========================================================================
 st.set_page_config(page_title="Academic Shield Pro", layout="wide", page_icon="🛡️")
 
+st.logo("https://cdn-icons-png.flaticon.com/512/3135/3135715.png")
+
 st.markdown("""
     <head>
         <link rel="manifest" href="manifest.json">
         <meta name="theme-color" content="#ff3333">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-        <meta http-equiv="X-Frame-Options" content="DENY">
-        <meta http-equiv="X-Content-Type-Options" content="nosniff">
     </head>
     """, unsafe_allow_html=True)
 
@@ -42,8 +42,11 @@ st.markdown("""
     .chat-right { background-color: #ff3333; color: white; margin-left: auto; text-align: right; }
     .illustration-box { border: 2px dashed #444; border-radius: 6px; padding: 10px; margin: 10px 0; text-align: center; background-color: #1a1a1a; }
     .partner-alert-box { background-color: #111111; border: 2px solid #ff3333; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+    .system-warn-box { background-color: #3b1111; border: 2px solid #ff3333; padding: 15px; border-radius: 8px; margin-bottom: 15px; color: #ff9999; }
     .fallback-alert-box { background-color: #1a1510; border: 1px dashed #ffa500; padding: 12px; border-radius: 6px; margin: 10px 0; }
     .top-profile-pic { border-radius: 50%; border: 2px solid #ff3333; object-fit: cover; width: 60px; height: 60px; }
+    .notification-badge { background-color: #ff3333; color: white; padding: 2px 8px; border-radius: 10px; font-weight: bold; font-size: 11px; margin-left: 5px; }
+    .admin-broadcast-banner { background-color: #ff3333; color: white; padding: 10px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 15px; }
     
     div.stButton > button {
         width: 100% !important;
@@ -65,62 +68,25 @@ st.markdown("""
 # 2. INBUILT NCDC OFFICIAL CURRICULUM DIRECTORY
 # =========================================================================
 NCDC_CURRICULUM_MAP = {
-    "Mathematics": [
-        "Numerical Concepts", "Equations and Inequalities", "Coordinate Geometry 1", 
-        "Partial Fractions", "Trigonometry", "Descriptive Statistics", 
-        "Scatter Diagrams and Correlations", "Dynamics 1", "Probability Theory", 
-        "Differentiation 1", "Integration 1", "Permutations and Combinations", 
-        "Series", "Random Variables", "Probability Distributions", "Error Analysis",
-        "Vectors", "Differentiation 2", "Integration 2", "Dynamics 2", 
-        "Trapezium Rule", "Sampling Distribution", "Iterative Methods", 
-        "Coordinate Geometry 2", "Complex Numbers", "Differential Equations"
-    ],
-    "Physics": [
-        "Measurement and Dimensions of Physical Quantities", "Statics", "Linear Motion", 
-        "Motion Under Gravity", "Work, Energy and Power", "Solid Friction", 
-        "Fluid Mechanics", "Mechanical Properties of Matter", "Thermometry", 
-        "Heat Quantities", "Transfer of Heat", "Behaviour of Gases", "Thermodynamics", 
-        "Reflection of Light", "Refraction of Light", "Optical Instruments", 
-        "Electrostatics", "Capacitors"
-    ],
-    "Chemistry": [
-        "Moles and Equations", "Atomic and Electronic Structure", "Bonding and Structure", 
-        "Periodicity I (Trends & Group 2)", "Thermochemistry (Hess & Born-Haber)", 
-        "Organic Chemistry I (Alkanes/Alkenes/Benzene)", "Equilibria I (Salt Hydrolysis/Buffers)", 
-        "Equilibria II (Colligative)", "Organic Chemistry II (Alcohols/Carbonyls/Acids)", 
-        "Electrochemistry (Cells & Faraday)", "Periodicity II (Group 14, 17, d-Block)", 
-        "Organic Chemistry III (Amines/Polymers)", "Reaction Kinetics"
-    ],
-    "Biology": [
-        "Cell Biology", "Nutrition", "Transport", "Respiration", "Homeostasis", 
-        "Coordination", "Inheritance and Evolution", "Growth and Development", "Ecology"
-    ],
-    "S4_Mathematics": [
-        "Three-Dimensional Geometry", "Loci and Modern Geometry", 
-        "Advanced Statistics", "Probability", "Matrices and Linear Transformations"
-    ],
-    "S4_Physics": [
-        "Electronics", "Radioactivity and Nuclear Physics", "Electromagnetism"
-    ],
-    "S4_Chemistry": [
-        "Rates of Chemical Reactions and Reversible Reactions", "Organic Chemistry", "Electrolysis and Redox Reactions"
-    ],
-    "S4_Biology": [
-        "Growth and Development in Plants and Animals", "Genetics", "Evolution"
-    ]
+    "Mathematics": ["Numerical Concepts", "Equations and Inequalities", "Coordinate Geometry 1", "Partial Fractions", "Trigonometry", "Descriptive Statistics", "Vectors", "Differentiation 1", "Integration 1", "Complex Numbers", "Differential Equations"],
+    "Physics": ["Measurement and Dimensions", "Statics", "Linear Motion", "Fluid Mechanics", "Mechanical Properties of Matter", "Thermometry", "Heat Quantities", "Electrostatics", "Capacitors"],
+    "Chemistry": ["Moles and Equations", "Atomic and Electronic Structure", "Bonding and Structure", "Periodicity I", "Thermochemistry", "Organic Chemistry I", "Equilibria I", "Electrochemistry"],
+    "Biology": ["Cell Biology", "Nutrition", "Transport", "Respiration", "Homeostasis", "Coordination", "Ecology"],
+    "S4_Mathematics": ["Three-Dimensional Geometry", "Loci and Modern Geometry", "Advanced Statistics", "Probability"],
+    "S4_Physics": ["Electronics", "Radioactivity and Nuclear Physics", "Electromagnetism"],
+    "S4_Chemistry": ["Rates of Chemical Reactions", "Organic Chemistry", "Electrolysis and Redox"],
+    "S4_Biology": ["Growth and Development", "Genetics", "Evolution"]
 }
 
 # =========================================================================
-# 3. FILE SYSTEM CONTROL & DATABASE MIRROR PROTECTION
+# 3. FILE SYSTEM & GOOGLE SHEETS LIVE EXTRACTOR ENGINE
 # =========================================================================
 SUDAISI_IMAGE_STREAM = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAFA3PEY8OF5GXFpmZ2hkb6b/2wBDNWZpboaFl6b/"
-
 AVATAR_OPTIONS = [
     "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
     "https://cdn-icons-png.flaticon.com/512/4140/4140037.png",
     "https://cdn-icons-png.flaticon.com/512/4140/4140048.png",
-    "https://cdn-icons-png.flaticon.com/512/4139/4139981.png",
-    "https://cdn-icons-png.flaticon.com/512/1999/1999625.png"
+    "https://cdn-icons-png.flaticon.com/512/4139/4139981.png"
 ]
 
 if "SHEET_ID" in st.secrets:
@@ -154,12 +120,12 @@ def load_cache_from_disk(filename, default_val):
             except Exception: continue
     return default_val
 
-# Database Instantiations
+# Database Engine Restorations
 if "users_registry" not in st.session_state:
     st.session_state["users_registry"] = load_cache_from_disk("db_users.json", {
-        "0000": {"username": "Admin", "pwd": "SudaisiAdmin2026", "name": "Sudaisi Setra", "class": "Senior Five", "school": "St Marys", "phone": "0752047103", "email": "admin@shield.com", "gender": "Male", "location": "Kampala", "subjects": ["Mathematics", "Physics", "Chemistry", "Biology"], "expiry": "2030-01-01", "status": "Approved", "avatar": "SUDAISI_BAKED", "partner": "Gideon Cheps"},
-        "6601": {"username": "Setra stones", "pwd": "Amazima2026", "name": "Setra Stones", "class": "Senior Five", "school": "St Marys", "phone": "0752047103", "email": "setra@shield.com", "gender": "Male", "location": "Kampala", "subjects": ["Mathematics", "Physics", "Chemistry"], "expiry": "2030-01-01", "status": "Approved", "avatar": AVATAR_OPTIONS[0], "partner": ""},
-        "6602": {"username": "Gideon Cheps", "pwd": "Gideon2026", "name": "Gideon Cheps", "class": "Senior Five", "school": "St Marys", "phone": "0700000000", "email": "gideon@shield.com", "gender": "Male", "location": "Kampala", "subjects": ["Mathematics", "Physics", "Chemistry"], "expiry": str(datetime.date.today() + datetime.timedelta(days=14)), "status": "Approved", "avatar": AVATAR_OPTIONS[1], "partner": "Admin"}
+        "0000": {"username": "Admin", "pwd": "SudaisiAdmin2026", "name": "Sudaisi Setra", "class": "Senior Five", "school": "St Marys", "phone": "0752047103", "email": "admin@shield.com", "gender": "Male", "location": "Kampala", "subjects": ["Mathematics", "Physics", "Chemistry", "Biology"], "expiry": "2030-01-01", "status": "Approved", "warning_msg": "", "avatar": "SUDAISI_BAKED", "partner": "Gideon Cheps"},
+        "6601": {"username": "Setra stones", "pwd": "Amazima2026", "name": "Setra Stones", "class": "Senior Five", "school": "St Marys", "phone": "0752047103", "email": "setra@shield.com", "gender": "Male", "location": "Kampala", "subjects": ["Mathematics", "Physics", "Chemistry"], "expiry": "2030-01-01", "status": "Approved", "warning_msg": "", "avatar": AVATAR_OPTIONS[0], "partner": ""},
+        "6602": {"username": "Gideon Cheps", "pwd": "Gideon2026", "name": "Gideon Cheps", "class": "Senior Five", "school": "St Marys", "phone": "0700000000", "email": "gideon@shield.com", "gender": "Male", "location": "Kampala", "subjects": ["Mathematics", "Physics", "Chemistry"], "expiry": "2030-01-01", "status": "Approved", "warning_msg": "", "avatar": AVATAR_OPTIONS[1], "partner": "Admin"}
     })
 
 if "pending_registrations" not in st.session_state: st.session_state["pending_registrations"] = load_cache_from_disk("db_pending.json", [])
@@ -169,12 +135,29 @@ if "suggestions" not in st.session_state: st.session_state["suggestions"] = load
 if "global_alerts" not in st.session_state: st.session_state["global_alerts"] = load_cache_from_disk("db_alerts.json", ["🚀 Platform Online. Hardened Dual Mirror Protection Active."])
 if "revision_notes" not in st.session_state: st.session_state["revision_notes"] = load_cache_from_disk("db_notes.json", {"Mathematics": [], "Physics": [], "Chemistry": [], "Biology": [], "S4_General": []})
 if "exam_vault" not in st.session_state: st.session_state["exam_vault"] = load_cache_from_disk("db_exams.json", {})
-
-if "generated_registration_codes" not in st.session_state:
-    st.session_state["generated_registration_codes"] = load_cache_from_disk("db_regcodes.json", ["SHIELD2026", "ASP2026"])
-
+if "last_read_tracker" not in st.session_state: st.session_state["last_read_tracker"] = load_cache_from_disk("db_readtrack.json", {})
+if "generated_registration_codes" not in st.session_state: st.session_state["generated_registration_codes"] = load_cache_from_disk("db_regcodes.json", ["SHIELD2026", "ASP2026"])
 if "online_users" not in st.session_state: st.session_state["online_users"] = {}
 if "live_exam_invites" not in st.session_state: st.session_state["live_exam_invites"] = load_cache_from_disk("db_invites.json", {})
+
+# Auto-Sync Background Pull from Google Sheets for Note Materials
+sheet_notes_df = read_public_sheet("Notes")
+if sheet_notes_df is not None and not sheet_notes_df.empty:
+    try:
+        for idx, row in sheet_notes_df.iterrows():
+            s_subj = str(row.iloc[0]).strip()
+            s_class = str(row.iloc[1]).strip()
+            s_title = str(row.iloc[2]).strip()
+            s_content = str(row.iloc[3]).strip()
+            
+            l_key = f"S4_{s_subj}" if s_class == "Senior Four" else s_subj
+            if l_key in st.session_state["revision_notes"]:
+                if not any(n['title'] == s_title for n in st.session_state["revision_notes"][l_key]):
+                    st.session_state["revision_notes"][l_key].append({
+                        "title": s_title, "content": s_content, "target_class": s_class, "date": "Sheet Sync"
+                    })
+    except Exception:
+        pass
 
 # =========================================================================
 # 4. INITIALIZE AUTHENTICATION SCOPE TO PREVENT NAMEERRORS
@@ -186,6 +169,8 @@ session_class = "Senior Five"
 session_partner = ""
 allowed_subjects = ["Mathematics", "Physics", "Chemistry"]
 current_avatar_url = AVATAR_OPTIONS[0]
+user_account_status = "Approved"
+account_warning_text = ""
 
 # =========================================================================
 # 5. PORTAL INTERFACE MATRIX ROUTING
@@ -193,9 +178,6 @@ current_avatar_url = AVATAR_OPTIONS[0]
 st.sidebar.title("🔐 ASP Access Interface")
 app_mode = st.sidebar.radio("Select Portal Target Module", ["Login Page Panel", "Registration Terminal", "System Administrator Hub"])
 
-# =========================================================================
-# CREDENTIALS EVALUATION BEFORE HEADER RENDERING
-# =========================================================================
 if app_mode == "Login Page Panel":
     st.sidebar.subheader("🔒 Enter Active Credentials")
     login_uid = st.sidebar.text_input("User ID Code Token:")
@@ -210,14 +192,15 @@ if app_mode == "Login Page Panel":
         session_partner = st.session_state["users_registry"]["0000"].get("partner", "")
         allowed_subjects = ["Mathematics", "Physics", "Chemistry", "Biology"]
         current_avatar_url = "SUDAISI_BAKED"
+        user_account_status = "Approved"
     elif login_uid in st.session_state["users_registry"]:
         node = st.session_state["users_registry"][login_uid]
         if node["username"] == login_user and node["pwd"] == login_pwd:
-            expiry_date = datetime.datetime.strptime(str(node["expiry"]), "%Y-%m-%d").date() if isinstance(node["expiry"], str) else node["expiry"]
-            if datetime.date.today() > expiry_date:
-                st.sidebar.error("❌ Account Locked! Access window expired.")
-            elif node["status"] != "Approved":
-                st.sidebar.error("❌ Access Suspended.")
+            user_account_status = node.get("status", "Approved")
+            account_warning_text = node.get("warning_msg", "")
+            
+            if user_account_status == "Banned" or user_account_status == "Locked":
+                st.sidebar.error("❌ Access Terminated! This profile account has been suspended by Admin.")
             else:
                 is_authenticated = True
                 session_user = login_user
@@ -247,11 +230,6 @@ with col_head_pic:
 if app_mode == "Registration Terminal":
     st.subheader("📋 Student Account Registration Desk")
     st.info("💰 Notice: Send confirmation fee of 2000 UGX to mobile money line 0752047103 to finalize loops.")
-    
-    st.markdown("#### 👤 Select Your Profile Avatar Character")
-    chosen_avatar_idx = st.slider("Slide to cycle through profile mascots:", 1, len(AVATAR_OPTIONS), 1)
-    selected_avatar_url = AVATAR_OPTIONS[chosen_avatar_idx - 1]
-    st.image(selected_avatar_url, width=75)
     
     reg_user = st.text_input("Choose Unique Account Username:")
     reg_pwd = st.text_input("Choose Password:", type="password")
@@ -289,7 +267,7 @@ if app_mode == "Registration Terminal":
                 "username": reg_user, "pwd": reg_pwd, "name": reg_name, "class": reg_class,
                 "school": reg_school, "phone": reg_phone, "email": reg_email, "gender": reg_gender,
                 "location": reg_town, "subjects": chosen, "reg_code": reg_code_input,
-                "avatar": selected_avatar_url, "partner": "", "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %I:%M:%S %p")
+                "avatar": AVATAR_OPTIONS[0], "partner": "", "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %I:%M:%S %p")
             }
             st.session_state["pending_registrations"].append(new_request)
             save_cache_to_disk("db_pending.json", st.session_state["pending_registrations"])
@@ -302,173 +280,61 @@ elif app_mode == "Login Page Panel":
     if not is_authenticated:
         st.markdown("<div style='text-align:center; margin-top:12%;'><h3>🛡️ ASP PORTAL SECURITY SCREEN</h3><p>Provide your configurations inside the left side interface panel to populate your dashboard matrix.</p></div>", unsafe_allow_html=True)
     else:
-        st.session_state["online_users"][session_user] = datetime.datetime.now().strftime("%I:%M:%S %p")
-        st.sidebar.success(f"Scholar: {session_user} ({session_class})")
+        if account_warning_text:
+            st.markdown(f'<div class="system-warn-box">⚠️ <strong>SYSTEM ADMIN WARNING FLAG:</strong> {account_warning_text}</div>', unsafe_allow_html=True)
+            
+        if st.session_state["global_alerts"]:
+            st.markdown(f'<div class="admin-broadcast-banner">📢 BROADCAST: {st.session_state["global_alerts"][-1]}</div>', unsafe_allow_html=True)
+
+        st.session_state["online_users"][session_user] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        u_last = st.session_state["last_read_tracker"].get(session_user, "1970-01-01 00:00:00")
+        unread_p2p_cnt = sum(1 for m in st.session_state["private_chats"] if m.get("to") == session_user and m.get("timestamp", "") > u_last)
+        unread_gen_cnt = sum(1 for m in st.session_state["general_chat"] if m.get("sender") != session_user and m.get("timestamp", "") > u_last)
+        total_badge_weight = unread_p2p_cnt + unread_gen_cnt
+        
+        badge_indicator = f" ({total_badge_weight} Unread)" if total_badge_weight > 0 else ""
         selected_subject = st.sidebar.selectbox("📚 Select Academic Subject Field", allowed_subjects)
         
-        client_tab_choice = st.sidebar.radio("Navigate Workspace Pages", [
+        client_tab_choice = st.sidebar.radio(f"Workspace Channels {badge_indicator}", [
             "📝 Access Exam Center", "🤝 Partner Connection Hub", "📖 Revision Notes Portal", 
             "🌐 General Lounge Chat", "🔒 Private Peer Chatroom", "📊 Progress Tracker Logs", 
-            "📁 Finished Exam Vault", "📩 Submit App Suggestions"
+            "📁 Finished Exam Vault", "🔑 Change Account Password", "📩 Submit App Suggestions"
         ])
 
-        if session_user in st.session_state["live_exam_invites"]:
-            invite = st.session_state["live_exam_invites"][session_user]
-            if invite["status"] == "pending":
-                st.markdown(f"""
-                <div class="partner-alert-box">
-                    <h4 style="color:#ff3333; margin:0;">🔔 LIVE PARTNER EXAM CALL CONFLICT</h4>
-                    <p style="margin:5px 0;">Your partner <strong>{invite['sender']}</strong> wants to sit a live <strong>{invite['subject']} ({invite['grade']})</strong> exam with you right now!</p>
-                </div>
-                """, unsafe_allow_html=True)
-                col_acc, col_dec = st.columns(2)
-                if col_acc.button("✅ Accept Invite", key="acc_shared_ex"):
-                    st.session_state["live_exam_invites"][session_user]["status"] = "accepted"
-                    save_cache_to_disk("db_invites.json", st.session_state["live_exam_invites"])
-                    st.rerun()
-                if col_dec.button("❌ Decline", key="dec_shared_ex"):
-                    st.session_state["live_exam_invites"][session_user]["status"] = "declined"
-                    save_cache_to_disk("db_invites.json", st.session_state["live_exam_invites"])
-                    st.rerun()
-
-        # =========================================================================
-        # RE-ENGINEERED HIGH-DENSITY ASSESSMENT CENTER WITH CURRICULUM PRE-LOADS
-        # =========================================================================
         if client_tab_choice == "📝 Access Exam Center":
             st.title("📝 Precision Topic Exam Center")
-            
             lookup_key = f"S4_{selected_subject}" if session_class == "Senior Four" else selected_subject
-            
             official_topics = NCDC_CURRICULUM_MAP.get(lookup_key, ["General Concepts"])
-            dropdown_options = ["All Topics / Mix Scenario"] + official_topics
-            
-            selected_topic_target = st.selectbox("🎯 Target Challenge Topic Filter:", dropdown_options)
+            selected_topic_target = st.selectbox("🎯 Target Challenge Topic Filter:", ["All Topics"] + official_topics)
             
             sheet_data = read_public_sheet(lookup_key)
-            
-            parsed_questions_bank = []
-            answer_keys = {}
-            illustrations = {}
-            
-            if sheet_data is not None and not sheet_data.empty:
-                sheet_data.columns = [str(c).strip() for c in sheet_data.columns]
-                for idx, row in sheet_data.iterrows():
-                    q_text = str(row.iloc[0]).strip()
-                    parsed_questions_bank.append(row)
-                    if len(row) > 1 and pd.notna(row.iloc[1]): answer_keys[q_text] = str(row.iloc[1]).strip().lower()
-                    if len(row) > 2 and pd.notna(row.iloc[2]): illustrations[q_text] = str(row.iloc[2]).strip()
-
             filtered_pool = []
-            fallback_triggered = False
-            fallback_reason = ""
-
-            if selected_topic_target == "All Topics / Mix Scenario":
-                filtered_pool = [str(r.iloc[0]).strip() for r in parsed_questions_bank]
-            else:
-                for row_node in parsed_questions_bank:
-                    if len(row_node) > 3 and pd.notna(row_node.iloc[3]):
-                        cell_topics = str(row_node.iloc[3]).strip()
-                        if selected_topic_target.lower() in cell_topics.lower():
-                            filtered_pool.append(str(row_node.iloc[0]).strip())
-                
-                if not filtered_pool:
-                    for row_node in parsed_questions_bank:
-                        q_string = str(row_node.iloc[0]).strip()
-                        if selected_topic_target.lower() in q_string.lower():
-                            filtered_pool.append(q_string)
-                    if filtered_pool:
-                        fallback_triggered = True
-                        fallback_reason = "Keyword Connection Extraction Match"
-
-                if not filtered_pool:
-                    filtered_pool = [str(r.iloc[0]).strip() for r in parsed_questions_bank]
-                    if filtered_pool:
-                        fallback_triggered = True
-                        fallback_reason = "Random Global Subject Pool Injection"
-
+            if sheet_data is not None and not sheet_data.empty:
+                filtered_pool = [str(r.iloc[0]).strip() for idx, r in sheet_data.iterrows()]
+            
             if not filtered_pool:
-                filtered_pool = [
-                    f"Analyze the real-world operational challenges connected with {selected_topic_target} in Uganda [NCDC Core Scenario Level A].", 
-                    f"Formulate a definitive mathematical or experimental layout modeling {selected_topic_target} applications [NCDC Core Scenario Level B]."
-                ]
-                fallback_triggered = True
-                fallback_reason = "System Synthetic Scenario Generator Engine"
-
-            if fallback_triggered:
-                st.markdown(f"""
-                <div class="fallback-alert-box">
-                    <span style="color:#ffa500; font-weight:bold;">📢 CURRICULUM FALLBACK SIGNAL ACTIVE</span><br>
-                    <span style="font-size:13px; color:#ddd;">Specific questions for <strong>{selected_topic_target}</strong> are being finalized. To preserve your learning momentum, the system used its <strong>{fallback_reason}</strong> engine to keep you moving!</span>
-                </div>
-                """, unsafe_allow_html=True)
-
-            st.markdown("### ✍️ Generate Targeted Assessment Paper")
-            col_tr1, col_tr2 = st.columns([2, 2])
-            with col_tr1:
-                run_exam_trigger = st.button("🚀 Pull 2 Precision Scenario Questions")
-            with col_tr2:
-                if session_partner:
-                    is_partner_online = session_partner in st.session_state["online_users"]
-                    status_color = "#39ff14" if is_partner_online else "#ff3333"
-                    st.markdown(f"Partner Link: **{session_partner}** (<span style='color:{status_color}; font-weight:bold;'>{'ONLINE' if is_partner_online else 'OFFLINE'}</span>)", unsafe_allow_html=True)
-
-            if run_exam_trigger:
-                st.session_state[f"seed_mod_{lookup_key}"] = random.randint(1, 99999)
-                if session_partner and session_partner in st.session_state["online_users"]:
-                    st.session_state["live_exam_invites"][session_partner] = {
-                        "sender": session_user, "subject": selected_subject, 
-                        "grade": session_class, "status": "pending", "seed": st.session_state[f"seed_mod_{lookup_key}"]
-                    }
-                    save_cache_to_disk("db_invites.json", st.session_state["live_exam_invites"])
-                st.rerun()
-
-            random.seed(st.session_state.get(f"seed_mod_{lookup_key}", 42))
-            active_exam_items = random.sample(filtered_pool, min(len(filtered_pool), 2))
-            
-            for index, question_text in enumerate(active_exam_items, 1):
-                st.markdown(f"<div style='background-color:#1e1e1e; padding:15px; border-radius:6px; margin-top:15px; border-left:4px solid #ff3333;'><strong style='color:#ff3333;'>Item {index}:</strong> {question_text}</div>", unsafe_allow_html=True)
-                if question_text in illustrations:
-                    img_url = illustrations[question_text]
-                    if img_url.startswith("http"):
-                        st.markdown(f'<div class="illustration-box"><img src="{img_url}" style="max-height:280px; border-radius:4px;"/></div>', unsafe_allow_html=True)
+                filtered_pool = [f"Synthesized Core evaluation task context on {selected_topic_target} for evaluation."]
                 
-            st.markdown("##### ⏱️ Task Section Layout Countdown Indicators (25 Minutes Max Per Element)")
-            timer_columns = st.columns(2)
-            for idx in range(2):
-                with timer_columns[idx]:
-                    st.markdown("""<div class="timer-container"><span style='font-size:10px; color:#aaa;'>ITEM LIMIT</span><h4 style='color:#ff3333; margin:0;'>25:00</h4></div>""", unsafe_allow_html=True)
+            st.markdown("### ✍️ Pull Evaluation Tasks")
+            if st.button("🚀 Load Targeted Matrix Exam Paper"):
+                st.session_state[f"seed_{lookup_key}"] = random.randint(1, 10000)
+                st.rerun()
+                
+            random.seed(st.session_state.get(f"seed_{lookup_key}", 42))
+            selected_questions = random.sample(filtered_pool, min(len(filtered_pool), 2))
             
-            st.markdown("---")
-            st.write("✍️ **Hand in Finished Work Sheet Script**")
-            typed_work = st.text_area("Type paragraph explanations or calculation proofs:")
-            uploaded_img = st.file_uploader("Upload script image captures:", type=["jpg","jpeg","png"])
-            
-            if st.button("🚀 Transmit Answers Script"):
-                if not typed_work.strip() and not uploaded_img:
-                    st.warning("Please supply data fields before triggering.")
-                else:
-                    score_counter = 0
-                    has_keys_at_all = False
-                    for item_q in active_exam_items:
-                        if item_q in answer_keys:
-                            has_keys_at_all = True
-                            if answer_keys[item_q] in typed_work.lower(): score_counter += 50
-                                
-                    if session_uid not in st.session_state["exam_vault"]: st.session_state["exam_vault"][session_uid] = []
-                    if has_keys_at_all:
-                        final_grade = min(score_counter, 100)
-                        exam_payload = {"Subject": selected_subject, "Topic": selected_topic_target, "Date": str(datetime.date.today()), "Grade": f"{final_grade}%", "Status": "Graded Instantly via Sheet Key"}
-                        st.success(f"🎯 Graded Instantly! Score: {final_grade}/100 Marks.")
-                    else:
-                        exam_payload = {"Subject": selected_subject, "Topic": selected_topic_target, "Date": str(datetime.date.today()), "Grade": "Pending Review", "Status": "Forwarded to Reviewer Panels"}
-                        st.info("📋 Proof Answer Captured: Script forwarded to reviewer panels.")
-                        
-                    st.session_state["exam_vault"][session_uid].append(exam_payload)
-                    save_cache_to_disk("db_exams.json", st.session_state["exam_vault"])
+            for i, q in enumerate(selected_questions, 1):
+                st.markdown(f"<div style='background-color:#1e1e1e; padding:15px; border-radius:6px; margin-top:10px; border-left:4px solid #ff3333;'><strong>Item {i}:</strong> {q}</div>", unsafe_allow_html=True)
 
-        # =========================================================================
-        # CORE OPERATIONAL LOGIC FEATURES
-        # =========================================================================
+            typed_work = st.text_area("Type your explanation or proof strings:")
+            if st.button("🚀 Transmit Answers Script"):
+                if typed_work.strip():
+                    if session_uid not in st.session_state["exam_vault"]: st.session_state["exam_vault"][session_uid] = []
+                    st.session_state["exam_vault"][session_uid].append({"Subject": selected_subject, "Topic": selected_topic_target, "Date": str(datetime.date.today()), "Grade": "Pending Review", "Status": "Forwarded"})
+                    save_cache_to_disk("db_exams.json", st.session_state["exam_vault"])
+                    st.success("✔ Exam script secured!")
+
         elif client_tab_choice == "🤝 Partner Connection Hub":
             st.title("🤝 Academic Partners Registry")
             st.markdown(f"Linked Partner Profile Name: **{session_partner if session_partner else 'None Linked'}**")
@@ -480,35 +346,65 @@ elif app_mode == "Login Page Panel":
                     st.success(f"Sync complete for: {new_p_assign}")
                     st.rerun()
 
+        elif client_tab_choice == "📖 Revision Notes Portal":
+            st.title(f"📖 Protected Notes Portal - {selected_subject}")
+            lookup_key = f"S4_{selected_subject}" if session_class == "Senior Four" else selected_subject
+            
+            notes_array = st.session_state["revision_notes"].get(lookup_key, [])
+            filtered_notes = [n for n in notes_array if n.get("target_class", session_class) == session_class]
+            
+            if not filtered_notes:
+                st.info(f"📅 No specific verified material published for {session_class} {selected_subject} yet.")
+            for note in filtered_notes:
+                with st.expander(f"📘 Material: {note['title']} ({note.get('date','Direct Sync')})"):
+                    st.write(note["content"])
+                    st.markdown("<span style='color:grey; font-size:11px;'>Authorized Level: Clear Access</span>", unsafe_allow_html=True)
+
         elif client_tab_choice == "🌐 General Lounge Chat":
-            st.title("🌐 General Chatroom Terminal")
+            st.title("🌐 General Chatroom Channel")
+            st.session_state["last_read_tracker"][session_user] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            save_cache_to_disk("db_readtrack.json", st.session_state["last_read_tracker"])
+            
             for msg in st.session_state["general_chat"]:
                 align_cls = "chat-right" if msg["sender"] == session_user else "chat-left"
-                st.markdown(f"<div class='chat-bubble {align_cls}'><strong>{msg['sender']}</strong> <span style='font-size:10px; color:#aaa;'>[{msg['time']}]</span>: {msg['text']}</div>", unsafe_allow_html=True)
-            in_gen_msg = st.text_input("Type message:", key="in_gen_msg_str")
-            if st.button("Send to Lounge"):
+                st.markdown(f"<div class='chat-bubble {align_cls}'><strong>{msg['sender']}</strong> <span style='font-size:10px; color:#aaa;'>[{msg['time']}]</span>:<br>{msg['text']}</div>", unsafe_allow_html=True)
+                
+            in_gen_msg = st.text_input("Type general chat string message:", key="in_gen_chat_box")
+            if st.button("Send to Lounge Channel"):
                 if in_gen_msg.strip():
-                    st.session_state["general_chat"].append({"sender": session_user, "text": in_gen_msg, "time": datetime.datetime.now().strftime("%I:%M:%S %p")})
+                    st.session_state["general_chat"].append({
+                        "sender": session_user, "text": in_gen_msg.strip(), 
+                        "time": datetime.datetime.now().strftime("%I:%M %p"),
+                        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    })
                     save_cache_to_disk("db_genchat.json", st.session_state["general_chat"])
                     st.rerun()
 
-        elif client_tab_choice == "📖 Revision Notes Portal":
-            st.title(f"📖 Notes Portal - {selected_subject}")
-            notes_array = st.session_state["revision_notes"].get("S4_General" if session_class == "Senior Four" else lookup_key, [])
-            for item in notes_array:
-                with st.expander(f"📁 Note: {item['title']}"): st.write(item["content"])
-
         elif client_tab_choice == "🔒 Private Peer Chatroom":
-            st.title("🔒 Inbuilt Private Chat Matrix")
-            target_p = st.text_input("Enter recipient username link:")
-            for msg in st.session_state["private_chats"]:
-                st.markdown(f"<div class='chat-bubble chat-left'><strong>{msg['sender']}</strong> <span style='font-size:10px; color:#aaa;'>[{msg['time']}]</span>: {msg['text']}</div>", unsafe_allow_html=True)
-            in_priv_msg = st.text_input("Type private text:", key="in_priv_msg_str")
-            if f"adm_rep_{session_user}" in st.session_state:
-                pass
-            if st.button("Send Private Message"):
-                if in_priv_msg.strip():
-                    st.session_state["private_chats"].append({"sender": session_user, "text": in_priv_msg, "to": target_p, "time": datetime.datetime.now().strftime("%I:%M:%S %p")})
+            st.title("🔒 Isolated Private Chat Room Matrix")
+            st.session_state["last_read_tracker"][session_user] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            save_cache_to_disk("db_readtrack.json", st.session_state["last_read_tracker"])
+            
+            all_usernames = [u["username"] for k, u in st.session_state["users_registry"].items() if u["username"] != session_user]
+            target_p = st.selectbox("Select Target Recipient Buddy to Message:", all_usernames)
+            
+            isolated_thread = [
+                m for m in st.session_state["private_chats"]
+                if (m["sender"] == session_user and m["to"] == target_p) or (m["sender"] == target_p and m["to"] == session_user)
+            ]
+            
+            for msg in isolated_thread:
+                align_cls = "chat-right" if msg["sender"] == session_user else "chat-left"
+                st.markdown(f"<div class='chat-bubble {align_cls}'><strong>{msg['sender']}</strong> <span style='font-size:10px; color:#aaa;'>[{msg['time']}]</span>:<br>{msg['text']}</div>", unsafe_allow_html=True)
+                
+            in_priv_msg = st.text_input("Type secure message string:", key="in_p2p_box")
+            if st.button("Send Secure Private Message"):
+                if in_priv_msg.strip() and target_p:
+                    st.session_state["private_chats"].append({
+                        "sender": session_user, "to": target_p, "text": in_priv_msg.strip(),
+                        "time": datetime.datetime.now().strftime("%I:%M %p"),
+                        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    })
                     save_cache_to_disk("db_p2pchat.json", st.session_state["private_chats"])
                     st.rerun()
 
@@ -520,20 +416,46 @@ elif app_mode == "Login Page Panel":
             st.title("📁 Historic Exam Vault")
             st.write(st.session_state["exam_vault"].get(session_uid, []))
 
+        # =========================================================================
+        # NEW INTEGRATED FEATURE: RE-ENGINEERED CHANGE PASSWORD CHANNEL
+        # =========================================================================
+        elif client_tab_choice == "🔑 Change Account Password":
+            st.title("🔑 Change Account Access Password")
+            st.markdown("Update your account authentication token keys below. Changes take sync effect instantly.")
+            
+            p_old = st.text_input("Enter Current Password:", type="password", key="pwd_chg_old")
+            p_new1 = st.text_input("Enter Brand New Password:", type="password", key="pwd_chg_n1")
+            p_new2 = st.text_input("Confirm Brand New Password:", type="password", key="pwd_chg_n2")
+            
+            if st.button("🔄 Commit Password Sync Payload"):
+                # Pull active real-time data structure records directly
+                current_matching_pwd = st.session_state["users_registry"][session_uid]["pwd"]
+                
+                if p_old != current_matching_pwd:
+                    st.error("❌ Authentication Error: The 'Current Password' you typed does not match our records.")
+                elif not p_new1 or not p_new2:
+                    st.error("❌ Field Validation Error: New password inputs cannot be blank.")
+                elif p_new1 != p_new2:
+                    st.error("❌ Discrepancy Error: The two new passwords do not match each other.")
+                elif p_new1 == current_matching_pwd:
+                    st.warning("⚠️ Optimization Check: The new password cannot be identical to your old password.")
+                else:
+                    # Inject variables cleanly back into system dictionaries
+                    st.session_state["users_registry"][session_uid]["pwd"] = p_new1.strip()
+                    save_cache_to_disk("db_users.json", st.session_state["users_registry"])
+                    st.success("✔ Secure Sync Complete! Your password has been updated across all mirrors successfully.")
+
         elif client_tab_choice == "📩 Submit App Suggestions":
             st.title("📩 Public Feedback Portal")
-            for sug in st.session_state["suggestions"]:
-                st.markdown(f"<div style='background-color:#111; padding:10px; margin-bottom:5px; border-radius:4px;'><strong>{sug['user']}</strong> <span style='font-size:10px; color:grey;'>[{sug['time']}]</span>: {sug['text']}<br><span style='color:#ff3333; font-size:12px;'>Outcome: {sug['reply']}</span></div>", unsafe_allow_html=True)
             in_sug_text = st.text_area("Propose adjustments:")
-            if st.button("Submit Suggestion Log"):
+            if st.button("Submit Suggestion"):
                 if in_sug_text.strip():
-                    st.session_state["suggestions"].append({"user": session_user, "text": in_sug_text, "reply": "Awaiting Review.", "time": datetime.datetime.now().strftime("%Y-%m-%d %I:%M:%S %p")})
+                    st.session_state["suggestions"].append({"user": session_user, "text": in_sug_text.strip(), "reply": "Awaiting Review.", "time": datetime.datetime.now().strftime("%Y-%m-%d %I:%M %p")})
                     save_cache_to_disk("db_suggestions.json", st.session_state["suggestions"])
-                    st.success("Suggestion logged successfully!")
-                    st.rerun()
+                    st.success("Logged successfully!")
 
 # =========================================================================
-# MODULE C: CENTRAL SYSTEM ADMINISTRATIVE DASHBOARD (ROOT HUB)
+# MODULE C: CENTRAL SYSTEM ADMINISTRATIVE DASHBOARD (ROOT CONTROL HUD)
 # =========================================================================
 elif app_mode == "System Administrator Hub":
     st.subheader("🛡️ Administrative Dashboard Terminal")
@@ -541,63 +463,90 @@ elif app_mode == "System Administrator Hub":
     
     if admin_token == "SudaisiAdmin2026":
         st.success("✔ Root Privileges Enabled.")
-        adm_t1, adm_t2, adm_t3, adm_t4, adm_t5 = st.tabs(["👥 Registrations Pipeline", "👤 Directory Control & Codes", "📖 Notes Uploads", "📢 Mass Alerts", "📩 Suggestions Responses"])
+        adm_t0, adm_t1, adm_t2, adm_t3, adm_t4 = st.tabs(["🛑 GOD-MODE USER ACCOUNT ACCOUNTABILITY CONTROL", "👥 Registrations Pipeline", "📖 Notes Uploads Desk", "📢 Mass Broadcasts", "📩 Suggestions Responses"])
         
+        with adm_t0:
+            st.subheader("🛑 Master User Account Management Center")
+            st.markdown("Modify permissions or terminate abusive account access strings down down instantly.")
+            
+            for uid_key, user_node in list(st.session_state["users_registry"].items()):
+                if uid_key == "0000": continue 
+                
+                col_u1, col_u2, col_u3, col_u4, col_u5 = st.columns([3, 2, 2, 2, 2])
+                with col_u1:
+                    st.markdown(f"👤 **{user_node['username']}** ({user_node['class']})<br>`ID: {uid_key}` | Status: **{user_node.get('status','Approved')}**", unsafe_allow_html=True)
+                with col_u2:
+                    warn_input = st.text_input("Warning Text String Message:", key=f"warn_txt_{uid_key}", placeholder="Type warning flag...")
+                    if st.button("⚠️ Warn User", key=f"btn_warn_{uid_key}"):
+                        st.session_state["users_registry"][uid_key]["warning_msg"] = warn_input
+                        save_cache_to_disk("db_users.json", st.session_state["users_registry"])
+                        st.warning(f"Issued Warning alert flag directly to {user_node['username']}")
+                with col_u3:
+                    if st.button("🔒 Ban/Lock Account", key=f"btn_lock_{uid_key}"):
+                        st.session_state["users_registry"][uid_key]["status"] = "Banned"
+                        save_cache_to_disk("db_users.json", st.session_state["users_registry"])
+                        st.error(f"Terminated profile access token authorization for {user_node['username']}")
+                        st.rerun()
+                with col_u4:
+                    if st.button("🔓 Restore/Approve Account", key=f"btn_res_{uid_key}"):
+                        st.session_state["users_registry"][uid_key]["status"] = "Approved"
+                        st.session_state["users_registry"][uid_key]["warning_msg"] = ""
+                        save_cache_to_disk("db_users.json", st.session_state["users_registry"])
+                        st.success(f"Restored clean status clear loops for {user_node['username']}")
+                        st.rerun()
+                with col_u5:
+                    if st.button("❌ Completely Delete Account", key=f"btn_del_{uid_key}"):
+                        st.session_state["users_registry"].pop(uid_key)
+                        save_cache_to_disk("db_users.json", st.session_state["users_registry"])
+                        st.info("Purged profile entirely from system mirrors.")
+                        st.rerun()
+                st.markdown("---")
+
         with adm_t1:
-            st.subheader(f"🔔 Queue Counter: {len(st.session_state['pending_registrations'])} Registrations Awaiting Verification")
+            st.subheader(f"🔔 Verification Queue Counter: {len(st.session_state['pending_registrations'])}")
             for index, item_node in enumerate(st.session_state["pending_registrations"]):
-                st.markdown(f"📌 **Request Profile {index+1}:** User: `{item_node['username']}` ({item_node.get('class','S5')}) | Sent: {item_node['timestamp']}")
+                st.markdown(f"📌 **Request Profile {index+1}:** User: `{item_node['username']}` | Sent: {item_node['timestamp']}")
                 if st.button(f"🟢 Approve Profile & Grant Entry ID for {item_node['username']}", key=f"p_app_{index}"):
                     allocated_uid_id = str(6601 + len(st.session_state["users_registry"]))
                     st.session_state["users_registry"][allocated_uid_id] = {
                         "username": item_node["username"], "pwd": item_node["pwd"], "name": item_node["name"],
                         "class": item_node["class"], "school": item_node["school"], "phone": item_node["phone"],
                         "email": item_node["email"], "gender": item_node["gender"], "location": item_node["location"],
-                        "subjects": item_node["subjects"], "status": "Approved", "avatar": item_node.get("avatar", AVATAR_OPTIONS[0]),
-                        "partner": "", "expiry": str(datetime.date.today() + datetime.timedelta(days=14))
+                        "subjects": item_node["subjects"], "status": "Approved", "warning_msg": "", "avatar": AVATAR_OPTIONS[0],
+                        "partner": "", "expiry": "2030-01-01"
                     }
                     st.session_state["pending_registrations"].pop(index)
                     save_cache_to_disk("db_users.json", st.session_state["users_registry"])
                     save_cache_to_disk("db_pending.json", st.session_state["pending_registrations"])
-                    st.success(f"Activated! User ID Assigned: `{allocated_uid_id}`")
+                    st.success(f"Activated ID Token: `{allocated_uid_id}`")
                     st.rerun()
 
         with adm_t2:
-            st.subheader("🔑 Registration Codes Token Generator")
-            new_generated_code = st.text_input("Create structural verification code string:")
-            if st.button("Generate Code Token"):
-                if new_generated_code.strip():
-                    st.session_state["generated_registration_codes"].append(new_generated_code.strip())
-                    save_cache_to_disk("db_regcodes.json", st.session_state["generated_registration_codes"])
-                    st.success("Code token active!")
+            st.subheader("📖 Upload Protected Subject Revision Notes Material")
+            note_subj = st.selectbox("Choose Target Subject Fields Material:", ["Mathematics", "Physics", "Chemistry", "Biology"])
+            note_class = st.selectbox("Target Class Grade Level Restrictions Rules:", ["Senior Four", "Senior Five", "Senior Six"])
+            note_head = st.text_input("Enter Revision Notes Title Header Text:")
+            note_body = st.text_area("Paste structural resource contents strings:")
+            
+            if st.button("📦 Sync Notes Content Resource to Mirrors"):
+                if note_head and note_body:
+                    lookup_key = f"S4_{note_subj}" if note_class == "Senior Four" else note_subj
+                    st.session_state["revision_notes"][lookup_key].append({
+                        "title": note_head.strip(), "content": note_body.strip(), "target_class": note_class, "date": str(datetime.date.today())
+                    })
+                    save_cache_to_disk("db_notes.json", st.session_state["revision_notes"])
+                    st.success(f"✔ Live deployed inside app portal framework channel for {note_class} {note_subj}!")
 
         with adm_t3:
-            st.subheader("📖 Upload Subject Notes")
-            note_subj = st.selectbox("Choose Target Destination:", ["Mathematics", "Physics", "Chemistry", "Biology", "S4_General"])
-            note_head = st.text_input("Enter Notes Title Header:")
-            note_body = st.text_area("Paste resource content strings:")
-            if st.button("📦 Sync Notes Resource"):
-                if note_head and note_body:
-                    st.session_state["revision_notes"][note_subj].append({"title": note_head, "content": note_body, "date": str(datetime.date.today())})
-                    save_cache_to_disk("db_notes.json", st.session_state["revision_notes"])
-                    st.success("Notes compiled!")
+            st.subheader("📢 High Priority Admin Announcement Global Engine Broadcast")
+            alert_msg = st.text_input("Type critical system update to flash on all channels:")
+            if st.button("Broadcast Priority System Update Alert Everywhere"):
+                if alert_msg.strip():
+                    st.session_state["global_alerts"].append(alert_msg.strip())
+                    save_cache_to_disk("db_alerts.json", st.session_state["global_alerts"])
+                    st.success("✔ Notification broadcast injected into global system array frames.")
 
         with adm_t4:
-            st.subheader("📢 Broadcast Mass Notifications")
-            alert_msg = st.text_input("Type urgent messaging updates:")
-            if st.button("Broadcast Priority Alert Notification Everywhere"):
-                if alert_msg.strip():
-                    st.session_state["global_alerts"].append(alert_msg)
-                    save_cache_to_disk("db_alerts.json", st.session_state["global_alerts"])
-                    st.success("Alert broadcast injected successfully.")
-
-        with adm_t5:
-            st.subheader("📩 Process Suggestion Response Loop")
+            st.subheader("📢 Process Suggestion Logs")
             for idx, log in enumerate(st.session_state["suggestions"]):
                 st.markdown(f"**From Student:** {log['user']} | **Content:** {log['text']}")
-                reply_text = st.text_input("Formulate resolution outcome:", key=f"adm_rep_{idx}")
-                if st.button("Publish Response", key=f"adm_btn_{idx}"):
-                    st.session_state["suggestions"][idx]["reply"] = reply_text
-                    save_cache_to_disk("db_suggestions.json", st.session_state["suggestions"])
-                    st.success("Response resolution updated.")
-                    st.rerun()
