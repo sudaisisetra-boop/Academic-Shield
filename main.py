@@ -177,15 +177,69 @@ if "online_users" not in st.session_state: st.session_state["online_users"] = {}
 if "live_exam_invites" not in st.session_state: st.session_state["live_exam_invites"] = load_cache_from_disk("db_invites.json", {})
 
 # =========================================================================
-# 4. PORTAL INTERFACE MATRIX ROUTING
+# 4. INITIALIZE AUTHENTICATION SCOPE TO PREVENT NAMEERRORS
+# =========================================================================
+is_authenticated = False
+session_user = ""
+session_uid = ""
+session_class = "Senior Five"
+session_partner = ""
+allowed_subjects = ["Mathematics", "Physics", "Chemistry"]
+current_avatar_url = AVATAR_OPTIONS[0]
+
+# =========================================================================
+# 5. PORTAL INTERFACE MATRIX ROUTING
 # =========================================================================
 st.sidebar.title("🔐 ASP Access Interface")
 app_mode = st.sidebar.radio("Select Portal Target Module", ["Login Page Panel", "Registration Terminal", "System Administrator Hub"])
 
+# =========================================================================
+# CREDENTIALS EVALUATION BEFORE HEADER RENDERING
+# =========================================================================
+if app_mode == "Login Page Panel":
+    st.sidebar.subheader("🔒 Enter Active Credentials")
+    login_uid = st.sidebar.text_input("User ID Code Token:")
+    login_user = st.sidebar.text_input("Username:")
+    login_pwd = st.sidebar.text_input("Password:", type="password")
+    
+    if login_uid == "0000" and login_user == "Admin" and login_pwd == "SudaisiAdmin2026":
+        is_authenticated = True
+        session_user = "Admin"
+        session_uid = "0000"
+        session_class = "Senior Five"
+        session_partner = st.session_state["users_registry"]["0000"].get("partner", "")
+        allowed_subjects = ["Mathematics", "Physics", "Chemistry", "Biology"]
+        current_avatar_url = "SUDAISI_BAKED"
+    elif login_uid in st.session_state["users_registry"]:
+        node = st.session_state["users_registry"][login_uid]
+        if node["username"] == login_user and node["pwd"] == login_pwd:
+            expiry_date = datetime.datetime.strptime(str(node["expiry"]), "%Y-%m-%d").date() if isinstance(node["expiry"], str) else node["expiry"]
+            if datetime.date.today() > expiry_date:
+                st.sidebar.error("❌ Account Locked! Access window expired.")
+            elif node["status"] != "Approved":
+                st.sidebar.error("❌ Access Suspended.")
+            else:
+                is_authenticated = True
+                session_user = login_user
+                session_uid = login_uid
+                session_class = node.get("class", "Senior Five")
+                session_partner = node.get("partner", "")
+                allowed_subjects = node["subjects"]
+                current_avatar_url = node.get("avatar", AVATAR_OPTIONS[0])
+
+# =========================================================================
+# INTERFACE TOP BANNER RENDER
+# =========================================================================
 col_head_title, col_head_pic = st.columns([11, 1])
 with col_head_title:
     st.markdown("<h2 style='color:#ff3333; margin:0;'>🛡️ Academic Shield Pro</h2>", unsafe_allow_html=True)
     st.markdown("<h5 style='color:#aaaaaa; font-style:italic; margin:0;'>“Conceptual Mastery and Real Testing Engine”</h5>", unsafe_allow_html=True)
+
+with col_head_pic:
+    if current_avatar_url == "SUDAISI_BAKED" or session_user == "Admin":
+        st.markdown(f'<img src="{SUDAISI_IMAGE_STREAM}" class="top-profile-pic"/>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<img src="{current_avatar_url}" class="top-profile-pic"/>', unsafe_allow_html=True)
 
 # =========================================================================
 # MODULE A: REGISTRATION TERMINAL
@@ -245,49 +299,8 @@ if app_mode == "Registration Terminal":
 # MODULE B: LOGIN PAGE PANEL & CLIENT WORKSPACE
 # =========================================================================
 elif app_mode == "Login Page Panel":
-    st.sidebar.subheader("🔒 Enter Active Credentials")
-    login_uid = st.sidebar.text_input("User ID Code Token:")
-    login_user = st.sidebar.text_input("Username:")
-    login_pwd = st.sidebar.text_input("Password:", type="password")
-    
-    is_authenticated = False
-    session_class = "Senior Five"
-    session_partner = ""
-    current_avatar_url = AVATAR_OPTIONS[0]
-    
-    if login_uid == "0000" and login_user == "Admin" and login_pwd == "SudaisiAdmin2026":
-        is_authenticated = True
-        session_user = "Admin"
-        session_uid = "0000"
-        session_class = "Senior Five"
-        session_partner = st.session_state["users_registry"]["0000"].get("partner", "")
-        allowed_subjects = ["Mathematics", "Physics", "Chemistry", "Biology"]
-        current_avatar_url = "SUDAISI_BAKED"
-    elif login_uid in st.session_state["users_registry"]:
-        node = st.session_state["users_registry"][login_uid]
-        if node["username"] == login_user and node["pwd"] == login_pwd:
-            expiry_date = datetime.datetime.strptime(str(node["expiry"]), "%Y-%m-%d").date() if isinstance(node["expiry"], str) else node["expiry"]
-            if datetime.date.today() > expiry_date:
-                st.sidebar.error("❌ Account Locked! Access window expired.")
-            elif node["status"] != "Approved":
-                st.sidebar.error("❌ Access Suspended.")
-            else:
-                is_authenticated = True
-                session_user = login_user
-                session_uid = login_uid
-                session_class = node.get("class", "Senior Five")
-                session_partner = node.get("partner", "")
-                allowed_subjects = node["subjects"]
-                current_avatar_url = node.get("avatar", AVATAR_OPTIONS[0])
-
-    with col_head_pic:
-        if current_avatar_url == "SUDAISI_BAKED" or session_user == "Admin":
-            st.markdown(f'<img src="{SUDAISI_IMAGE_STREAM}" class="top-profile-pic"/>', unsafe_allow_html=True)
-        else:
-            st.markdown(f'<img src="{current_avatar_url}" class="top-profile-pic"/>', unsafe_allow_html=True)
-
     if not is_authenticated:
-        st.markdown("<div style='text-align:center; margin-top:12%;'><h3>🛡️ ASP PORTAL SECURITY SCREEN</h3><p>Provide your configurations to populate your dashboard matrix.</p></div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align:center; margin-top:12%;'><h3>🛡️ ASP PORTAL SECURITY SCREEN</h3><p>Provide your configurations inside the left side interface panel to populate your dashboard matrix.</p></div>", unsafe_allow_html=True)
     else:
         st.session_state["online_users"][session_user] = datetime.datetime.now().strftime("%I:%M:%S %p")
         st.sidebar.success(f"Scholar: {session_user} ({session_class})")
@@ -491,6 +504,8 @@ elif app_mode == "Login Page Panel":
             for msg in st.session_state["private_chats"]:
                 st.markdown(f"<div class='chat-bubble chat-left'><strong>{msg['sender']}</strong> <span style='font-size:10px; color:#aaa;'>[{msg['time']}]</span>: {msg['text']}</div>", unsafe_allow_html=True)
             in_priv_msg = st.text_input("Type private text:", key="in_priv_msg_str")
+            if f"adm_rep_{session_user}" in st.session_state:
+                pass
             if st.button("Send Private Message"):
                 if in_priv_msg.strip():
                     st.session_state["private_chats"].append({"sender": session_user, "text": in_priv_msg, "to": target_p, "time": datetime.datetime.now().strftime("%I:%M:%S %p")})
