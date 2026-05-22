@@ -11,7 +11,6 @@ import time
 # =========================================================================
 st.set_page_config(page_title="Academic Shield Pro", layout="wide", page_icon="🛡️")
 
-# Embedded manifest configuration details for the PWA configuration layers
 st.markdown("""
     <head>
         <link rel="manifest" href="manifest.json">
@@ -21,7 +20,6 @@ st.markdown("""
     </head>
     """, unsafe_allow_html=True)
 
-# Strict production CSS layout design mimicking WhatsApp bubble environments and corporate UI
 st.markdown("""
     <style>
     .timer-container {
@@ -36,7 +34,7 @@ st.markdown("""
         max-height: 400px;
         overflow-y: auto;
         padding: 10px;
-        background-color: #0b141a; /* Dark WhatsApp Theme Background */
+        background-color: #0b141a; 
         border-radius: 8px;
         margin-bottom: 10px;
     }
@@ -49,58 +47,13 @@ st.markdown("""
         font-size: 14px;
         line-height: 1.4;
     }
-    .chat-left { 
-        background-color: #202c33; 
-        color: #e9edef; 
-        margin-right: auto; 
-        text-align: left; 
-        border-top-left-radius: 0px;
-    }
-    .chat-right { 
-        background-color: #005c4b; 
-        color: #e9edef; 
-        margin-left: auto; 
-        text-align: left; 
-        border-top-right-radius: 0px;
-    }
-    .system-warn-box { 
-        background-color: #3b1111; 
-        border: 2px solid #ff3333; 
-        padding: 15px; 
-        border-radius: 8px; 
-        margin-bottom: 15px; 
-        color: #ff9999; 
-        font-weight: bold;
-    }
-    .top-profile-pic { 
-        border-radius: 50%; 
-        border: 2px solid #ff3333; 
-        object-fit: cover; 
-        width: 55px; 
-        height: 55px; 
-    }
-    .admin-broadcast-banner { 
-        background-color: #ff3333; 
-        color: white; 
-        padding: 12px; 
-        border-radius: 6px; 
-        font-weight: bold; 
-        text-align: center; 
-        margin-bottom: 20px; 
-    }
-    div.stButton > button {
-        width: 100% !important;
-        font-weight: bold !important;
-        background-color: #1e1e1e !important;
-        color: #ffffff !important;
-        border: 1px solid #444444 !important;
-        border-radius: 4px !important;
-    }
-    div.stButton > button:hover {
-        background-color: #ff3333 !important;
-        color: white !important;
-        border-color: #ff3333 !important;
-    }
+    .chat-left { background-color: #202c33; color: #e9edef; margin-right: auto; text-align: left; border-top-left-radius: 0px;}
+    .chat-right { background-color: #005c4b; color: #e9edef; margin-left: auto; text-align: left; border-top-right-radius: 0px;}
+    .system-warn-box { background-color: #3b1111; border: 2px solid #ff3333; padding: 15px; border-radius: 8px; margin-bottom: 15px; color: #ff9999; font-weight: bold;}
+    .top-profile-pic { border-radius: 50%; border: 2px solid #ff3333; object-fit: cover; width: 55px; height: 55px; }
+    .admin-broadcast-banner { background-color: #ff3333; color: white; padding: 12px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 20px; }
+    div.stButton > button { width: 100% !important; font-weight: bold !important; background-color: #1e1e1e !important; color: #ffffff !important; border: 1px solid #444444 !important; border-radius: 4px !important; }
+    div.stButton > button:hover { background-color: #ff3333 !important; color: white !important; border-color: #ff3333 !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -114,7 +67,6 @@ NCDC_CURRICULUM_MAP = {
     "Biology": ["Cell Biology", "Nutrition", "Transport", "Respiration", "Homeostasis", "Coordination", "Ecology"]
 }
 
-# Dynamic Avatar References and Admin Specific Image Streams
 SUDAISI_IMAGE_STREAM = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200"
 AVATAR_OPTIONS = [
     "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
@@ -137,17 +89,14 @@ def read_public_sheet(worksheet_name):
 
 def save_cache_to_disk(filename, data):
     try:
-        with open(filename, "w") as f: 
-            json.dump(data, f, default=str)
-    except Exception: 
-        pass
+        with open(filename, "w") as f: json.dump(data, f, default=str)
+    except Exception: pass
 
 def load_cache_from_disk(filename, default_val):
     if os.path.exists(filename):
         try:
             with open(filename, "r") as f: return json.load(f)
-        except Exception: 
-            pass
+        except Exception: pass
     return default_val
 
 # =========================================================================
@@ -216,14 +165,12 @@ if app_mode == "Login Page Panel":
                 allowed_subjects = node["subjects"]
                 current_avatar_url = node.get("avatar", AVATAR_OPTIONS[0])
 
-# Top Profile Graphics Header Injection Frame
 col_head_title, col_head_pic = st.columns([11, 1])
 with col_head_title:
     st.markdown("<h2 style='color:#ff3333; margin:0;'>🛡️ Academic Shield Pro</h2>", unsafe_allow_html=True)
     st.markdown("<h5 style='color:#aaaaaa; font-style:italic; margin:0;'>“Conceptual Mastery Terminal Engine”</h5>", unsafe_allow_html=True)
 
 with col_head_pic:
-    # Restored permanent profile photo stream mapping logic
     if session_user == "Admin" or current_avatar_url == "SUDAISI_BAKED":
         st.markdown(f'<img src="{SUDAISI_IMAGE_STREAM}" class="top-profile-pic"/>', unsafe_allow_html=True)
     else:
@@ -291,9 +238,6 @@ elif app_mode == "Login Page Panel":
         if st.session_state["global_alerts"]:
             st.markdown(f'<div class="admin-broadcast-banner">📢 BROADCAST: {st.session_state["global_alerts"][-1]}</div>', unsafe_allow_html=True)
 
-        # =========================================================================
-        # REAL-TIME WHATSAPP UNREAD MESSAGE COUNTER & BADGE GENERATOR ENGINE
-        # =========================================================================
         u_last = st.session_state["last_read_tracker"].get(session_user, "1970-01-01 00:00:00")
         unread_p2p_cnt = sum(1 for m in st.session_state["private_chats"] if m.get("to") == session_user and m.get("timestamp", "") > u_last)
         unread_gen_cnt = sum(1 for m in st.session_state["general_chat"] if m.get("sender") != session_user and m.get("timestamp", "") > u_last)
@@ -315,7 +259,7 @@ elif app_mode == "Login Page Panel":
         ])
 
         # =========================================================================
-        # 1. EXAM CENTER MODULE (GATEWAY AND CONSOLIDATED SINGLE COLUMN PARSER)
+        # UPGRADED HIGH-STANDARD EXAM EVALUATION CENTER
         # =========================================================================
         if client_tab_choice == "📝 Access Exam Center":
             st.title("📝 Precision Topic Exam Center")
@@ -341,7 +285,6 @@ elif app_mode == "Login Page Panel":
                 official_topics = NCDC_CURRICULUM_MAP.get(selected_subject, ["General Concepts"])
                 selected_topic_target = st.selectbox("🎯 Target Challenge Topic Filter:", ["All Topics"] + official_topics)
                 
-                # Dynamic sheet fetcher from consolidated 2-column database format
                 sheet_data = read_public_sheet(selected_subject)
                 active_exam_list = []
                 
@@ -351,7 +294,6 @@ elif app_mode == "Login Page Panel":
                             q_text = str(row.iloc[0]).strip()
                             raw_meta = str(row.iloc[1]).strip()
                             
-                            # Single column cell bundle split unpacker engine
                             parts = raw_meta.split("||")
                             if len(parts) >= 5:
                                 meta_subject = parts[0].strip()
@@ -366,117 +308,142 @@ elif app_mode == "Login Page Panel":
                                             "question": q_text, "solution": meta_solution, 
                                             "numerical": meta_numerical, "keywords": meta_keywords, "topic": meta_topic
                                         })
-                    except Exception: 
-                        pass
+                    except Exception: pass
 
-                # Hardcoded fallback safety net
                 if not active_exam_list:
                     active_exam_list = [{
                         "question": f"Calculate the systemic variation patterns for advanced NCDC {selected_subject} criteria.",
                         "solution": "Establish uniform coordinate tracks, configure vector parameters, and compute numerical limits.",
-                        "numerical": "1497.6 or 15.00", "keywords": "mass, velocity, pressure, calculate", "topic": "General Concepts"
+                        "numerical": "1497.6", "keywords": "mass, velocity, pressure, calculate, vector", "topic": "General Concepts"
                     }]
 
                 st.markdown("### ✍️ Active Test Assignment")
                 for index, item in enumerate(active_exam_list, 1):
                     st.markdown(f"<div style='background-color:#1e1e1e; padding:15px; border-radius:6px; margin-top:10px; border-left:4px solid #ff3333;'><strong>Question {index}:</strong> {item['question']}</div>", unsafe_allow_html=True)
                 
-                typed_work = st.text_area("Type your step-by-step structural mathematical/physical approach solution here:")
+                typed_work = st.text_area("Type your step-by-step structural analytical solution here:")
                 uploaded_photo = st.file_uploader("📸 Upload Handwritten Script Photo:", type=["jpg", "jpeg", "png"])
 
                 if st.button("🚀 Transmit Answers Script"):
                     if typed_work.strip() or uploaded_photo is not None:
-                        # Microsecond auto-marking evaluation calculation logic
-                        matched_keys = [k for k in active_exam_list[0]['keywords'].split(",") if k.strip().lower() in typed_work.lower()]
-                        score = random.randint(80, 98) if len(matched_keys) >= 2 else random.randint(45, 78)
-                        grade = "A (Distinction)" if score >= 80 else "C (Credit)" if score >= 60 else "F (Pass)"
+                        # --- STRICT MICROSECOND GRADING ALGORITHM ---
+                        start_eval_time = time.time()
                         
-                        full_structured_sol = f"**[NCDC Standard Solution Map]**\\nNumerical Target: {active_exam_list[0]['numerical']}\\nGuideline: {active_exam_list[0]['solution']}"
+                        keywords_list = [k.strip().lower() for k in active_exam_list[0]['keywords'].split(",") if k.strip()]
+                        matched_keys = [k for k in keywords_list if k in typed_work.lower()]
                         
+                        # High standards length validation (halfway answers penalty check)
+                        expected_min_length = max(60, len(active_exam_list[0]['solution']) // 2)
+                        actual_length = len(typed_work.strip())
+                        
+                        keyword_ratio = len(matched_keys) / len(keywords_list) if keywords_list else 1.0
+                        length_ratio = min(1.0, actual_length / expected_min_length) if expected_min_length > 0 else 1.0
+                        
+                        # Combined strict score evaluation
+                        calculated_score = int((keyword_ratio * 60) + (length_ratio * 40))
+                        if calculated_score > 100: calculated_score = 100
+                        
+                        # Exact requested grading scale loops
+                        if calculated_score >= 80:
+                            grade = "A (Distinction)"
+                        elif calculated_score >= 60:
+                            grade = "B (Credit)"
+                        elif calculated_score >= 50:
+                            grade = "C (Pass)"
+                        else:
+                            grade = "E (Failure)"
+                        
+                        eval_duration = (time.time() - start_eval_time) * 1000 # Microseconds/milliseconds translation
+                        
+                        full_structured_sol = f"**[NCDC Solution Blueprint]** Target Numerical: {active_exam_list[0]['numerical']} / Guidelines: {active_exam_list[0]['solution']}"
+                        
+                        # Commit automatically to Done Exam Vault
                         if session_uid not in st.session_state["exam_vault"]:
                             st.session_state["exam_vault"][session_uid] = []
                             
-                        st.session_state["exam_vault"][session_uid].append({
+                        exam_record = {
                             "Subject": selected_subject,
                             "Topic": active_exam_list[0]['topic'],
                             "Date": str(datetime.date.today()),
                             "Questions": active_exam_list[0]['question'],
                             "Your_Work": typed_work,
                             "Grade": grade,
-                            "Status": f"Scored: {score}%",
+                            "Status": f"Scored: {calculated_score}%",
                             "Feedback_Solution": full_structured_sol
-                        })
-                        
+                        }
+                        st.session_state["exam_vault"][session_uid].append(exam_record)
                         save_cache_to_disk("db_exams.json", st.session_state["exam_vault"])
-                        st.success(f"✔ Transmitted! Immediate Microsecond Feedback: {grade} ({score}%)")
-                        st.markdown(f"<div style='background-color:#112211; padding:15px; border-radius:6px; border:1px solid #22aa22; margin-top:10px;'>{full_structured_sol}</div>", unsafe_allow_html=True)
+                        
+                        # --- AUTOMATIC FAILURE PARTNER FORWARDING ENGINE ---
+                        if calculated_score < 50:
+                            st.error(f"⚠️ Score dropped below 50% ({calculated_score}%). Forwarding exam payload to partner channels.")
+                            if session_partner:
+                                st.session_state["private_chats"].append({
+                                    "sender": "SYSTEM_SHIELD_BOT",
+                                    "to": session_partner,
+                                    "text": f"🚨 EMERGENCY ACADEMIC ALERT: Your partner '{session_user}' failed a test in {selected_subject} ({active_exam_list[0]['topic']}) with a score of {calculated_score}% (Grade E). Here is their work for immediate peer review revision: '{typed_work}'",
+                                    "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                })
+                                save_cache_to_disk("db_p2pchat.json", st.session_state["private_chats"])
+                        
+                        st.success(f"✔ Transmitted! Evaluated in {eval_duration:.2f} ms. Result: {grade} ({calculated_score}%)")
+                        
+                        # Instant solution reveal if not perfect 100% score
+                        if calculated_score < 100:
+                            st.markdown("### 💡 Corrections & Blueprint Feedback")
+                            st.markdown(f"<div style='background-color:#112211; padding:15px; border-radius:6px; border:1px solid #22aa22;'>{full_structured_sol}</div>", unsafe_allow_html=True)
+                        
                         st.session_state[f"exam_active_{session_uid}"] = False
 
-        # =========================================================================
-        # 2. PROGRESS TRACKER MODULE WITH LIVE SKETCHED TREND GRAPH
-        # =========================================================================
+        # --- PROGRESS TRACKER ---
         elif client_tab_choice == "📊 Progress Tracker Logs":
             st.title("📊 Personal Performance Progress Chart")
             user_history = st.session_state["exam_vault"].get(session_uid, [])
-            
             if not user_history:
                 st.info("No records completed to build performance tracking logs yet.")
             else:
                 df_logs = pd.DataFrame(user_history)
                 st.dataframe(df_logs[["Subject", "Topic", "Date", "Grade", "Status"]])
-                
                 try:
                     scores_list = [int(s.split(":")[1].replace("%","").strip()) for s in df_logs["Status"] if "Scored" in s]
                     if scores_list:
                         st.markdown("### 📈 Trend Track Graph Analysis")
                         st.line_chart(scores_list)
-                except Exception:
-                    pass
+                except Exception: pass
 
-        # =========================================================================
-        # 3. HISTORIC EXAM VAULT MODULE (POLISHED & EXPORTABLE FORMATS)
-        # =========================================================================
+        # --- DONE EXAM VAULT WITH EXPORT DOWNLOAD HOOKS ---
         elif client_tab_choice == "📁 Finished Exam Vault":
-            st.title("📁 Historic Exam Script Vault")
+            st.title("📁 Historic Done Exam Script Vault")
             user_history = st.session_state["exam_vault"].get(session_uid, [])
-            
             if not user_history:
                 st.info("Your historical exam script archive is currently empty.")
             else:
                 for idx, entry in enumerate(user_history):
-                    with st.container():
-                        st.markdown(f"""
-                        <div style='background-color:#1e1e1e; padding:16px; border-radius:8px; border:1px solid #333; margin-bottom:12px;'>
-                            <h4 style='color:#ff3333; margin:0;'>📝 {entry['Subject']} — {entry['Topic']}</h4>
-                            <p style='color:#888; font-size:12px; margin:2px 0;'>Attempted on: {entry['Date']} | Status: <strong>{entry['Grade']} ({entry.get('Status','Completed')})</strong></p>
-                            <hr style='border-color:#333; margin:8px 0;'>
-                            <p><strong>Question Paper Profile:</strong><br><code style='color:#ff9999;'>{entry.get('Questions','NCDC Objective Task')}</code></p>
-                            <p><strong>Your Submitted Script:</strong><br><i style='color:#aaa;'>"{entry.get('Your_Work','[Handwritten Payload Mounted Links]变形')}"</i></p>
-                            <div style='background-color:#112211; padding:12px; border-radius:4px; margin-top:8px;'>
-                                <span style='color:#25D366; font-weight:bold;'>💡 Automated Correction Brain Solution:</span><br>
-                                <span style='font-size:13px;'>{entry.get('Feedback_Solution','Review baseline notes formulas.')}</span>
-                            </div>
+                    st.markdown(f"""
+                    <div style='background-color:#1e1e1e; padding:16px; border-radius:8px; border:1px solid #333; margin-bottom:12px;'>
+                        <h4 style='color:#ff3333; margin:0;'>📝 {entry['Subject']} — {entry['Topic']}</h4>
+                        <p style='color:#888; font-size:12px;'>Attempted on: {entry['Date']} | Status: <strong>{entry['Grade']} ({entry.get('Status','')})</strong></p>
+                        <hr style='border-color:#333; margin:8px 0;'>
+                        <p><strong>Question Paper Profile:</strong><br><code style='color:#ff9999;'>{entry.get('Questions','')}</code></p>
+                        <p><strong>Your Submitted Script:</strong><br><i style='color:#aaa;'>"{entry.get('Your_Work','')}"</i></p>
+                        <div style='background-color:#112211; padding:12px; border-radius:4px; margin-top:8px;'>
+                            <span style='color:#25D366; font-weight:bold;'>💡 Automated Correction Brain Solution:</span><br>
+                            <span style='font-size:13px;'>{entry.get('Feedback_Solution','')}</span>
                         </div>
-                        """, unsafe_allow_html=True)
-                        
-                        # Data block packaging for direct cross-platform copy paste mechanics
-                        report_string = f"ACADEMIC SHIELD PRO REPORT\\nDate: {entry['Date']}\\nSubject: {entry['Subject']}\\nTopic: {entry['Topic']}\\nQuestions: {entry.get('Questions','')}\\nScore Rank: {entry['Grade']}\\nSolution Blueprint: {entry.get('Feedback_Solution','')}"
-                        
-                        col_actions1, col_actions2 = st.columns([3, 9])
-                        with col_actions1:
-                            st.download_button(
-                                label="📥 Download Script",
-                                data=report_string,
-                                file_name=f"Exam_Script_{entry['Subject']}_{idx}.txt",
-                                mime="text/plain",
-                                key=f"dl_{idx}"
-                            )
-                        with col_actions2:
-                            st.code(report_string, language="text")
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    report_string = f"ACADEMIC SHIELD PRO REPORT\nDate: {entry['Date']}\nSubject: {entry['Subject']}\nTopic: {entry['Topic']}\nQuestions: {entry.get('Questions','')}\nScore Rank: {entry['Grade']} ({entry.get('Status','')})\nSolution Blueprint: {entry.get('Feedback_Solution','')}"
+                    
+                    st.download_button(
+                        label="📥 Download Script Data",
+                        data=report_string,
+                        file_name=f"Exam_Script_{entry['Subject']}_{idx}.txt",
+                        mime="text/plain",
+                        key=f"dl_{idx}"
+                    )
 
-        # =========================================================================
-        # 4. WHATSAPP CHAT HOOKS MODULES (LOUNGE AND P2P MODES)
-        # =========================================================================
+        # --- CHAT & ACCOUNT SETTINGS CHANNELS ---
         elif client_tab_choice.startswith("🌐 General Lounge Chat"):
             st.title("🌐 General Lounge Chat Channel")
             st.session_state["last_read_tracker"][session_user] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -491,10 +458,7 @@ elif app_mode == "Login Page Panel":
             in_gen_msg = st.text_input("Type general chat string message:", key="in_gen_chat_box")
             if st.button("Send to Lounge Channel"):
                 if in_gen_msg.strip():
-                    st.session_state["general_chat"].append({
-                        "sender": session_user, "text": in_gen_msg.strip(), 
-                        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    })
+                    st.session_state["general_chat"].append({"sender": session_user, "text": in_gen_msg.strip(), "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
                     save_cache_to_disk("db_genchat.json", st.session_state["general_chat"])
                     st.rerun()
 
@@ -507,10 +471,7 @@ elif app_mode == "Login Page Panel":
             target_p = st.selectbox("Select Target Recipient Buddy to Message:", all_usernames)
             
             st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-            isolated_thread = [
-                m for m in st.session_state["private_chats"]
-                if (m["sender"] == session_user and m["to"] == target_p) or (m["sender"] == target_p and m["to"] == session_user)
-            ]
+            isolated_thread = [m for m in st.session_state["private_chats"] if (m["sender"] == session_user and m["to"] == target_p) or (m["sender"] == target_p and m["to"] == session_user)]
             for msg in isolated_thread:
                 align_cls = "chat-right" if msg["sender"] == session_user else "chat-left"
                 st.markdown(f"<div class='chat-bubble {align_cls}'><strong>{msg['sender']}</strong>:<br>{msg['text']}</div>", unsafe_allow_html=True)
@@ -519,10 +480,7 @@ elif app_mode == "Login Page Panel":
             in_priv_msg = st.text_input("Type secure message string:", key="in_p2p_box")
             if st.button("Send Secure Private Message"):
                 if in_priv_msg.strip() and target_p:
-                    st.session_state["private_chats"].append({
-                        "sender": session_user, "to": target_p, "text": in_priv_msg.strip(),
-                        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    })
+                    st.session_state["private_chats"].append({"sender": session_user, "to": target_p, "text": in_priv_msg.strip(), "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
                     save_cache_to_disk("db_p2pchat.json", st.session_state["private_chats"])
                     st.rerun()
 
@@ -534,7 +492,7 @@ elif app_mode == "Login Page Panel":
                 if new_p_assign.strip():
                     st.session_state["users_registry"][session_uid]["partner"] = new_p_assign.strip()
                     save_cache_to_disk("db_users.json", st.session_state["users_registry"])
-                    st.success(f"Sync complete for: {new_p_assign}")
+                    st.success("Sync complete!")
                     st.rerun()
 
         elif client_tab_choice == "🔑 Change Account Password":
@@ -545,7 +503,7 @@ elif app_mode == "Login Page Panel":
                 if p_old == st.session_state["users_registry"][session_uid]["pwd"]:
                     st.session_state["users_registry"][session_uid]["pwd"] = p_new.strip()
                     save_cache_to_disk("db_users.json", st.session_state["users_registry"])
-                    st.success("Password Updated Successfully!")
+                    st.success("Password Updated!")
 
         elif client_tab_choice == "📩 Submit App Suggestions":
             st.title("📩 Public Feedback Portal")
@@ -564,8 +522,14 @@ elif app_mode == "System Administrator Hub":
     admin_token = st.text_input("Enter Admin Verification Password:", type="password")
     
     if admin_token == "SudaisiAdmin2026":
-        st.success("✔ Root Privileges Enabled.")
-        adm_t0, adm_t1, adm_t2 = st.tabs(["🛑 Account Flags Control", "👥 Registrations Queue", "📢 Global Announcements"])
+        st.success("✔ Root Privileges Fully Activated.")
+        
+        adm_t0, adm_t1, adm_t2, adm_t3 = st.tabs([
+            "🛑 Account Flags Control", 
+            "📋 Registrations Queue", 
+            "🔑 Registration Code Generator", 
+            "📢 Global Announcements"
+        ])
         
         with adm_t0:
             st.subheader("🛑 Master User Warning Flag Management Engine")
@@ -574,7 +538,7 @@ elif app_mode == "System Administrator Hub":
                 
                 col_u1, col_u2, col_u3 = st.columns([4, 4, 4])
                 with col_u1:
-                    st.markdown(f"👤 **{user_node['username']}** (`ID: {uid_key}`)<br>Active Status Tag: *{user_node.get('warning_msg','None Active')}*", unsafe_allow_html=True)
+                    st.markdown(f"👤 **{user_node['username']}** (`ID: {uid_key}`)<br>Active Status Tag: <code style='color:#ff9999;'>{user_node.get('warning_msg','None Active')}</code>", unsafe_allow_html=True)
                 with col_u2:
                     warn_input = st.text_input("Set Flag text string:", key=f"w_in_{uid_key}")
                     if st.button("⚠️ Inject/Update Warning", key=f"w_btn_{uid_key}"):
@@ -582,7 +546,6 @@ elif app_mode == "System Administrator Hub":
                         save_cache_to_disk("db_users.json", st.session_state["users_registry"])
                         st.rerun()
                 with col_u3:
-                    # RESTORED: Precise warning clear execution framework loops
                     if st.button("✅ Drop Warning & Tags Completely", key=f"clr_btn_{uid_key}"):
                         st.session_state["users_registry"][uid_key]["warning_msg"] = ""
                         save_cache_to_disk("db_users.json", st.session_state["users_registry"])
@@ -593,7 +556,7 @@ elif app_mode == "System Administrator Hub":
         with adm_t1:
             st.subheader(f"🔔 Verification Queue Counter: {len(st.session_state['pending_registrations'])}")
             for index, item_node in enumerate(st.session_state["pending_registrations"]):
-                st.markdown(f"📌 **Request Profile {index+1}:** User: `{item_node['username']}`")
+                st.markdown(f"📌 **Request Profile {index+1}:** User: `{item_node['username']}` | Combo: {item_node['subjects']}")
                 if st.button(f"🟢 Approve and Grant Entry ID to {item_node['username']}", key=f"p_app_{index}"):
                     allocated_uid_id = str(6601 + len(st.session_state["users_registry"]))
                     st.session_state["users_registry"][allocated_uid_id] = {
@@ -610,6 +573,18 @@ elif app_mode == "System Administrator Hub":
                     st.rerun()
 
         with adm_t2:
+            st.subheader("🔑 Access Token Generator")
+            st.write("Active Verification Tokens:", st.session_state["generated_registration_codes"])
+            
+            new_code_token = st.text_input("Create Secret Registration Token String (e.g. SHIELD2026):")
+            if st.button("💾 Append Token to System Memory"):
+                if new_code_token.strip() and new_code_token.strip() not in st.session_state["generated_registration_codes"]:
+                    st.session_state["generated_registration_codes"].append(new_code_token.strip())
+                    save_cache_to_disk("db_regcodes.json", st.session_state["generated_registration_codes"])
+                    st.success(f"✔ Token '{new_code_token.strip()}' is now active and ready for student registrations!")
+                    st.rerun()
+
+        with adm_t3:
             st.subheader("📢 Broadcast Announcements Engine")
             alert_msg = st.text_input("Type critical system update alert:")
             if st.button("Broadcast System Update Everywhere"):
