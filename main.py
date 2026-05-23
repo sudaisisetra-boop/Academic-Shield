@@ -887,4 +887,10 @@ elif app_mode == "System Administrator Hub":
 st.markdown("""
     <div class="sudaisi-branding-footer">
         <p style="color: #ff3333; font-family: monospace; font-size: 15px; letter-spacing: 1.5px; margin: 0; font-weight: bold;">
-            ⚡ APPLICATION POWERED BY METRIC MOTORS & NCDC SCHEM
+            ⚡ APPLICATION POWERED BY METRIC MOTORS & NCDC SCHEMAS ⚡
+        </p>
+        <p style="color: #ffffff; font-family: 'Courier New', Courier, monospace; font-size: 13px; margin: 5px 0 0 0;">
+            Created by <span style="color: #ff3333; font-weight: bold;">Sudaisi Setra</span> | Platform Operational Mirror System © 2026
+        </p>
+    </div>
+""", unsafe_allow_html=True)
