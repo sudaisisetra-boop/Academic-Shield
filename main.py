@@ -11,7 +11,7 @@ import time
 # =========================================================================
 st.set_page_config(page_title="Academic Shield Pro", layout="wide", page_icon="🛡️")
 
-# Injected CSS to hide all default styling and power loops
+# Injected CSS to hide default branding headers/footers and power custom WhatsApp elements
 st.markdown("""
     <head>
         <link rel="manifest" href="manifest.json">
@@ -20,7 +20,6 @@ st.markdown("""
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     </head>
     <style>
-    /* Absolute suppression of default branding headers/footers */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
@@ -118,7 +117,7 @@ st.markdown("""
     .partner-live-badge { background-color: #005c4b; color: #ffffff; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
     .partner-vs-box { background-color: #111; border: 1px solid #333; padding: 15px; border-radius: 8px; margin-top: 15px; }
     
-    /* Meet Dashboard Additions */
+    /* Meet Panel Styling */
     .meet-panel-card { background-color: #141a1e; border: 1px solid #ff3333; border-radius: 8px; padding: 15px; margin-bottom: 15px;}
     .hand-raised-badge { background-color: #ffcc00; color: #000000; font-weight: bold; border-radius: 4px; padding: 2px 6px; font-size: 11px; display: inline-block; margin-left: 6px;}
 
@@ -201,7 +200,6 @@ if "custom_admin_photo" not in st.session_state: st.session_state["custom_admin_
 if "mutual_exam_sessions" not in st.session_state:
     st.session_state["mutual_exam_sessions"] = load_cache_from_disk("db_mutual_exams.json", {})
 
-# Secure Storage Maps for Group Forums Updates
 if "group_discussions" not in st.session_state:
     st.session_state["group_discussions"] = load_cache_from_disk("db_group_discussions.json", {})
 if "user_forum_presence" not in st.session_state:
@@ -376,8 +374,8 @@ elif app_mode == "Login Page Panel":
             
         client_tab_choice = st.sidebar.radio("Workspace Channels", workspace_list, index=workspace_list.index(client_default_nav) if client_default_nav in workspace_list else 0)
 
+        # Unified Automated Microsecond Scoring and Grading Engine
         def run_microsecond_scoring_engine(typed_work, current_two_items):
-            start_eval_time = time.time()
             all_keywords = ",".join([item.get('keywords', '') for item in current_two_items if isinstance(item, dict)])
             keywords_list = [k.strip().lower() for k in all_keywords.split(",") if k.strip()]
             matched_keys = [k for k in keywords_list if k in typed_work.lower()]
@@ -515,7 +513,6 @@ elif app_mode == "Login Page Panel":
             
             grp = st.session_state["group_discussions"][selected_subject]
             
-            # Engagement Gate Handshake Modal for Late Joiners
             if grp["leader"] != "" and session_user != grp["leader"] and st.session_state["user_forum_presence"].get(f"{session_user}_{selected_subject}") is None:
                 st.markdown("<div class='system-warn-box'>🛰️ CHATROOM GATEWAY ENTRY GATE</div>", unsafe_allow_html=True)
                 st.info(f"An active study cluster session is currently run by Group Leader: @{grp['leader']}. Select your interaction profile mode to continue down-loop:")
@@ -530,7 +527,6 @@ elif app_mode == "Login Page Panel":
                         st.rerun()
                 st.stop()
             
-            # Session Leadership State Logic
             if not grp["leader"]:
                 st.info("No active session leader assigned for this subject channel. Open the link to assume leadership responsibilities.")
                 if st.button("👑 Initialize Open Discussion Session & Become Leader"):
@@ -548,7 +544,6 @@ elif app_mode == "Login Page Panel":
                         save_cache_to_disk("db_group_discussions.json", st.session_state["group_discussions"])
                         st.rerun()
             
-            # Google Meet Feature Control Matrix
             st.markdown("<div class='meet-panel-card'><h4>📺 Interactive Collaboration Utilities Panel</h4>", unsafe_allow_html=True)
             col_meet1, col_meet2, col_meet3 = st.columns([3, 3, 6])
             
@@ -579,7 +574,6 @@ elif app_mode == "Login Page Panel":
                     st.write("Speaker Queue is clear.")
             st.markdown("</div>", unsafe_allow_html=True)
             
-            # Interactive NCDC Live Question Delivery Engine Controls
             if session_user == grp["leader"]:
                 st.markdown("### 🎛️ Leader Question Stream Controllers")
                 col_lq1, col_lq2 = st.columns(2)
@@ -608,7 +602,6 @@ elif app_mode == "Login Page Panel":
                             save_cache_to_disk("db_group_discussions.json", st.session_state["group_discussions"])
                             st.rerun()
             
-            # Question Billboard Display Frame
             if grp.get("active_question"):
                 st.markdown(f"""
                 <div style='background-color:#161b22; padding:20px; border-radius:8px; border-left:5px solid #ff3333; margin-bottom:15px;'>
@@ -626,7 +619,6 @@ elif app_mode == "Login Page Panel":
                     </div>
                     """, unsafe_allow_html=True)
             
-            # Community Interactive Live Forums View (WhatsApp Skin Engine)
             st.markdown("### 💬 Shared Workspace Stream Channel")
             st.markdown('<div class="chat-container">', unsafe_allow_html=True)
             for msg in grp.get("messages", []):
@@ -654,46 +646,27 @@ elif app_mode == "Login Page Panel":
                     st.markdown(f'<div class="chat-bubble {side_class}"><strong>@{m_sender}:</strong> {m_text}{media_html}{react_html}<span class="chat-timestamp">{m_ts} {ticks}</span></div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # Shared Multi-Media Transmission Console Inputs Block
             with st.form("group_message_form", clear_on_submit=True):
-                col_in1, col_in2, col_in3 = st.columns([6, 3, 3])
-                with col_in1:
-                    grp_txt = st.text_input("Type contribution ideas / texts / WhatsApp GIFs codes...", key="grp_txt_in")
-                with col_in2:
-                    grp_file = st.file_uploader("📎 Upload target payload arrays:", type=["jpg", "jpeg", "png", "pdf", "txt", "xlsx"], key="grp_file_in")
-                with col_in3:
-                    st.write("")
-                    audio_checkbox_payload = st.checkbox("🎤 Trigger Audio Message Capture Mic", key="grp_audio_mic")
-                    
-                col_emoji_row = st.columns(6)
-                selected_reaction_emoji = ""
-                with col_emoji_row[0]: reaction_like = st.checkbox("👍 Like")
-                with col_emoji_row[1]: reaction_heart = st.checkbox("❤️ Heart")
-                with col_emoji_row[2]: reaction_laugh = st.checkbox("😂 Laugh")
-                with col_emoji_row[3]: reaction_gasp = st.checkbox("😮 Wow")
-                with col_emoji_row[4]: reaction_sticker = st.checkbox("⭐ Sticker")
-                with col_emoji_row[5]: reaction_gif = st.checkbox("🎬 GIF")
+                grp_txt = st.text_input("Type contribution ideas / texts / WhatsApp GIFs codes...", key="grp_txt_in")
+                grp_file = st.file_uploader("📎 Upload target payload arrays:", type=["jpg", "jpeg", "png", "pdf", "txt", "xlsx"], key="grp_file_in")
+                audio_checkbox_payload = st.checkbox("🎤 Trigger Audio Message Capture Mic", key="grp_audio_mic")
                 
-                if reaction_like: selected_reaction_emoji = "👍"
-                elif reaction_heart: selected_reaction_emoji = "❤️"
-                elif reaction_laugh: selected_reaction_emoji = "😂"
-                elif reaction_gasp: selected_reaction_emoji = "😮"
-                elif reaction_sticker: selected_reaction_emoji = "⭐ [Sticker]"
-                elif reaction_gif: selected_reaction_emoji = "🎬 [GIF Data]"
+                st.markdown("**Select WhatsApp Reaction/Sticker:**")
+                react_selection = st.selectbox("Choose reaction node to apply:", ["None", "👍 Like", "❤️ Heart", "😂 Laugh", "😮 Wow", "⭐ [Sticker]", "🎬 [GIF Data]"])
                 
                 grp_submit_trigger = st.form_submit_button("Transmit Packet to Shared Stream Room 🚀")
                 
                 if grp_submit_trigger:
-                    if grp_txt.strip() or grp_file is not None or audio_checkbox_payload or selected_reaction_emoji:
+                    if grp_txt.strip() or grp_file is not None or audio_checkbox_payload or react_selection != "None":
                         meta_pack = {"name": grp_file.name, "type": f"{grp_file.name.split('.')[-1].upper()} Item"} if grp_file else None
                         txt_val = grp_txt.strip()
                         
                         if not txt_val and audio_checkbox_payload:
                             txt_val = "🎙️ Transmitted Audio Message Packet Layer"
-                        elif not txt_val and selected_reaction_emoji:
-                            txt_val = f"Shared Reaction Node {selected_reaction_emoji}"
+                        elif not txt_val and react_selection != "None":
+                            txt_val = f"Shared Reaction Node {react_selection}"
                             
-                        react_map = {session_user: selected_reaction_emoji} if selected_reaction_emoji else {}
+                        react_map = {session_user: react_selection.split(" ")[0]} if react_selection != "None" else {}
                         
                         grp["messages"].append({
                             "sender": session_user, "text": txt_val if txt_val else "📄 Checked in.",
@@ -848,7 +821,6 @@ elif app_mode == "Login Page Panel":
         # --- GLOBAL STUDENT DIRECTORY ---
         elif client_tab_choice == "👥 Global Student Directory":
             st.title("👥 Global Student Directory Panel")
-            st.write("Browse profiles of active network scholars. Security limits are in force: passwords and private codes are scrubbed.")
             
             for uid, node in st.session_state["users_registry"].items():
                 if uid == session_uid: continue
@@ -881,7 +853,7 @@ elif app_mode == "Login Page Panel":
                                 st.session_state["users_registry"][sub_uid]["partner_role"] = "Session Follower"
                                 
                         save_cache_to_disk("db_users.json", st.session_state["users_registry"])
-                        st.success(f"✔ Synchronized Partner link established with {node.get('username')}! Assigned Tag: Leader.")
+                        st.success(f"✔ Synchronized Partner link established with {node.get('username')}!")
                         time.sleep(1)
                         st.rerun()
                 st.markdown("<hr style='border: 1px solid #1a1a1a; margin: 10px 0 25px 0;'>", unsafe_allow_html=True)
@@ -913,7 +885,7 @@ elif app_mode == "Login Page Panel":
                                 st.session_state["users_registry"][sub_uid]["partner_role"] = "Session Follower"
                                 
                         save_cache_to_disk("db_users.json", st.session_state["users_registry"])
-                        st.success(f"Pairing link initialized with {chosen_p} as Session Leader!")
+                        st.success(f"Pairing link initialized with {chosen_p}!")
                         st.rerun()
 
         # --- GLOBAL LOUNGE CHAT ---
@@ -941,11 +913,8 @@ elif app_mode == "Login Page Panel":
             st.markdown('</div>', unsafe_allow_html=True)
             
             with st.form("gen_message_form", clear_on_submit=True):
-                col_gen1, col_gen2 = st.columns([8, 4])
-                with col_gen1:
-                    gen_text_input = st.text_input("Type community broadcast chat message...")
-                with col_gen2:
-                    gen_audio_trigger = st.checkbox("🎤 Add Audio Mic Notes", key="gen_mic_bool")
+                gen_text_input = st.text_input("Type community broadcast chat message...")
+                gen_audio_trigger = st.checkbox("🎤 Add Audio Mic Notes", key="gen_mic_bool")
                 gen_file = st.file_uploader("📎 Attach Rich Media Payload:", type=["jpg", "jpeg", "png", "mp4", "mp3", "pdf", "txt"])
                 gen_submit_trigger = st.form_submit_button("Send 🚀")
                 
@@ -992,11 +961,8 @@ elif app_mode == "Login Page Panel":
                 st.markdown('</div>', unsafe_allow_html=True)
                 
                 with st.form("p2p_message_form", clear_on_submit=True):
-                    col_p2p1, col_p2p2 = st.columns([8, 4])
-                    with col_p2p1:
-                        p2p_text_input = st.text_input("Type confidential messaging nodes...")
-                    with col_p2p2:
-                        p2p_audio_trigger = st.checkbox("🎤 Add Audio Mic Notes", key="p2p_mic_bool")
+                    p2p_text_input = st.text_input("Type confidential messaging nodes...")
+                    p2p_audio_trigger = st.checkbox("🎤 Add Audio Mic Notes", key="p2p_mic_bool")
                     p2p_file = st.file_uploader("📎 Upload Rich Media Files to Partner Channel:", type=["jpg", "jpeg", "png", "mp4", "mp3", "pdf", "txt"])
                     p2p_submit_trigger = st.form_submit_button("Send 🔐")
                     
@@ -1013,7 +979,7 @@ elif app_mode == "Login Page Panel":
                             save_cache_to_disk("db_readtrack.json", st.session_state["last_read_tracker"])
                             st.rerun()
 
-        # --- PROGRESS TRACKER LOGS ---
+        # --- PROGRESS TRACKER LOGS & UPGRADED STANDINGS ---
         elif client_tab_choice == "📊 Progress Tracker Logs":
             st.title("📊 Performance Growth Metrics Analytics")
             user_history = st.session_state["exam_vault"].get(session_uid, [])
@@ -1030,6 +996,19 @@ elif app_mode == "Login Page Panel":
                     
                     st.line_chart(pd.DataFrame({"Your Score (%)": scores_list}, index=[f"Exam #{i+1}" for i in range(len(scores_list))]), y="Your Score (%)")
                 st.dataframe(pd.DataFrame(user_history)[[c for c in ["Subject", "Topic", "Date", "Grade", "Status"] if c in pd.DataFrame(user_history).columns]])
+
+            # Real-Time Upgraded Dream League Standing Tables Core Matrix Block
+            st.markdown("---")
+            st.markdown("### 🏆 Live Dynamic Community Tournament Standings")
+            
+            # Master Array calculations for tournament participants
+            standings_data = [
+                {"Rank": 1, "Club Squad": "Setra FC 👑", "P": 6, "W": 5, "D": 1, "L": 0, "GF": 16, "GA": 4, "GD": +12, "PTS": 16, "Form Matrix": "🟢 🟢 🟢 🟡 🟢 🟢"},
+                {"Rank": 2, "Club Squad": "Victoria FC", "P": 6, "W": 4, "D": 0, "L": 2, "GF": 11, "GA": 7, "GD": +4, "PTS": 12, "Form Matrix": "🟢 🔴 🟢 🟢 🔴 🟢"},
+                {"Rank": 3, "Club Squad": "Chelsea Lite FC", "P": 6, "W": 2, "D": 1, "L": 3, "GF": 8, "GA": 10, "GD": -2, "PTS": 7, "Form Matrix": "🔴 🟡 🟢 🔴 🟢 🔴"},
+                {"Rank": 4, "Club Squad": "Smur FC", "P": 6, "W": 0, "D": 0, "L": 6, "GF": 2, "GA": 16, "GD": -14, "PTS": 0, "Form Matrix": "🔴 🔴 🔴 🔴 🔴 🔴"}
+            ]
+            st.table(pd.DataFrame(standings_data).set_index("Rank"))
 
         # --- FINISHED EXAM VAULT ---
         elif client_tab_choice == "📁 Finished Exam Vault":
@@ -1147,7 +1126,7 @@ elif app_mode == "System Administrator Hub":
                         if st.button(f"🚀 Broadcast Official Reply (Item {idx+1})", key=f"rep_btn_{s.get('id', idx)}"):
                             st.session_state["suggestions"][idx]["Reply"] = reply_text_input.strip()
                             save_cache_to_disk("db_suggestions.json", st.session_state["suggestions"])
-                            st.success("✔ Reply compiled and synced live to the public dashboard boards!")
+                            st.success("✔ Reply compiled and synced live!")
                             time.sleep(1)
                             st.rerun()
 
