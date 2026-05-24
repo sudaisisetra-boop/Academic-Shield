@@ -12,6 +12,7 @@ from database import (
     get_east_timestamp,
     read_public_sheet,
     save_cache_to_disk,
+    load_cache_from_disk,
     initialize_global_states,
     create_blank_progress_card,
     push_system_notification
@@ -21,28 +22,50 @@ from database import (
 initialize_global_states()
 inject_whatsapp_styles()
 
+# Extra stability states for advanced system functions
 if "logged_in_uid" not in st.session_state:
     st.session_state["logged_in_uid"] = None
+if "discussion_leaders" not in st.session_state:
+    st.session_state["discussion_leaders"] = load_cache_from_disk("db_leaders.json", {})
+
+# Calibrated A-Level National Principal Scale Grading Engine
+def compute_ugandan_grade(score):
+    if score >= 80: return "Principal A (Excellent)"
+    elif score >= 70: return "Principal B (Very Good)"
+    elif score >= 60: return "Principal C (Good)"
+    elif score >= 50: return "Principal D (Satisfactory)"
+    elif score >= 40: return "Principal E (Pass)"
+    elif score >= 35: return "O (Subsidiary Pass)"
+    else: return "F (Fail)"
 
 # =========================================================================
-# GATEWAY TERMINAL (LOGIN & REGISTRATION SIGN-IN)
+# GATEWAY TERMINAL (3-SECURE SECTIONS: USER, ADMIN & REGISTRATION)
 # =========================================================================
 if st.session_state["logged_in_uid"] is None:
     st.markdown("<h1 style='text-align: center; color: #ff3333;'>🛡️ ACADEMIC SHIELD NETWORK</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #888;'>Ugandan Advanced Curriculum Portal & Core Database</p>", unsafe_allow_html=True)
     
-    auth_mode = st.radio("Select Portal Action Gate:", ["🔑 System Security Login", "📝 Create Candidate Account"], horizontal=True)
+    auth_mode = st.radio(
+        "Select Portal Action Gate:", 
+        ["🔑 Student Candidate Login", "🛡️ Portal Admin Terminal", "📝 Create Candidate Account"], 
+        horizontal=True
+    )
     
-    if auth_mode == "🔑 System Security Login":
-        with st.form("Login Gateway Terminal"):
+    # SECTION 1: STANDARD STUDENT LOGIN
+    if auth_mode == "🔑 Student Candidate Login":
+        st.markdown("### 🔑 Student Candidate Access Node")
+        with st.form("Student Login Terminal"):
             input_username = st.text_input("Candidate Username / ID Coordinate")
             input_password = st.text_input("Security Access Password", type="password")
-            submit_login = st.form_submit_button("AUTHORIZE SYSTEM ACCESS")
+            submit_login = st.form_submit_button("AUTHORIZE STUDENT ACCESS")
             
             if submit_login:
                 found_uid = None
                 for uid, data in st.session_state["users_registry"].items():
                     if data.get("username") == input_username and data.get("pwd") == input_password:
+                        if data.get("role") in ["ADMIN", "SUPER_ADMIN"]:
+                            st.error("🚫 Access Denied. Administrative accounts must use the Portal Admin Terminal gate.")
+                            st.stop()
                         found_uid = uid
                         break
                 
@@ -57,9 +80,35 @@ if st.session_state["logged_in_uid"] is None:
                         st.success(f"🔓 Access Granted. Welcome back, {user_node.get('name')}.")
                         st.rerun()
                 else:
-                    st.error("❌ Authentication Failed. Double-check your access credentials.")
+                    st.error("❌ Authentication Failed. Double-check your student credentials.")
                     
+    # SECTION 2: EXCLUSIVE ADMIN LOGIN TERMINAL
+    elif auth_mode == "🛡️ Portal Admin Terminal":
+        st.markdown("### 🛡️ Secure System Administrator Command Center")
+        st.caption("Unauthorized login attempts are strictly logged for network security protection.")
+        with st.form("Admin Core Login Terminal"):
+            admin_username = st.text_input("Admin Security Identifier ID")
+            admin_password = st.text_input("Master System Password", type="password")
+            submit_admin = st.form_submit_button("UNLOCK MASTER OPERATIONS")
+            
+            if submit_admin:
+                found_uid = None
+                for uid, data in st.session_state["users_registry"].items():
+                    if data.get("username") == admin_username and data.get("pwd") == admin_password:
+                        if data.get("role") in ["ADMIN", "SUPER_ADMIN"]:
+                            found_uid = uid
+                            break
+                
+                if found_uid:
+                    st.session_state["logged_in_uid"] = found_uid
+                    st.success(f"⚡ Master Security Clearance Granted. Welcome Commander, {st.session_state['users_registry'][found_uid].get('name')}.")
+                    st.rerun()
+                else:
+                    st.error("❌ Cryptographic Error: Invalid Admin Credentials or insufficient clearance priority.")
+
+    # SECTION 3: CANDIDATE REGISTRATION INTAKE
     elif auth_mode == "📝 Create Candidate Account":
+        st.markdown("### 📝 New Candidate Registration Intake Module")
         with st.form("Registration Intake Module"):
             reg_code = st.text_input("Enter Access Validation Code (From Admin)")
             reg_uid = st.text_input("Desired Unique ID Number (4 Digits Only)")
@@ -105,7 +154,7 @@ else:
         st.rerun()
 
     # =========================================================================
-    # SIDEBAR TERMINAL CONTROL PANEL
+    # SIDEBAR TERMINAL CONTROL PANEL (PERMANENT BRANDING)
     # =========================================================================
     with st.sidebar:
         st.markdown(f"<h3 style='color: #ff3333;'>🛡️ SHIELD TERMINAL</h3>", unsafe_allow_html=True)
@@ -149,6 +198,15 @@ else:
             navigation_nodes.append("⚙️ Super Admin Operations")
             
         selected_workspace = st.radio("Navigate Workspace Channels:", navigation_nodes)
+        
+        st.write("---")
+        
+        # Permanent Sidebar Signature Label
+        st.markdown("""
+            <div style='background-color: #0e0e0e; padding: 12px; border-radius: 6px; border: 1px solid #ff3333; text-align: center; box-shadow: 0px 0px 5px rgba(255,51,51,0.2);'>
+                <p style='color: #ffffff; font-size: 12px; font-weight: bold; margin: 0; letter-spacing: 0.5px;'>⚙️ Engineered by Sudaisi Setra</p>
+            </div>
+        """, unsafe_allow_html=True)
         
         st.write("---")
         if st.button("🔴 SECURE LOGOUT"):
@@ -220,7 +278,7 @@ else:
                     save_cache_to_disk("db_users.json", st.session_state["users_registry"])
                     st.success("Matrix coverage records successfully locked down.")
 
-    # 📝 REVISION CENTER & ASSESSMENT ENGINE (WITH EXAM FORWARDING LOGIC)
+    # 📝 REVISION CENTER & ASSESSMENT ENGINE (WITH INSTANT SOLUTIONS FEEDBACK & A-E GRADING)
     elif selected_workspace == "📝 Revision Center & Mock Vault":
         st.markdown("<h2>📝 Academic Revision & Evaluation Vault</h2>", unsafe_allow_html=True)
         tab_notes, tab_exam, tab_shared = st.tabs(["📂 Shared Document Center", "⏱️ High-Precision Examination", "📩 Forwarded Peer Exams"])
@@ -240,8 +298,8 @@ else:
         with tab_exam:
             st.markdown("### ⏱️ Live Microsecond Metric Assessment Node")
             fallback_quiz = pd.DataFrame([
-                {"Question": "Factorize completely the cubic expression: $x^3 - 6x^2 + 11x - 6 = 0$. Determine correct roots.", "OptionA": "1, 2, 3", "OptionB": "-1, -2, -3", "OptionC": "0, 1, 5", "OptionD": "2, 4, 6", "Answer": "A", "Solution": "By factor theorem, testing x=1 gives 0. Long division results in (x-1)(x-2)(x-3)=0."},
-                {"Question": "A particle progresses along a linear vector with displacement $s = t^3 - 3t^2 + 2$. Evaluate acceleration at $t=3$ seconds.", "OptionA": "6 m/s^2", "OptionB": "12 m/s^2", "OptionC": "18 m/s^2", "OptionD": "24 m/s^2", "Answer": "B", "Solution": "v = ds/dt = 3t^2 - 6t. a = dv/dt = 6t - 6. At t=3, a = 6(3) - 6 = 12 m/s^2."}
+                {"Question": "Factorize completely the cubic expression: $x^3 - 6x^2 + 11x - 6 = 0$. Determine correct roots.", "OptionA": "1, 2, 3", "OptionB": "-1, -2, -3", "OptionC": "0, 1, 5", "OptionD": "2, 4, 6", "Answer": "A", "Solution": "By factor theorem, testing x=1 gives 0. Long division results in (x-1)(x-2)(x-3)=0. Therefore, the roots are exactly 1, 2, and 3."},
+                {"Question": "A particle progresses along a linear vector with displacement $s = t^3 - 3t^2 + 2$. Evaluate acceleration at $t=3$ seconds.", "OptionA": "6 m/s^2", "OptionB": "12 m/s^2", "OptionC": "18 m/s^2", "OptionD": "24 m/s^2", "Answer": "B", "Solution": "Velocity v = ds/dt = 3t^2 - 6t. Acceleration a = dv/dt = 6t - 6. Substituting t=3 yields a = 6(3) - 6 = 12 m/s^2."}
             ])
             quiz_df = read_public_sheet("QuizBank")
             if quiz_df is None or quiz_df.empty: quiz_df = fallback_quiz
@@ -258,12 +316,18 @@ else:
                 elapsed = time.time() - st.session_state["start_epoch"]
                 st.markdown(f"<div class='timer-container'><span style='color:#ff3333; font-size:20px; font-weight:bold;'>{elapsed:.4f} Seconds Logged</span></div>", unsafe_allow_html=True)
                 
+                submission_type = st.radio("Select Submission Execution Mode:", ["🔤 Typed Input Option", "✍️ Handwritten Document Link Reference"], horizontal=True)
+                
                 with st.form("Exam Questionnaire Blueprint"):
                     user_selections = {}
                     for idx, row in quiz_df.iterrows():
                         st.markdown(f"#### Q{idx+1}: {row['Question']}")
-                        opts = [f"A) {row['OptionA']}", f"B) {row['OptionB']}", f"C) {row['OptionC']}", f"D) {row['OptionD']}"]
-                        user_selections[idx] = st.radio(f"Select Answer Choice for Q{idx+1}:", opts, key=f"qm_{idx}")
+                        
+                        if submission_type == "🔤 Typed Input Option":
+                            opts = [f"A) {row['OptionA']}", f"B) {row['OptionB']}", f"C) {row['OptionC']}", f"D) {row['OptionD']}"]
+                            user_selections[idx] = st.radio(f"Select Answer Choice for Q{idx+1}:", opts, key=f"qm_{idx}")
+                        else:
+                            user_selections[idx] = st.text_input(f"Enter Link to Handwritten Solution Scan for Q{idx+1}:", placeholder="https://drive.google.com/...", key=f"hw_{idx}")
                     
                     if st.form_submit_button("🔒 LOCK ANSWERS AND SUBMIT FOR EVALUATION"):
                         total_time = time.time() - st.session_state["start_epoch"]
@@ -272,27 +336,62 @@ else:
                         correct = 0
                         breakdown = []
                         for idx, row in quiz_df.iterrows():
-                            chosen = user_selections[idx].split(")")[0].strip()
+                            if submission_type == "🔤 Typed Input Option":
+                                chosen = user_selections[idx].split(")")[0].strip()
+                            else:
+                                chosen = "A" if user_selections[idx] else "FAIL_NO_SUBMISSION"
+                                
                             ans = str(row['Answer']).strip()
                             ok = (chosen == ans)
                             if ok: correct += 1
-                            breakdown.append({"Item": f"Q {idx+1}", "Your Pick": chosen, "Correct Key": ans, "Status": "PASS" if ok else "FAIL", "Traceback Explanation": row['Solution']})
+                            breakdown.append({
+                                "Item": f"Q {idx+1}", 
+                                "Your Pick/Attachment": user_selections[idx] if submission_type != "🔤 Typed Input Option" else chosen, 
+                                "Correct Key": ans, 
+                                "Status": "PASS" if ok else "💥 MISFIRED AREA", 
+                                "Traceback Explanation": row['Solution']
+                            })
                         
                         score = (correct / len(quiz_df)) * 100
-                        st.markdown("### 🏆 Performance Analytics Sheet")
-                        st.metric("Performance Mark Percentage", f"{score:.2f}%")
-                        
-                        # Cache performance into state so user can choice to forward it if it's a failed block (< 50%)
                         st.session_state["last_score"] = score
                         st.session_state["last_breakdown"] = breakdown
+                        st.session_state["last_exam_time"] = total_time
                         st.rerun()
 
             if "last_score" in st.session_state:
-                st.subheader("Last Exam Attempt Breakdown Summary")
-                st.write(f"Final Score: **{st.session_state['last_score']:.2f}%**")
-                st.dataframe(pd.DataFrame(st.session_state["last_breakdown"]))
+                st.markdown("### 🏆 Performance Analytics Sheet")
+                u_grade = compute_ugandan_grade(st.session_state["last_score"])
                 
-                # Forward Failed Exam Routing Option
+                c_m1, c_m2 = st.columns(2)
+                c_m1.metric("Performance Score Percentage", f"{st.session_state['last_score']:.2f}%")
+                c_m2.metric("National A-Level Principal Grade", u_grade)
+                st.write(f"Total High-Precision Execution Duration: **{st.session_state.get('last_exam_time', 0.0):.4f} seconds**")
+                
+                # Instantaneous Feedback Node for Solutions and Misfired Areas
+                st.markdown("### ⚡ Microsecond Instant Solutions Feedback Matrix")
+                for item in st.session_state["last_breakdown"]:
+                    if item["Status"] == "💥 MISFIRED AREA":
+                        st.error(f"❌ **{item['Item']} Misfired!** Your Entry: `{item['Your Pick/Attachment']}` | Correct Target: `{item['Correct Key']}`")
+                        st.info(f"💡 **Instant Strategic Correction:** {item['Traceback Explanation']}")
+                    else:
+                        st.success(f"✅ **{item['Item']} Passed!** Solution reference verified correctly.")
+                
+                st.subheader("Completed Evaluation Breakdown Matrix")
+                pdf_df = pd.DataFrame(st.session_state["last_breakdown"])
+                st.dataframe(pdf_df)
+                
+                # Downloadable Done Exams Engine
+                raw_text_report = f"🛡️ ACADEMIC SHIELD NETWORK EVALUATION RECORD\nCandidate: {USER_DATA.get('name')}\nTimestamp: {get_east_timestamp()} EAT\nFinal Score: {st.session_state['last_score']:.2f}%\nGrade: {u_grade}\nExecution Time: {st.session_state.get('last_exam_time', 0.0):.4f}s\n\nDetailed Matrix Logs:\n"
+                for i, r in pdf_df.iterrows():
+                    raw_text_report += f"\n- {r['Item']} | Entry: {r['Your Pick/Attachment']} | Key: {r['Correct Key']} | Status: {r['Status']}\n  Solution Feedback: {r['Traceback Explanation']}\n"
+                
+                st.download_button(
+                    label="📥 DOWNLOAD COMPLETED EXAM SCRIPT (TXT REPORT)",
+                    data=raw_text_report,
+                    file_name=f"Exam_Script_{USER_DATA.get('name')}_{int(time.time())}.txt",
+                    mime="text/plain"
+                )
+                
                 if st.session_state["last_score"] < 50.0:
                     st.warning("⚠️ Critical Milestone Deficit detected (Score under 50%). Review with your peer sync.")
                     partner_id = USER_DATA.get("partner", "")
@@ -364,7 +463,7 @@ else:
                 st.markdown("</div>", unsafe_allow_html=True)
                 
                 with st.form("P2P Tx", clear_on_submit=True):
-                    ptxt = p_text_input("Type Encrypted Message...")
+                    ptxt = st.text_input("Type Encrypted Message...")
                     if st.form_submit_button("TRANSMIT SECURE DATA"):
                         if ptxt:
                             st.session_state["private_chats"].append({"sender": USER_DATA.get("name"), "text": ptxt, "timestamp": get_east_timestamp()})
@@ -372,12 +471,26 @@ else:
                             push_system_notification(pid, f"📥 Encrypted message received from your partner {USER_DATA.get('name')}.")
                             st.rerun()
 
-    # 📚 SUBJECT GROUP DISCUSSIONS (WITH LIVE HANDS AND VOICE NOTES)
+    # 📚 SUBJECT GROUP DISCUSSIONS (WITH ASSIGNED FIELD LEADERS MATRIX)
     elif selected_workspace == "📚 Subject Group Discussions":
         st.markdown("<h2>📚 Subject Group Discussion Hub (EAT)</h2>", unsafe_allow_html=True)
         
         user_subs = USER_DATA.get("subjects", ["Mathematics"])
         selected_group = st.selectbox("Select Active Subject Channel Frequency:", user_subs)
+        
+        # Session Leader Appointment Operational Matrix Block
+        assigned_leader = st.session_state["discussion_leaders"].get(selected_group, "None Appointed Yet")
+        st.success(f"👑 Appointed Session Discussion Coordinator for {selected_group}: **{assigned_leader}**")
+        
+        if USER_DATA.get("role") in ["ADMIN", "SUPER_ADMIN"]:
+            with st.expander("💼 Assign Subject Session Leader Panel"):
+                user_list = [node.get("name") for uid, node in st.session_state["users_registry"].items()]
+                picked_leader = st.selectbox(f"Appoint Coordinator Node for {selected_group}:", user_list)
+                if st.button(f"🔒 Lock Leader Appointment for {selected_group}"):
+                    st.session_state["discussion_leaders"][selected_group] = picked_leader
+                    save_cache_to_disk("db_leaders.json", st.session_state["discussion_leaders"])
+                    st.success(f"Successfully appointed {picked_leader} as the session leader.")
+                    st.rerun()
         
         # Google Meet Panel: Raised Hands Indicator list
         active_hands = []
@@ -409,7 +522,7 @@ else:
         with st.form("SubTx", clear_on_submit=True):
             sub_txt = st.text_input(f"Broadcast text to {selected_group} Room...")
             c1, c2 = st.columns(2)
-            s_l1 = c1.text_input("Attach Reference URL Link (Optional)")
+            s_l1 = c1.text_input("Attach Reference URL Link / Scan Coordinates (Optional)")
             s_l2 = c2.text_input("Simulate Voice Note Duration (Optional)")
             
             if st.form_submit_button("TRANSMIT TO FIELD"):
