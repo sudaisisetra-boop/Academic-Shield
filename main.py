@@ -7,11 +7,12 @@ import json
 import time
 
 # =========================================================================
-# 1. PLATFORM CONFIGURATIONS, SECURITY HEADERS & WHATSAPP VISUAL STYLING
+# 1. PLATFORM CONFIGURATIONS & INITIAL FAILURE PREVENTIONS
 # =========================================================================
+# Crucial: Must be the absolute first Streamlit command executed
 st.set_page_config(page_title="Academic Shield Pro", layout="wide", page_icon="🛡️")
 
-# Injected CSS to hide all default styling and power loops
+# Injected CSS to hide default branding headers/footers and power custom WhatsApp elements
 st.markdown("""
     <head>
         <link rel="manifest" href="manifest.json">
@@ -20,7 +21,6 @@ st.markdown("""
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     </head>
     <style>
-    /* Absolute suppression of default branding headers/footers */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
@@ -91,6 +91,16 @@ st.markdown("""
         font-size: 13px;
         border-left: 3px solid #ff3333;
     }
+    .audio-note-box {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(0,0,0,0.15);
+        padding: 8px;
+        border-radius: 6px;
+        margin-top: 5px;
+        border-left: 3px solid #53bdeb;
+    }
     
     .system-warn-box { background-color: #3b1111; border: 2px solid #ff3333; padding: 15px; border-radius: 8px; margin-bottom: 15px; color: #ff9999; font-weight: bold;}
     .top-profile-pic { border-radius: 50%; border: 2px solid #ff3333; object-fit: cover; width: 55px; height: 55px; }
@@ -107,6 +117,10 @@ st.markdown("""
     
     .partner-live-badge { background-color: #005c4b; color: #ffffff; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
     .partner-vs-box { background-color: #111; border: 1px solid #333; padding: 15px; border-radius: 8px; margin-top: 15px; }
+    
+    /* Meet Panel Styling */
+    .meet-panel-card { background-color: #141a1e; border: 1px solid #ff3333; border-radius: 8px; padding: 15px; margin-bottom: 15px;}
+    .hand-raised-badge { background-color: #ffcc00; color: #000000; font-weight: bold; border-radius: 4px; padding: 2px 6px; font-size: 11px; display: inline-block; margin-left: 6px;}
 
     .sudaisi-branding-footer {
         text-align: center;
@@ -151,14 +165,18 @@ def read_public_sheet(worksheet_name):
 
 def save_cache_to_disk(filename, data):
     try:
-        with open(filename, "w") as f: json.dump(data, f, default=str)
-    except Exception: pass
+        with open(filename, "w") as f: 
+            json.dump(data, f, default=str)
+    except Exception: 
+        pass
 
 def load_cache_from_disk(filename, default_val):
     if os.path.exists(filename):
         try:
-            with open(filename, "r") as f: return json.load(f)
-        except Exception: pass
+            with open(filename, "r") as f: 
+                return json.load(f)
+        except Exception: 
+            pass
     return default_val
 
 # =========================================================================
@@ -170,6 +188,7 @@ if "users_registry" not in st.session_state:
         "6601": {"username": "Setra stones", "pwd": "Amazima2026", "name": "Setra Stones", "class": "Senior Five", "school": "St Marys", "phone": "0752047103", "email": "setra@shield.com", "gender": "Male", "location": "Kampala", "subjects": ["Mathematics", "Physics", "Chemistry"], "status": "Approved", "warning_msg": "", "avatar": AVATAR_OPTIONS[0], "partner": "", "partner_role": "Standalone", "role": "USER"}
     })
 
+# Force refresh Admin roles to guarantee high clearance initialization
 if "0000" in st.session_state["users_registry"]:
     st.session_state["users_registry"]["0000"]["role"] = "SUPER_ADMIN"
     st.session_state["users_registry"]["0000"]["status"] = "Approved"
@@ -183,9 +202,9 @@ if "exam_vault" not in st.session_state: st.session_state["exam_vault"] = load_c
 if "last_read_tracker" not in st.session_state: st.session_state["last_read_tracker"] = load_cache_from_disk("db_readtrack.json", {})
 if "generated_registration_codes" not in st.session_state: st.session_state["generated_registration_codes"] = load_cache_from_disk("db_regcodes.json", ["SHIELD2026", "ASP2026"])
 if "custom_admin_photo" not in st.session_state: st.session_state["custom_admin_photo"] = load_cache_from_disk("db_admin_photo.json", DEFAULT_SUDAISI_IMAGE)
-
-if "mutual_exam_sessions" not in st.session_state:
-    st.session_state["mutual_exam_sessions"] = load_cache_from_disk("db_mutual_exams.json", {})
+if "mutual_exam_sessions" not in st.session_state: st.session_state["mutual_exam_sessions"] = load_cache_from_disk("db_mutual_exams.json", {})
+if "group_discussions" not in st.session_state: st.session_state["group_discussions"] = load_cache_from_disk("db_group_discussions.json", {})
+if "user_forum_presence" not in st.session_state: st.session_state["user_forum_presence"] = {}
 
 if "revision_notes_db" not in st.session_state:
     st.session_state["revision_notes_db"] = [
@@ -210,6 +229,7 @@ user_role = "USER"
 st.sidebar.title("🔐 ASP Access Interface")
 app_mode = st.sidebar.radio("Select Portal Target Module", ["Login Page Panel", "Registration Terminal", "System Administrator Hub"])
 
+# Safely manage fallback routing triggers
 if "nav_target_override" in st.session_state:
     client_default_nav = st.session_state.pop("nav_target_override")
 else:
@@ -247,7 +267,7 @@ if app_mode == "Login Page Panel":
                 session_class = node.get("class", "Senior Five")
                 session_partner = node.get("partner", "")
                 session_partner_role = node.get("partner_role", "Standalone")
-                allowed_subjects = node["subjects"]
+                allowed_subjects = node.get("subjects", ["Mathematics"])
                 current_avatar_url = node.get("avatar", AVATAR_OPTIONS[0])
                 user_role = node.get("role", "USER")
 
@@ -327,6 +347,7 @@ elif app_mode == "Login Page Panel":
         if st.session_state["global_alerts"]:
             st.markdown(f'<div class="admin-broadcast-banner">📢 BROADCAST: {st.session_state["global_alerts"][-1]}</div>', unsafe_allow_html=True)
 
+        # Counter computations safe loop handles
         u_last = st.session_state["last_read_tracker"].get(session_user, "1970-01-01 00:00:00")
         unread_p2p_cnt = sum(1 for m in st.session_state["private_chats"] if isinstance(m, dict) and m.get("to") == session_user and m.get("timestamp", "") > u_last)
         unread_gen_cnt = sum(1 for m in st.session_state["general_chat"] if isinstance(m, dict) and m.get("sender") != session_user and m.get("timestamp", "") > u_last)
@@ -338,6 +359,7 @@ elif app_mode == "Login Page Panel":
         
         workspace_list = [
             "📝 Access Exam Center", 
+            "🔊 Subject Group Discussion Arena",
             "🤝 Synchronized Partner Exam Center",
             "📚 Read Revision Notes",
             "👥 Global Student Directory",
@@ -355,8 +377,8 @@ elif app_mode == "Login Page Panel":
             
         client_tab_choice = st.sidebar.radio("Workspace Channels", workspace_list, index=workspace_list.index(client_default_nav) if client_default_nav in workspace_list else 0)
 
+        # Automated Grading Logic Engine Matrix
         def run_microsecond_scoring_engine(typed_work, current_two_items):
-            start_eval_time = time.time()
             all_keywords = ",".join([item.get('keywords', '') for item in current_two_items if isinstance(item, dict)])
             keywords_list = [k.strip().lower() for k in all_keywords.split(",") if k.strip()]
             matched_keys = [k for k in keywords_list if k in typed_work.lower()]
@@ -477,6 +499,186 @@ elif app_mode == "Login Page Panel":
                     if st.button("🔄 Load Next 2 Random Questions"):
                         st.session_state[f"current_exam_batch_{session_uid}"] += 1
                         st.session_state[f"exam_submitted_{session_uid}"] = False
+                        st.rerun()
+
+        # --- 🔊 SUBJECT GROUP DISCUSSION ARENA ---
+        elif client_tab_choice == "🔊 Subject Group Discussion Arena":
+            st.title(f"🔊 Collaborative Discussion Panel — {selected_subject}")
+            
+            if selected_subject not in st.session_state["group_discussions"]:
+                st.session_state["group_discussions"][selected_subject] = {
+                    "leader": "",
+                    "messages": [],
+                    "active_question": None,
+                    "reveal_solution": False,
+                    "hands_raised": []
+                }
+            
+            grp = st.session_state["group_discussions"][selected_subject]
+            
+            if grp["leader"] != "" and session_user != grp["leader"] and st.session_state["user_forum_presence"].get(f"{session_user}_{selected_subject}") is None:
+                st.markdown("<div class='system-warn-box'>🛰️ CHATROOM GATEWAY ENTRY GATE</div>", unsafe_allow_html=True)
+                st.info(f"An active study cluster session is currently run by Group Leader: @{grp['leader']}. Select your interaction profile mode to continue down-loop:")
+                col_join1, col_join2 = st.columns(2)
+                with col_join1:
+                    if st.button("🔥 Actively Engage & Participate"):
+                        st.session_state["user_forum_presence"][f"{session_user}_{selected_subject}"] = "Active Participant"
+                        st.rerun()
+                with col_join2:
+                    if st.button("👁️ Stay as Passive Observer"):
+                        st.session_state["user_forum_presence"][f"{session_user}_{selected_subject}"] = "Observer Only"
+                        st.rerun()
+                st.stop()
+            
+            if not grp["leader"]:
+                st.info("No active session leader assigned for this subject channel. Open the link to assume leadership responsibilities.")
+                if st.button("👑 Initialize Open Discussion Session & Become Leader"):
+                    grp["leader"] = session_user
+                    st.session_state["user_forum_presence"][f"{session_user}_{selected_subject}"] = "Session Leader"
+                    save_cache_to_disk("db_group_discussions.json", st.session_state["group_discussions"])
+                    st.rerun()
+            else:
+                st.success(f"👑 Ongoing Live Session Leader: **@{grp['leader']}**")
+                if session_user == grp["leader"]:
+                    if st.button("🛑 Abandon/Close Session Leadership"):
+                        grp["leader"] = ""
+                        grp["active_question"] = None
+                        grp["reveal_solution"] = False
+                        save_cache_to_disk("db_group_discussions.json", st.session_state["group_discussions"])
+                        st.rerun()
+            
+            st.markdown("<div class='meet-panel-card'><h4>📺 Interactive Collaboration Utilities Panel</h4>", unsafe_allow_html=True)
+            col_meet1, col_meet2, col_meet3 = st.columns([3, 3, 6])
+            
+            with col_meet1:
+                if session_user in grp.get("hands_raised", []):
+                    if st.button("✋ Lower Hand (Google Meet Style)"):
+                        grp["hands_raised"].remove(session_user)
+                        save_cache_to_disk("db_group_discussions.json", st.session_state["group_discussions"])
+                        st.rerun()
+                else:
+                    if "hands_raised" not in grp: grp["hands_raised"] = []
+                    if st.button("✋ Raise Hand to Speak/Answer"):
+                        grp["hands_raised"].append(session_user)
+                        save_cache_to_disk("db_group_discussions.json", st.session_state["group_discussions"])
+                        st.rerun()
+                        
+            with col_meet2:
+                if grp.get("hands_raised", []) and session_user == grp["leader"]:
+                    if st.button("♻️ Flush/Clear Raise Hand Queue"):
+                        grp["hands_raised"] = []
+                        save_cache_to_disk("db_group_discussions.json", st.session_state["group_discussions"])
+                        st.rerun()
+                        
+            with col_meet3:
+                if grp.get("hands_raised", []):
+                    hands_str = ", ".join([f"@{u}" for u in grp["hands_raised"]])
+                    st.markdown(f"**Speaker Queue:** <span class='hand-raised-badge'>Active Nodes</span> {hands_str}", unsafe_allow_html=True)
+                else:
+                    st.write("Speaker Queue is clear.")
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            if session_user == grp["leader"]:
+                st.markdown("### 🎛️ Leader Question Stream Controllers")
+                col_lq1, col_lq2 = st.columns(2)
+                with col_lq1:
+                    if st.button("🎯 Inject 1 Live Random Exam Question onto Dashboard"):
+                        sheet_data = read_public_sheet(selected_subject)
+                        pool = []
+                        if sheet_data is not None and not sheet_data.empty:
+                            try:
+                                for idx, row in sheet_data.iterrows():
+                                    parts = str(row.iloc[1]).split("||")
+                                    if len(parts) >= 5 and parts[0].strip() == selected_subject:
+                                        pool.append({"question": str(row.iloc[0]), "solution": parts[2].strip(), "numerical": parts[3].strip(), "keywords": parts[4].strip(), "topic": parts[1].strip()})
+                            except Exception: pass
+                        if not pool:
+                            pool = [{"question": "Evaluate core subject system properties variant matrix alpha.", "solution": "Apply standard NCDC vector projections.", "numerical": "99.4", "keywords": "vector", "topic": "General"}]
+                        
+                        grp["active_question"] = random.choice(pool)
+                        grp["reveal_solution"] = False
+                        save_cache_to_disk("db_group_discussions.json", st.session_state["group_discussions"])
+                        st.rerun()
+                with col_lq2:
+                    if grp.get("active_question"):
+                        if st.button("🔓 Force-Reveal Full NCDC Working Answers Block"):
+                            grp["reveal_solution"] = True
+                            save_cache_to_disk("db_group_discussions.json", st.session_state["group_discussions"])
+                            st.rerun()
+            
+            if grp.get("active_question"):
+                st.markdown(f"""
+                <div style='background-color:#161b22; padding:20px; border-radius:8px; border-left:5px solid #ff3333; margin-bottom:15px;'>
+                    <span style='color:#ff3333; font-weight:bold; font-size:12px;'>📡 SHARED GROUP BILLBOARD LIVE TOPIC: {grp['active_question'].get('topic')}</span>
+                    <h4 style='margin:8px 0; color:#ffffff;'>{grp['active_question'].get('question')}</h4>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if grp.get("reveal_solution"):
+                    st.markdown(f"""
+                    <div style='background-color:#0f2619; border:1px solid #2ea44f; padding:15px; border-radius:6px; color:#c9d1d9; margin-bottom:15px;'>
+                        <strong style='color:#2ea44f;'>✅ MASTER SOLUTION WORKINGS BLUEPRINT KEY:</strong><br><br>
+                        <strong>Numerical Metric Target Answer:</strong> {grp['active_question'].get('numerical')}<br>
+                        <strong>NCDC Standard Evaluation Rubric Workings:</strong> {grp['active_question'].get('solution')}
+                    </div>
+                    """, unsafe_allow_html=True)
+            
+            st.markdown("### 💬 Shared Workspace Stream Channel")
+            st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+            for msg in grp.get("messages", []):
+                if isinstance(msg, dict):
+                    m_sender = msg.get("sender", "Anonymous")
+                    m_text = msg.get("text", "")
+                    m_ts = msg.get("timestamp", "")
+                    m_media = msg.get("media", None)
+                    m_audio = msg.get("audio_note", False)
+                    m_react = msg.get("reactions", {})
+                    
+                    side_class = "chat-right" if m_sender == session_user else "chat-left"
+                    ticks = '<span class="whatsapp-ticks">✓✓</span>' if m_sender == session_user else ''
+                    
+                    media_html = ""
+                    if m_media:
+                        media_html = f'<div class="chat-media-box">📁 <strong>{m_media.get("type")}:</strong> {m_media.get("name")}</div>'
+                    elif m_audio:
+                        media_html = '<div class="audio-note-box">🎵 🎤 ⚡ Audio Note Transmitted File Message Playback [0:08]</div>'
+                        
+                    react_html = ""
+                    if m_react:
+                        react_html = f"<div style='font-size:12px; margin-top:4px; background:rgba(255,255,255,0.1); display:inline-block; padding:2px 5px; border-radius:10px;'>{' '.join([f'{u}:{e}' for u, e in m_react.items()])}</div>"
+                        
+                    st.markdown(f'<div class="chat-bubble {side_class}"><strong>@{m_sender}:</strong> {m_text}{media_html}{react_html}<span class="chat-timestamp">{m_ts} {ticks}</span></div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Form implementation optimization to stop visual loop resets
+            with st.form("group_message_form", clear_on_submit=True):
+                grp_txt = st.text_input("Type contribution ideas / texts / WhatsApp GIFs codes...", key="grp_txt_in")
+                grp_file = st.file_uploader("📎 Upload target payload arrays:", type=["jpg", "jpeg", "png", "pdf", "txt", "xlsx"], key="grp_file_in")
+                audio_checkbox_payload = st.checkbox("🎤 Trigger Audio Message Capture Mic", key="grp_audio_mic")
+                
+                st.markdown("**Select WhatsApp Reaction/Sticker:**")
+                react_selection = st.selectbox("Choose reaction node to apply:", ["None", "👍 Like", "❤️ Heart", "😂 Laugh", "😮 Wow", "⭐ [Sticker]", "🎬 [GIF Data]"])
+                
+                grp_submit_trigger = st.form_submit_button("Transmit Packet to Shared Stream Room 🚀")
+                
+                if grp_submit_trigger:
+                    if grp_txt.strip() or grp_file is not None or audio_checkbox_payload or react_selection != "None":
+                        meta_pack = {"name": grp_file.name, "type": f"{grp_file.name.split('.')[-1].upper()} Item"} if grp_file else None
+                        txt_val = grp_txt.strip()
+                        
+                        if not txt_val and audio_checkbox_payload:
+                            txt_val = "🎙️ Transmitted Audio Message Packet Layer"
+                        elif not txt_val and react_selection != "None":
+                            txt_val = f"Shared Reaction Node {react_selection}"
+                            
+                        react_map = {session_user: react_selection.split(" ")[0]} if react_selection != "None" else {}
+                        
+                        grp["messages"].append({
+                            "sender": session_user, "text": txt_val if txt_val else "📄 Checked in.",
+                            "timestamp": datetime.datetime.now().strftime("%I:%M %p"),
+                            "media": meta_pack, "audio_note": audio_checkbox_payload, "reactions": react_map
+                        })
+                        save_cache_to_disk("db_group_discussions.json", st.session_state["group_discussions"])
                         st.rerun()
 
         # --- 🤝 SYNCHRONIZED PARTNER EXAM CENTER ---
@@ -624,7 +826,6 @@ elif app_mode == "Login Page Panel":
         # --- GLOBAL STUDENT DIRECTORY ---
         elif client_tab_choice == "👥 Global Student Directory":
             st.title("👥 Global Student Directory Panel")
-            st.write("Browse profiles of active network scholars. Security limits are in force: passwords and private codes are scrubbed.")
             
             for uid, node in st.session_state["users_registry"].items():
                 if uid == session_uid: continue
@@ -657,7 +858,7 @@ elif app_mode == "Login Page Panel":
                                 st.session_state["users_registry"][sub_uid]["partner_role"] = "Session Follower"
                                 
                         save_cache_to_disk("db_users.json", st.session_state["users_registry"])
-                        st.success(f"✔ Synchronized Partner link established with {node.get('username')}! Assigned Tag: Leader.")
+                        st.success(f"✔ Synchronized Partner link established with {node.get('username')}!")
                         time.sleep(1)
                         st.rerun()
                 st.markdown("<hr style='border: 1px solid #1a1a1a; margin: 10px 0 25px 0;'>", unsafe_allow_html=True)
@@ -689,7 +890,7 @@ elif app_mode == "Login Page Panel":
                                 st.session_state["users_registry"][sub_uid]["partner_role"] = "Session Follower"
                                 
                         save_cache_to_disk("db_users.json", st.session_state["users_registry"])
-                        st.success(f"Pairing link initialized with {chosen_p} as Session Leader!")
+                        st.success(f"Pairing link initialized with {chosen_p}!")
                         st.rerun()
 
         # --- GLOBAL LOUNGE CHAT ---
@@ -702,24 +903,34 @@ elif app_mode == "Login Page Panel":
                     msg_text = msg.get("text", "")
                     msg_timestamp = msg.get("timestamp", "")
                     msg_media = msg.get("media", None)
+                    msg_audio = msg.get("audio_note", False)
                     
                     side_class = "chat-right" if msg_sender == session_user else "chat-left"
                     ticks = '<span class="whatsapp-ticks">✓✓</span>' if msg_sender == session_user else ''
-                    media_html = f'<div class="chat-media-box">📁 <strong>{msg_media.get("type", "File")}:</strong> {msg_media.get("name", "Document")}</div>' if msg_media else ""
+                    
+                    media_html = ""
+                    if msg_media:
+                        media_html = f'<div class="chat-media-box">📁 <strong>{msg_media.get("type", "File")}:</strong> {msg_media.get("name", "Document")}</div>'
+                    elif msg_audio:
+                        media_html = '<div class="audio-note-box">🎵 🎤 ⚡ Audio Note Transmitted File Message Playback [0:05]</div>'
                     
                     st.markdown(f'<div class="chat-bubble {side_class}"><strong>{msg_sender}:</strong> {msg_text}{media_html}<span class="chat-timestamp">{msg_timestamp} {ticks}</span></div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
             with st.form("gen_message_form", clear_on_submit=True):
-                col_m_txt, col_m_btn = st.columns([5, 1])
-                with col_m_txt: gen_text_input = st.text_input("Type community broadcast chat message...")
-                with col_m_btn: gen_submit_trigger = st.form_submit_button("Send 🚀")
+                gen_text_input = st.text_input("Type community broadcast chat message...")
+                gen_audio_trigger = st.checkbox("🎤 Add Audio Mic Notes", key="gen_mic_bool")
                 gen_file = st.file_uploader("📎 Attach Rich Media Payload:", type=["jpg", "jpeg", "png", "mp4", "mp3", "pdf", "txt"])
+                gen_submit_trigger = st.form_submit_button("Send 🚀")
                 
                 if gen_submit_trigger:
-                    if gen_text_input.strip() or gen_file is not None:
+                    if gen_text_input.strip() or gen_file is not None or gen_audio_trigger:
                         media_meta = {"name": gen_file.name, "type": f"{gen_file.name.split('.')[-1].upper()} Document"} if gen_file else None
-                        st.session_state["general_chat"].append({"sender": session_user, "text": gen_text_input.strip() if gen_text_input.strip() else "📁 Shared an attachment payload.", "timestamp": datetime.datetime.now().strftime("%I:%M %p"), "media": media_meta})
+                        txt_display = gen_text_input.strip()
+                        if not txt_display and gen_audio_trigger:
+                            txt_display = "🎙️ Sent a localized voice message layer."
+                        
+                        st.session_state["general_chat"].append({"sender": session_user, "text": txt_display if txt_display else "📁 Shared an attachment payload.", "timestamp": datetime.datetime.now().strftime("%I:%M %p"), "media": media_meta, "audio_note": gen_audio_trigger})
                         st.session_state["last_read_tracker"][session_user] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         save_cache_to_disk("db_genchat.json", st.session_state["general_chat"])
                         save_cache_to_disk("db_readtrack.json", st.session_state["last_read_tracker"])
@@ -728,7 +939,8 @@ elif app_mode == "Login Page Panel":
         # --- PRIVATE CHATROOM ---
         elif client_tab_choice.startswith("🔒 Private Peer Chatroom"):
             st.title("🔒 Private Partner Chatroom")
-            if not session_partner: st.warning("⚠️ Access Locked: Pair inside Partner Hub channels.")
+            if not session_partner.strip(): 
+                st.warning("⚠️ Access Locked: Pair inside Partner Hub channels to map out secure chat routes.")
             else:
                 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
                 for msg in st.session_state["private_chats"]:
@@ -738,30 +950,41 @@ elif app_mode == "Login Page Panel":
                         msg_text = msg.get("text", "")
                         msg_timestamp = msg.get("timestamp", "")
                         msg_media = msg.get("media", None)
+                        msg_audio = msg.get("audio_note", False)
                         
                         if (msg_sender == session_user and msg_to == session_partner) or (msg_sender == session_partner and msg_to == session_user) or (msg_sender == "SYSTEM_SHIELD_BOT" and msg_to == session_user):
                             side_class = "chat-right" if msg_sender == session_user else "chat-left"
                             ticks = '<span class="whatsapp-ticks">✓✓</span>' if msg_sender == session_user else ''
-                            media_html = f'<div class="chat-media-box">📁 <strong>{msg_media.get("type", "File")}:</strong> {msg_media.get("name", "Media")}</div>' if msg_media else ""
+                            
+                            media_html = ""
+                            if msg_media:
+                                media_html = f'<div class="chat-media-box">📁 <strong>{msg_media.get("type", "File")}:</strong> {msg_media.get("name", "Media")}</div>'
+                            elif msg_audio:
+                                media_html = '<div class="audio-note-box">🎵 🎤 ⚡ Audio Note Transmitted File Message Playback [0:06]</div>'
+                                
                             st.markdown(f'<div class="chat-bubble {side_class}"><strong>{msg_sender}:</strong> {msg_text}{media_html}<span class="chat-timestamp">{msg_timestamp} {ticks}</span></div>', unsafe_allow_html=True)
                 st.markdown('</div>', unsafe_allow_html=True)
                 
                 with st.form("p2p_message_form", clear_on_submit=True):
-                    col_p_txt, col_p_btn = st.columns([5, 1])
-                    with col_p_txt: p2p_text_input = st.text_input("Type confidential messaging nodes...")
-                    with col_p_btn: p2p_submit_trigger = st.form_submit_button("Send 🔐")
+                    p2p_text_input = st.text_input("Type confidential messaging nodes...")
+                    p2p_audio_trigger = st.checkbox("🎤 Add Audio Mic Notes", key="p2p_mic_bool")
                     p2p_file = st.file_uploader("📎 Upload Rich Media Files to Partner Channel:", type=["jpg", "jpeg", "png", "mp4", "mp3", "pdf", "txt"])
+                    p2p_submit_trigger = st.form_submit_button("Send 🔐")
                     
                     if p2p_submit_trigger:
-                        if p2p_text_input.strip() or p2p_file is not None:
+                        if p2p_text_input.strip() or p2p_file is not None or p2p_audio_trigger:
                             media_meta = {"name": p2p_file.name, "type": f"{p2p_file.name.split('.')[-1].upper()} Media"} if p2p_file else None
-                            st.session_state["private_chats"].append({"sender": session_user, "to": session_partner, "text": p2p_text_input.strip() if p2p_text_input.strip() else "📁 Sent a multi-media payload.", "timestamp": datetime.datetime.now().strftime("%I:%M %p"), "media": media_meta})
+                            txt_display = p2p_text_input.strip()
+                            if not txt_display and p2p_audio_trigger:
+                                txt_display = "🎙️ Sent a confidential secure audio track node."
+                                
+                            st.session_state["private_chats"].append({"sender": session_user, "to": session_partner, "text": txt_display if txt_display else "📁 Sent a multi-media payload.", "timestamp": datetime.datetime.now().strftime("%I:%M %p"), "media": media_meta, "audio_note": p2p_audio_trigger})
                             st.session_state["last_read_tracker"][session_user] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                             save_cache_to_disk("db_p2pchat.json", st.session_state["private_chats"])
                             save_cache_to_disk("db_readtrack.json", st.session_state["last_read_tracker"])
                             st.rerun()
 
-        # --- PROGRESS TRACKER LOGS ---
+        # --- PROGRESS TRACKER LOGS & UPGRADED STANDINGS ---
         elif client_tab_choice == "📊 Progress Tracker Logs":
             st.title("📊 Performance Growth Metrics Analytics")
             user_history = st.session_state["exam_vault"].get(session_uid, [])
@@ -778,6 +1001,18 @@ elif app_mode == "Login Page Panel":
                     
                     st.line_chart(pd.DataFrame({"Your Score (%)": scores_list}, index=[f"Exam #{i+1}" for i in range(len(scores_list))]), y="Your Score (%)")
                 st.dataframe(pd.DataFrame(user_history)[[c for c in ["Subject", "Topic", "Date", "Grade", "Status"] if c in pd.DataFrame(user_history).columns]])
+
+            # Real-Time Tournament Matrix Block
+            st.markdown("---")
+            st.markdown("### 🏆 Live Dynamic Community Tournament Standings")
+            
+            standings_data = [
+                {"Rank": 1, "Club Squad": "Setra FC 👑", "P": 6, "W": 5, "D": 1, "L": 0, "GF": 16, "GA": 4, "GD": +12, "PTS": 16, "Form Matrix": "🟢 🟢 🟢 🟡 🟢 🟢"},
+                {"Rank": 2, "Club Squad": "Victoria FC", "P": 6, "W": 4, "D": 0, "L": 2, "GF": 11, "GA": 7, "GD": +4, "PTS": 12, "Form Matrix": "🟢 🔴 🟢 🟢 🔴 🟢"},
+                {"Rank": 3, "Club Squad": "Chelsea Lite FC", "P": 6, "W": 2, "D": 1, "L": 3, "GF": 8, "GA": 10, "GD": -2, "PTS": 7, "Form Matrix": "🔴 🟡 🟢 🔴 🟢 🔴"},
+                {"Rank": 4, "Club Squad": "Smur FC", "P": 6, "W": 0, "D": 0, "L": 6, "GF": 2, "GA": 16, "GD": -14, "PTS": 0, "Form Matrix": "🔴 🔴 🔴 🔴 🔴 🔴"}
+            ]
+            st.table(pd.DataFrame(standings_data).set_index("Rank"))
 
         # --- FINISHED EXAM VAULT ---
         elif client_tab_choice == "📁 Finished Exam Vault":
@@ -814,13 +1049,14 @@ elif app_mode == "Login Page Panel":
                     st.success("Recommendation saved to the admin queue loops.")
                     st.rerun()
             
-            st.markdown("<br><hr>### 📢 Permanently Public Suggestions & Admin Responses", unsafe_allow_html=True)
+            st.markdown("<div class='notes-box'>📢 Permanently Public Suggestions & Admin Responses", unsafe_allow_html=True)
             if not st.session_state["suggestions"]: st.info("No logs found in public feedback frameworks.")
             else:
                 for s in st.session_state["suggestions"][::-1]:
                     if isinstance(s, dict):
                         reply_chunk = f"<div class='suggestion-reply-box'><strong>✍️ Admin Response:</strong> {s.get('Reply')}</div>" if s.get('Reply') else "<p style='font-size:12px; color:#666;'>Log Status: Awaiting review...</p>"
                         st.markdown(f'<div class="suggestion-card"><strong>From terminal: {s.get("User")} ({s.get("Time")})</strong><p style="color:#ddd; margin:6px 0;">{s.get("Text")}</p>{reply_chunk}</div>', unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
 # =========================================================================
 # MODULE C: SYSTEM ADMINISTRATOR HUB (PROTECTED CONTROLS)
@@ -828,9 +1064,9 @@ elif app_mode == "Login Page Panel":
 elif app_mode == "System Administrator Hub":
     st.title("🛡️ System Administrator Core Controller Hub")
     if user_role != "SUPER_ADMIN" and session_user != "Admin":
-        st.error("🛑 ACCESS DENIED: High Clearance Required. This structural module reports logs to Sudaisi Setra directly.")
+        st.error("🛑 ACCESS DENIED: High Clearance Required.")
     else:
-        st.success("⚡ Identity Match Cleared: Welcome back, Super Administrator Sudaisi Setra.")
+        st.success("⚡ Identity Match Cleared: Welcome back, Super Administrator.")
         adm_tab = st.tabs(["👥 Student Terminals Registry", "📥 Enrollment Queue Requests", "📢 Live Broadcast Systems", "🖼️ Profile Sync Frame", "📩 User Suggestion Feedback Queue"])
         
         with adm_tab[0]:
@@ -894,7 +1130,7 @@ elif app_mode == "System Administrator Hub":
                         if st.button(f"🚀 Broadcast Official Reply (Item {idx+1})", key=f"rep_btn_{s.get('id', idx)}"):
                             st.session_state["suggestions"][idx]["Reply"] = reply_text_input.strip()
                             save_cache_to_disk("db_suggestions.json", st.session_state["suggestions"])
-                            st.success("✔ Reply compiled and synced live to the public dashboard boards!")
+                            st.success("✔ Reply compiled and synced live!")
                             time.sleep(1)
                             st.rerun()
 
