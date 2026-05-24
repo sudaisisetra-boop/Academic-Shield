@@ -943,4 +943,223 @@ elif app_mode == "Login Page Panel":
                 gen_submit_trigger = st.form_submit_button("Send 🚀")
                 
                 if gen_submit_trigger:
-                    if gen_text_input.strip
+                    if gen_text_input.strip() or gen_file is not None or gen_audio_trigger:
+                        media_meta = {"name": gen_file.name, "type": f"{gen_file.name.split('.')[-1].upper()} Document"} if gen_file else None
+                        txt_display = gen_text_input.strip()
+                        if not txt_display and gen_audio_trigger:
+                            txt_display = "🎙️ Sent a localized voice message layer."
+                        
+                        st.session_state["general_chat"].append({"sender": session_user, "text": txt_display if txt_display else "📁 Shared an attachment payload.", "timestamp": datetime.datetime.now().strftime("%I:%M %p"), "media": media_meta, "audio_note": gen_audio_trigger})
+                        st.session_state["last_read_tracker"][session_user] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        save_cache_to_disk("db_genchat.json", st.session_state["general_chat"])
+                        save_cache_to_disk("db_readtrack.json", st.session_state["last_read_tracker"])
+                        st.rerun()
+
+        # --- PRIVATE CHATROOM ---
+        elif client_tab_choice.startswith("🔒 Private Peer Chatroom"):
+            st.title("🔒 Private Partner Chatroom")
+            if not session_partner.strip(): 
+                st.warning("⚠️ Access Locked: Pair inside Partner Hub channels to map out secure chat routes.")
+            else:
+                st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+                for msg in st.session_state["private_chats"]:
+                    if isinstance(msg, dict):
+                        msg_sender = msg.get("sender", "")
+                        msg_to = msg.get("to", "")
+                        msg_text = msg.get("text", "")
+                        msg_timestamp = msg.get("timestamp", "")
+                        msg_media = msg.get("media", None)
+                        msg_audio = msg.get("audio_note", False)
+                        
+                        if (msg_sender == session_user and msg_to == session_partner) or (msg_sender == session_partner and msg_to == session_user) or (msg_sender == "SYSTEM_SHIELD_BOT" and msg_to == session_user):
+                            side_class = "chat-right" if msg_sender == session_user else "chat-left"
+                            ticks = '<span class="whatsapp-ticks">✓✓</span>' if msg_sender == session_user else ''
+                            
+                            media_html = ""
+                            if msg_media:
+                                media_html = f'<div class="chat-media-box">📁 <strong>{msg_media.get("type", "File")}:</strong> {msg_media.get("name", "Media")}</div>'
+                            elif msg_audio:
+                                media_html = '<div class="audio-note-box">🎵 🎤 ⚡ Audio Note Transmitted File Message Playback [0:06]</div>'
+                                
+                            st.markdown(f'<div class="chat-bubble {side_class}"><strong>{msg_sender}:</strong> {msg_text}{media_html}<span class="chat-timestamp">{msg_timestamp} {ticks}</span></div>', unsafe_allow_html=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+                
+                with st.form("p2p_message_form", clear_on_submit=True):
+                    p2p_text_input = st.text_input("Type confidential messaging nodes...")
+                    p2p_audio_trigger = st.checkbox("🎤 Add Audio Mic Notes", key="p2p_mic_bool")
+                    p2p_file = st.file_uploader("📎 Upload Rich Media Files to Partner Channel:", type=["jpg", "jpeg", "png", "mp4", "mp3", "pdf", "txt"])
+                    p2p_submit_trigger = st.form_submit_button("Send 🔐")
+                    
+                    if p2p_submit_trigger:
+                        if p2p_text_input.strip() or p2p_file is not None or p2p_audio_trigger:
+                            media_meta = {"name": p2p_file.name, "type": f"{p2p_file.name.split('.')[-1].upper()} Media"} if p2p_file else None
+                            txt_display = p2p_text_input.strip()
+                            if not txt_display and p2p_audio_trigger:
+                                txt_display = "🎙️ Sent a confidential secure audio track node."
+                                
+                            st.session_state["private_chats"].append({"sender": session_user, "to": session_partner, "text": txt_display if txt_display else "📁 Sent a multi-media payload.", "timestamp": datetime.datetime.now().strftime("%I:%M %p"), "media": media_meta, "audio_note": p2p_audio_trigger})
+                            st.session_state["last_read_tracker"][session_user] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            save_cache_to_disk("db_p2pchat.json", st.session_state["private_chats"])
+                            save_cache_to_disk("db_readtrack.json", st.session_state["last_read_tracker"])
+                            st.rerun()
+
+        # --- PROGRESS TRACKER LOGS & UPGRADED STANDINGS ---
+        elif client_tab_choice == "📊 Progress Tracker Logs":
+            st.title("📊 Performance Growth Metrics Analytics")
+            user_history = st.session_state["exam_vault"].get(session_uid, [])
+            
+            if not user_history: st.info("No records completed to build analytics tracks yet.")
+            else:
+                col_m1, col_m2, col_m3 = st.columns(3)
+                scores_list = [int(str(e.get("Status","")).split(":")[1].replace("%","").strip()) if "Status" in e and ":" in str(e.get("Status","")) else int(e.get("Score_Raw",0)) for e in user_history if isinstance(e, dict)]
+                
+                if scores_list:
+                    with col_m1: st.markdown(f'<div class="metric-card"><h5>📝 Total Exams Attempted</h5><h2>{len(user_history)} Items</h2></div>', unsafe_allow_html=True)
+                    with col_m2: st.markdown(f'<div class="metric-card"><h5>📈 Mean Mastery Percentage</h5><h2>{sum(scores_list)/len(scores_list):.1f}%</h2></div>', unsafe_allow_html=True)
+                    with col_m3: st.markdown(f'<div class="metric-card"><h5>🏆 Peak Evaluation Score</h5><h2>{max(scores_list)}% Target</h2></div>', unsafe_allow_html=True)
+                    
+                    st.line_chart(pd.DataFrame({"Your Score (%)": scores_list}, index=[f"Exam #{i+1}" for i in range(len(scores_list))]), y="Your Score (%)")
+                st.dataframe(pd.DataFrame(user_history)[[c for c in ["Subject", "Topic", "Date", "Grade", "Status"] if c in pd.DataFrame(user_history).columns]])
+
+            # Real-Time Tournament Matrix Block
+            st.markdown("---")
+            st.markdown("### 🏆 Live Dynamic Community Tournament Standings")
+            
+            standings_data = [
+                {"Rank": 1, "Club Squad": "Setra FC 👑", "P": 6, "W": 5, "D": 1, "L": 0, "GF": 16, "GA": 4, "GD": +12, "PTS": 16, "Form Matrix": "🟢 🟢 🟢 🟡 🟢 🟢"},
+                {"Rank": 2, "Club Squad": "Victoria FC", "P": 6, "W": 4, "D": 0, "L": 2, "GF": 11, "GA": 7, "GD": +4, "PTS": 12, "Form Matrix": "🟢 🔴 🟢 🟢 🔴 🟢"},
+                {"Rank": 3, "Club Squad": "Chelsea Lite FC", "P": 6, "W": 2, "D": 1, "L": 3, "GF": 8, "GA": 10, "GD": -2, "PTS": 7, "Form Matrix": "🔴 🟡 🟢 🔴 🟢 🔴"},
+                {"Rank": 4, "Club Squad": "Smur FC", "P": 6, "W": 0, "D": 0, "L": 6, "GF": 2, "GA": 16, "GD": -14, "PTS": 0, "Form Matrix": "🔴 🔴 🔴 🔴 🔴 🔴"}
+            ]
+            st.table(pd.DataFrame(standings_data).set_index("Rank"))
+
+        # --- FINISHED EXAM VAULT ---
+        elif client_tab_choice == "📁 Finished Exam Vault":
+            st.title("📁 Secure Script Archives Vault")
+            user_history = st.session_state["exam_vault"].get(session_uid, [])
+            if not user_history: st.info("Vault registry empty.")
+            else:
+                for idx, entry in enumerate(user_history[::-1]):
+                    if isinstance(entry, dict):
+                        with st.expander(f"📚 {entry.get('Subject')} : {entry.get('Topic')} — [{entry.get('Date')}] — Grade {entry.get('Grade')}"):
+                            st.write(f"**Questions Explored:** {entry.get('Questions')}")
+                            st.code(f"Your Work Submission Payload:\n{entry.get('Your_Work')}", language="text")
+                            st.markdown(f"<div style='background-color:#112211; padding:10px; border-radius:4px; border:1px solid green;'>{entry.get('Feedback_Solution')}</div>", unsafe_allow_html=True)
+
+        # --- CHANGE PASSWORD ---
+        elif client_tab_choice == "🔑 Change Account Password":
+            st.title("🔑 Update Security Credentials")
+            old_p = st.text_input("Enter Current Password:", type="password")
+            new_p = st.text_input("Enter New Password:", type="password")
+            if st.button("🔐 Rewrite Secure Memory Block"):
+                if old_p == st.session_state["users_registry"][session_uid]["pwd"]:
+                    st.session_state["users_registry"][session_uid]["pwd"] = new_p
+                    save_cache_to_disk("db_users.json", st.session_state["users_registry"])
+                    st.success("Credentials successfully updated in the secure storage matrix.")
+
+        # --- SUBMIT APP SUGGESTIONS ---
+        elif client_tab_choice == "📩 Submit App Suggestions":
+            st.title("📩 System Improvement Feedback Channel")
+            sug_text = st.text_area("Propose new system updates directly to Admin:")
+            if st.button("🚀 Transmit Feedback Packet"):
+                if sug_text.strip():
+                    st.session_state["suggestions"].append({"id": str(random.randint(10000, 99999)), "User": session_user, "Text": sug_text.strip(), "Time": datetime.datetime.now().strftime("%Y-%m-%d %I:%M:%S %p"), "Reply": ""})
+                    save_cache_to_disk("db_suggestions.json", st.session_state["suggestions"])
+                    st.success("Recommendation saved to the admin queue loops.")
+                    st.rerun()
+            
+            st.markdown("<div class='notes-box'>📢 Permanently Public Suggestions & Admin Responses", unsafe_allow_html=True)
+            if not st.session_state["suggestions"]: st.info("No logs found in public feedback frameworks.")
+            else:
+                for s in st.session_state["suggestions"][::-1]:
+                    if isinstance(s, dict):
+                        reply_chunk = f"<div class='suggestion-reply-box'><strong>✍️ Admin Response:</strong> {s.get('Reply')}</div>" if s.get('Reply') else "<p style='font-size:12px; color:#666;'>Log Status: Awaiting review...</p>"
+                        st.markdown(f'<div class="suggestion-card"><strong>From terminal: {s.get("User")} ({s.get("Time")})</strong><p style="color:#ddd; margin:6px 0;">{s.get("Text")}</p>{reply_chunk}</div>', unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+
+# =========================================================================
+# MODULE C: SYSTEM ADMINISTRATOR HUB (PROTECTED CONTROLS)
+# =========================================================================
+elif app_mode == "System Administrator Hub":
+    st.title("🛡️ System Administrator Core Controller Hub")
+    if user_role != "SUPER_ADMIN" and session_user != "Admin":
+        st.error("🛑 ACCESS DENIED: High Clearance Required.")
+    else:
+        st.success("⚡ Identity Match Cleared: Welcome back, Super Administrator.")
+        adm_tab = st.tabs(["👥 Student Terminals Registry", "📥 Enrollment Queue Requests", "📢 Live Broadcast Systems", "🖼️ Profile Sync Frame", "📩 User Suggestion Feedback Queue"])
+        
+        with adm_tab[0]:
+            for uid, node in list(st.session_state["users_registry"].items()):
+                with st.expander(f"👤 Account: {node.get('name','')} (UID: {uid}) [{node.get('role', 'USER')}]"):
+                    st.write(f"**Username:** {node.get('username','')} | **Password Matrix:** {node.get('pwd','')}")
+                    st.write(f"**Institution:** {node.get('school','')} | **Authorized Subject Arrays:** {node.get('subjects',[])}")
+                    if uid != "0000":
+                        current_status = node.get("status","Approved")
+                        status_options = ["Approved", "Locked", "Banned"]
+                        if current_status not in status_options:
+                            status_options.append(current_status)
+                        new_stat = st.selectbox(f"Operational State (UID {uid}):", status_options, index=status_options.index(current_status), key=f"adm_stat_{uid}")
+                        warn_in = st.text_input(f"Inject warning marquee (UID {uid}):", value=node.get("warning_msg",""), key=f"adm_warn_{uid}")
+                        if st.button(f"💾 Lock Changes (UID {uid})"):
+                            st.session_state["users_registry"][uid]["status"] = new_stat
+                            st.session_state["users_registry"][uid]["warning_msg"] = warn_in
+                            save_cache_to_disk("db_users.json", st.session_state["users_registry"])
+                            st.success("Registers updated.")
+                            st.rerun()
+
+        with adm_tab[1]:
+            if not st.session_state["pending_registrations"]: st.info("Queue empty.")
+            else:
+                for idx, req in enumerate(st.session_state["pending_registrations"]):
+                    if isinstance(req, dict):
+                        st.markdown(f"**Candidate:** {req.get('name','')} | **Class:** {req.get('class','')} | **School:** {req.get('school','')}")
+                        col_acc, col_rej = st.columns(2)
+                        with col_acc:
+                            if st.button(f"✔ Grant Access (Index {idx})"):
+                                new_uid = str(random.randint(1000, 9999))
+                                st.session_state["users_registry"][new_uid] = {"username": req.get("username",""), "pwd": req.get("pwd",""), "name": req.get("name",""), "class": req.get("class",""), "school": req.get("school",""), "phone": req.get("phone",""), "email": req.get("email",""), "gender": req.get("gender",""), "location": req.get("location", "Kampala"), "subjects": req.get("subjects",[]), "status": "Approved", "warning_msg": "", "avatar": req.get("avatar",AVATAR_OPTIONS[0]), "partner": "", "partner_role": "Standalone", "role": "USER"}
+                                st.session_state["pending_registrations"].pop(idx)
+                                save_cache_to_disk("db_users.json", st.session_state["users_registry"])
+                                save_cache_to_disk("db_pending.json", st.session_state["pending_registrations"])
+                                st.success(f"Approved! Access Token: [{new_uid}]")
+                                st.rerun()
+
+        with adm_tab[2]:
+            bc_text = st.text_input("Type new live alert banner context string:")
+            if st.button("🚀 Push Live Global System Broadcast Alert"):
+                st.session_state["global_alerts"].append(bc_text.strip())
+                save_cache_to_disk("db_alerts.json", st.session_state["global_alerts"])
+                st.success("Alert broadcasted.")
+
+        with adm_tab[3]:
+            new_pic_url = st.text_input("Paste photo direct source URL link:", value=st.session_state.get("custom_admin_photo", DEFAULT_SUDAISI_IMAGE))
+            if st.button("💾 Apply Global Structural Photo Re-Write"):
+                st.session_state["custom_admin_photo"] = new_pic_url.strip()
+                save_cache_to_disk("db_admin_photo.json", st.session_state["custom_admin_photo"])
+                st.success("System picture sync matrix updated instantly.")
+
+        with adm_tab[4]:
+            st.subheader("📩 Incoming Suggestions & Interactive Feedback Queue")
+            if not st.session_state["suggestions"]: st.info("No active feedback packets logged by standard users yet.")
+            else:
+                for idx, s in enumerate(st.session_state["suggestions"]):
+                    if isinstance(s, dict):
+                        st.markdown(f'<div style="background-color:#1e1e1e; padding:12px; border-radius:4px; margin-bottom:6px; border-left:3px solid #ff3333;"><strong>Sender:</strong> {s.get("User","")} | <strong>Content:</strong> {s.get("Text","")}<br><strong>Current Reply:</strong> {s.get("Reply", "None")}</div>', unsafe_allow_html=True)
+                        reply_text_input = st.text_input(f"Draft permanent public response layer:", value=s.get("Reply", ""), key=f"rep_input_{s.get('id', idx)}")
+                        if st.button(f"🚀 Broadcast Official Reply (Item {idx+1})", key=f"rep_btn_{s.get('id', idx)}"):
+                            st.session_state["suggestions"][idx]["Reply"] = reply_text_input.strip()
+                            save_cache_to_disk("db_suggestions.json", st.session_state["suggestions"])
+                            st.success("✔ Reply compiled and synced live!")
+                            time.sleep(1)
+                            st.rerun()
+
+# =========================================================================
+# 5. UNIVERSAL IMMUTABLE BRANDING FOOTER LAYER
+# =========================================================================
+st.markdown("""
+    <div class="sudaisi-branding-footer">
+        <p style="color: #ffffff; font-family: 'Courier New', Courier, monospace; font-size: 13px; margin: 0; text-align: center;">
+            Created by <span style="color: #ff3333; font-weight: bold;">Sudaisi Setra</span>
+        </p>
+    </div>
+""", unsafe_allow_html=True)
