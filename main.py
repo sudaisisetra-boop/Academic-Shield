@@ -1,5 +1,5 @@
 # =========================================================================
-# PART 2 OF 2: REVISED MASTER WORKSPACE CODE ORCHESTRATOR (main.py)
+# FILE 2 OF 2: MASTER WORKSPACE CODE ORCHESTRATOR (main.py) - PART 1
 # =========================================================================
 import streamlit as st
 import pandas as pd
@@ -68,8 +68,9 @@ if st.session_state["logged_in_uid"] is None:
     with auth_tab1:
         st.subheader("Administrative Authority Verification")
         with st.form("Admin Authorization Form"):
-            adm_user = st.text_input("Admin ID / Username Key", value="admin_setra")
-            adm_pwd = st.text_input("Secret Master Password Link", type="password", value="AdminPassword2026")
+            # Set to empty string so credentials never auto-populate
+            adm_user = st.text_input("Admin ID / Username Key", value="")
+            adm_pwd = st.text_input("Secret Master Password Link", type="password", value="")
             if st.form_submit_button("UNLOCK EXECUTIVE FRAMEWORK"):
                 matched_id = None
                 cleaned_adm_user = adm_user.strip()
@@ -90,8 +91,9 @@ if st.session_state["logged_in_uid"] is None:
     with auth_tab2:
         st.subheader("Candidate Workspace Access")
         with st.form("Candidate Login Form"):
-            usr_user = st.text_input("Registered Account Username", value="Setra stones")
-            usr_pwd = st.text_input("Personal Security Password", type="password", value="Amazima2026")
+            # Set to empty string so credentials never auto-populate
+            usr_user = st.text_input("Registered Account Username", value="")
+            usr_pwd = st.text_input("Personal Security Password", type="password", value="")
             if st.form_submit_button("INITIALIZE SECURE MEMBER NODE"):
                 matched_id = None
                 cleaned_usr_user = usr_user.strip().lower()
@@ -109,9 +111,7 @@ if st.session_state["logged_in_uid"] is None:
                     else:
                         st.session_state["logged_in_uid"] = matched_id
                         st.session_state["current_user_role"] = "USER"
-                        st.session_state["active_channel"] = "Live Individual Exam Center" if "Live Individual Exam Center" in [
-                            "📝 Live Individual Exam Center", "Live Individual Exam Center"
-                        ] else "📝 Live Individual Exam Center"
+                        st.session_state["active_channel"] = "📝 Live Individual Exam Center"
                         st.rerun()
                 else:
                     st.error("❌ Authentication failure: Check entry strings.")
@@ -156,7 +156,7 @@ else:
         st.rerun()
 
     # =========================================================================
-    # GLOBAL BROADCAST LAYER (VISUAL ALERTS MOUNTED TO TOP HEADER BUFFER PANEL)
+    # GLOBAL BROADCAST LAYER
     # =========================================================================
     if db.GLOBAL_BROADCASTS:
         st.markdown(f"""
@@ -185,7 +185,6 @@ else:
 
     if USER.get("warning_msg"):
         st.error(f"⚠️ **REGULATION NOTICE ACTION LOGGED:** {USER['warning_msg']}")
-
     # =========================================================================
     # SIDEBAR EXPANSION WORKSPACE LAYOUT
     # =========================================================================
@@ -202,7 +201,8 @@ else:
                 "📥 Incoming Signups Request Queue",
                 "📢 Mass Global Communication Portal",
                 "📥 Suggestions Box Center",
-                "📤 Upload Notes Page"
+                "📤 Upload Notes Page",
+                "🔐 Account Security Center"
             ]
         else:
             st.markdown("<b style='color:#00a884;'>🎓 STUDENT WORKSPACE HOUSING</b>", unsafe_allow_html=True)
@@ -214,7 +214,8 @@ else:
                 "🔒 Private Peer Chatroom",
                 "📊 Personal Progress Tracker",
                 "📂 Finished Exam Vault Storage",
-                "📖 Global Candidates Directory"
+                "📖 Global Candidates Directory",
+                "🔐 Account Security Center"
             ]
             
         if st.session_state["active_channel"] not in workspace_channels:
@@ -359,8 +360,8 @@ else:
     # =========================================================================
     # WORKSPACE MODULE 2: RECONFIGURED STANDARD STUDENT CHANNELS FRAMEWORK
     # =========================================================================
-    else:
-        if ACTIVE_WORKSPACE in ["📝 Live Individual Exam Center", "Live Individual Exam Center"]:
+    if USER["role"] == "USER":
+        if ACTIVE_WORKSPACE == "📝 Live Individual Exam Center":
             st.markdown("<h2>📝 Real-Time Google Sheets Evaluation Engine</h2>", unsafe_allow_html=True)
             sel_sub = st.selectbox("Select Target Subject Track Parameter:", ["Mathematics", "Physics", "Chemistry", "Biology"])
             
@@ -683,3 +684,30 @@ else:
                         db.save_storage_node("suggestions_box.json", db.SUGGESTIONS_BOX)
                         st.success("Recommendation entry added to public records database channels.")
                         st.rerun()
+
+    # =========================================================================
+    # GLOBAL ACCESSIBILITY WORKSPACE MODULE: ACCOUNT SECURITY CENTER (FOR ALL)
+    # =========================================================================
+    if ACTIVE_WORKSPACE == "🔐 Account Security Center":
+        st.markdown("<h2>🔐 Account Security & Cryptographic Password Modification Panel</h2>", unsafe_allow_html=True)
+        st.caption("Change your system access security password tracking vector key instantly.")
+        
+        with st.form("Universal Password Refactoring Form Block"):
+            old_p = st.text_input("Enter Current Password Vector String:", type="password", value="")
+            new_p = st.text_input("Define New Secure Account Access Password:", type="password", value="")
+            confirm_p = st.text_input("Confirm New Password Mapping Sequence:", type="password", value="")
+            
+            if st.form_submit_button("COMMIT PASSWORD UPDATE MATRIX"):
+                if old_p != USER["pwd"]:
+                    st.error("❌ Authentication Failure: Your typed current verification string does not match database entries.")
+                elif not new_p or len(new_p) < 4:
+                    st.error("❌ Configuration Error: Proposed security password parameter is empty or too short.")
+                elif new_p != confirm_p:
+                    st.error("❌ Structural Collision: The confirmation string parameter mapping sequence does not align.")
+                else:
+                    # Update local runtime session node reference array value
+                    db.USERS_REGISTRY[UID]["pwd"] = new_p
+                    db.save_storage_node("users_registry.json", db.USERS_REGISTRY)
+                    st.success("🎯 Password refactoring verified! Active profile updated successfully on disk memory pipelines.")
+                    time.sleep(1)
+                    st.rerun()
