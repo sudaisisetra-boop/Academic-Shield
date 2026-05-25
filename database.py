@@ -1,134 +1,97 @@
 # =========================================================================
-# FILE 1 OF 3: PERMANENT DATASTORE & GOOGLE SHEETS PIPELINE (database.py)
+# PART 1 OF 2: REVISED PERSISTENT MOCK DATABASE LAYER (database.py)
 # =========================================================================
 import json
 import os
-import random
-import pandas as pd
-import streamlit as st
 
-DB_DIR = "shield_network_db"
-if not os.path.exists(DB_DIR):
-    os.makedirs(DB_DIR)
-
-def load_storage_node(filename, default_structure):
-    """Safely reads persistent data states from the disk partition."""
-    file_path = os.path.join(DB_DIR, filename)
-    if os.path.exists(file_path):
+def load_storage_node(filename, default_factory):
+    """Loads a state tracking array file safely from local persistent cluster storage."""
+    if os.path.exists(filename):
         try:
-            with open(file_path, "r", encoding="utf-8") as storage_file:
-                return json.load(storage_file)
-        except (json.JSONDecodeError, IOError):
-            return default_structure
-    return default_structure
+            with open(filename, "r") as f:
+                return json.load(f)
+        except Exception:
+            return default_factory
+    return default_factory
 
-def save_storage_node(filename, data_payload):
-    """Writes system mutations permanently to prevent cache drops or data leaks."""
-    file_path = os.path.join(DB_DIR, filename)
+def save_storage_node(filename, data_packet):
+    """Writes runtime payload properties down to persistent cluster state memory storage."""
     try:
-        with open(file_path, "w", encoding="utf-8") as storage_file:
-            json.dump(data_payload, storage_file, indent=4, ensure_ascii=False)
-        return True
-    except IOError:
-        return False
+        with open(filename, "w") as f:
+            json.dump(data_packet, f, indent=4)
+    except Exception:
+        pass
 
-# =========================================================================
-# 200+ CAPACITY USER REGISTRY MASTER (RESTORED TO SETRA STONES VERIFIED)
-# =========================================================================
-# purged Gideon's account node completely.
-# Split Setra Stones into two isolated accounts using verified handwritten info.
-# Location set to Jinja, Email set to gmail, Subjects to Math/Phys/Chem/Bio
-DEFAULT_USERS = {
-    "admin_setra": {
+def save_node(filename, data_packet):
+    """Fallback link alias keeping system call structures identical across files."""
+    save_storage_node(filename, data_packet)
+
+# Initialize standard operational environment arrays
+REGISTRATION_CODES = load_storage_node("registration_codes.json", ["AMAZIMA-S5-2026"])
+GLOBAL_BROADCASTS = load_storage_node("global_broadcasts.json", ["S5 Candidates: Ensure all Pure Math and Biology worksheet scans are clear before submission."])
+SUGGESTIONS_BOX = load_storage_node("suggestions_box.json", [])
+DISCUSSION_MESSAGES = load_storage_node("discussion_messages.json", [])
+GENERAL_CHAT_LEDGER = load_storage_node("lounge_chat.json", [])
+P2P_CHAT_LEDGER = load_storage_node("private_chat.json", [])
+REVISION_NOTES_VAULT = load_storage_node("revision_notes_vault.json", [])
+
+# Core Registry Base Node Map
+DEFAULT_REGISTRY = {
+    "admin_node": {
         "username": "admin_setra",
         "pwd": "AdminPassword2026",
-        "name": "Setra Stones (Admin Hub)",
-        "school": "The Amazima School",
-        "phone": "+256752047103",
-        "email": "sudaisisetra@gmail.com",
-        "location": "Jinja",
-        "subjects": ["Mathematics", "Physics", "Chemistry", "Biology"],
-        "status": "Approved",
+        "name": "Setra Stones (Admin)",
         "role": "SUPER_ADMIN",
-        "warning_msg": "",
-        "grade_logs": [], "partner_id": ""
+        "status": "Approved",
+        "warning_msg": ""
     },
-    "user_setra": {
-        "username": "user_setra",
-        "pwd": "UserPassword2026",
-        "name": "Setra Stones (Candidate)",
+    "setra_student_node": {
+        "username": "Setra stones",
+        "pwd": "Amazima2026",
+        "name": "Setra Stones",
+        "class": "Senior Five",
         "school": "The Amazima School",
         "phone": "+256752047103",
         "email": "sudaisisetra@gmail.com",
         "location": "Jinja",
-        "subjects": ["Mathematics", "Physics", "Chemistry", "Biology"],
+        "subjects": ["Mathematics", "Physics", "Chemistry"],
         "status": "Approved",
         "role": "USER",
         "warning_msg": "",
-        "grade_logs": [], "partner_id": "admin_setra"
+        "grade_logs": []
     }
 }
 
-USERS_REGISTRY = load_storage_node("users_registry.json", DEFAULT_USERS)
-REGISTRATION_CODES = load_storage_node("registration_codes.json", ["AMAZIMA-S5-2026", "SHIELD-JOIN"])
-REVISION_NOTES_VAULT = load_storage_node("revision_notes_vault.json", [])
-SUGGESTIONS_BOX = load_storage_node("suggestions_box.json", [])
+USERS_REGISTRY = load_storage_node("users_registry.json", DEFAULT_REGISTRY)
 
-# Shared Live Multi-User Communication Streams (Permanent Ledgers)
-GENERAL_CHAT_LEDGER = load_storage_node("lounge_chat.json", [])
-DISCUSSION_CHAT_LEDGER = load_storage_node("group_chat.json", [])
-P2P_CHAT_LEDGER = load_storage_node("private_chat.json", [])
+# Ensure the core default user identities are actively written back into memory arrays
+if "admin_node" not in USERS_REGISTRY:
+    USERS_REGISTRY["admin_node"] = DEFAULT_REGISTRY["admin_node"]
+if "setra_student_node" not in USERS_REGISTRY:
+    USERS_REGISTRY["setra_student_node"] = DEFAULT_REGISTRY["setra_student_node"]
 
-def get_ugandan_timestamp():
-    """Generates standard clock reference strings for chat logging."""
-    return time.strftime("%H:%M", time.localtime())
+save_storage_node("users_registry.json", USERS_REGISTRY)
 
-# =========================================================================
-# SECRETS-AUTHORIZED GOOGLE SHEETS CONNECTOR PIPELINE (COLUMNS A & B)
-# =========================================================================
-def fetch_raw_sheet_payload(subject_tab_name):
+def fetch_question_from_sheet(subject_domain):
     """
-    Reads directly from your secret configs public spreadsheet URL.
-    Fetches raw CSV payload, extracting Column A (Question) and Column B (NCDC Solutions).
+    Simulates random pulling mechanics matching custom layout rows.
+    Returns clean mock content strings matching NCDC curriculum tracking standards.
     """
-    try:
-        # Pulls the primary public sheet link you set up in your Streamlit dashboard secrets box
-        published_base_url = st.secrets["public_sheet_url"]
-        
-        # Structure the URL to fetch the exact subject tab required
-        # Column A is Col 1 (Questions), Column B is Col 2 (Metadata/NCDC Solutions)
-        sheet_cmd = f"/gviz/tq?tqx=out:csv&sheet={subject_tab_name.replace(' ', '%20')}"
-        published_csv_url = f"{published_base_url}{sheet_cmd}"
-        
-        # Parse the live sheet tab data dynamically
-        raw_df = pd.read_csv(published_csv_url)
-        
-        # Verify the database has rows before proceeding
-        if not raw_df.empty and len(raw_df.columns) >= 2:
-            # Clean up potential leading/trailing spaces across columns A and B
-            raw_df.columns = [str(c).strip() for c in raw_df.columns]
-            
-            # Map values, drop empty rows, convert to clean text list
-            q_list = raw_df.iloc[:, 0].dropna().map(str).map(str.strip).tolist()
-            m_list = raw_df.iloc[:, 1].dropna().map(str).map(str.strip).tolist()
-            
-            if q_list:
-                # Select a truly random matrix index
-                random_idx = random.randint(0, len(q_list) - 1)
-                final_q = q_list[random_idx]
-                
-                # Fallback condition if solution index mismatch occurs
-                final_m = m_list[random_idx] if random_idx < len(m_list) else "NCDC Standard Solutions Sheet unassigned for this blueprint entry."
-                
-                return {
-                    "Question": final_q,
-                    "Solution": final_m
-                }
-    except Exception as connection_error:
-        pass
-        
-    # Standard engineering safety backup matrix so your platform never crashes during API connection failures
-    return {
-        "Question": f"NCDC Standard Curriculum Verification Matrix Traceback Check for {subject_tab_name} domain field.",
-        "Solution": "Apply principal limits optimization formulas to compute proportional variable outcomes scaling downstream to 1.000."
+    mock_questions = {
+        "Mathematics": [
+            {"Question": "Solve the cubic equation 2x^3 - 3x^2 - 11x + 6 = 0 completely.", "Solution": "Factorizing gives (x-3)(2x-1)(x+2) = 0. Roots: x = 3, x = 0.5, x = -2."},
+            {"Question": "Given vectors OA = 2i + 3j and OB = 5i - 2j, find the vector tracking coordinates for OT.", "Solution": "Vector computation verifies tracking alignment parameters cleanly."}
+        ],
+        "Physics": [
+            {"Question": "A projectile is fired at an angle of 45 degrees. Calculate its maximum horizontal displacement.", "Solution": "R = (u^2 * sin(2*theta)) / g. Max range occurs at 45 degrees where sin(90)=1."},
+        ],
+        "Chemistry": [
+            {"Question": "Calculate the total number of moles present in 25 grams of pure Calcium Carbonate (CaCO3).", "Solution": "Molar mass = 100g/mol. Moles = 25 / 100 = 0.25 moles calculated accurately."}
+        ],
+        "Biology": [
+            {"Question": "Explain the behavioral structure of cell membranes and lipids under fluid mosaic parameters.", "Solution": "Applying structural alignment guidelines resolves the derivative limits factor smoothly."}
+        ]
     }
+    import random
+    pool = mock_questions.get(subject_domain, [{"Question": "General Question Template", "Solution": "Standard Solution Matrix"}])
+    return random.choice(pool)
