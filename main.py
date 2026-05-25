@@ -1,5 +1,5 @@
 # =========================================================================
-# FILE 3 OF 3: MASTER WORKSPACE CODE ORCHESTRATOR (main.py)
+# PART 2 OF 2: REVISED MASTER WORKSPACE CODE ORCHESTRATOR (main.py)
 # =========================================================================
 import streamlit as st
 import pandas as pd
@@ -72,10 +72,12 @@ if st.session_state["logged_in_uid"] is None:
             adm_pwd = st.text_input("Secret Master Password Link", type="password", value="AdminPassword2026")
             if st.form_submit_button("UNLOCK EXECUTIVE FRAMEWORK"):
                 matched_id = None
+                cleaned_adm_user = adm_user.strip()
                 for uid, data in db.USERS_REGISTRY.items():
-                    if data["username"] == adm_user and data["pwd"] == adm_pwd and data["role"] in ["ADMIN", "SUPER_ADMIN"]:
-                        matched_id = uid
-                        break
+                    if data["username"].strip() == cleaned_adm_user and data["pwd"] == adm_pwd:
+                        if data.get("role") in ["ADMIN", "SUPER_ADMIN"]:
+                            matched_id = uid
+                            break
                 if matched_id:
                     st.session_state["logged_in_uid"] = matched_id
                     st.session_state["current_user_role"] = db.USERS_REGISTRY[matched_id]["role"]
@@ -88,14 +90,16 @@ if st.session_state["logged_in_uid"] is None:
     with auth_tab2:
         st.subheader("Candidate Workspace Access")
         with st.form("Candidate Login Form"):
-            usr_user = st.text_input("Registered Account Username", value="user_setra")
-            usr_pwd = st.text_input("Personal Security Password", type="password", value="UserPassword2026")
+            usr_user = st.text_input("Registered Account Username", value="Setra stones")
+            usr_pwd = st.text_input("Personal Security Password", type="password", value="Amazima2026")
             if st.form_submit_button("INITIALIZE SECURE MEMBER NODE"):
                 matched_id = None
+                cleaned_usr_user = usr_user.strip().lower()
                 for uid, data in db.USERS_REGISTRY.items():
-                    if data["username"] == usr_user and data["pwd"] == usr_pwd and data["role"] == "USER":
-                        matched_id = uid
-                        break
+                    if data["username"].strip().lower() == cleaned_usr_user and data["pwd"] == usr_pwd:
+                        if data.get("role") == "USER":
+                            matched_id = uid
+                            break
                 if matched_id:
                     u_rec = db.USERS_REGISTRY[matched_id]
                     if u_rec["status"] == "Suspended":
@@ -105,7 +109,9 @@ if st.session_state["logged_in_uid"] is None:
                     else:
                         st.session_state["logged_in_uid"] = matched_id
                         st.session_state["current_user_role"] = "USER"
-                        st.session_state["active_channel"] = "📝 Live Individual Exam Center"
+                        st.session_state["active_channel"] = "Live Individual Exam Center" if "Live Individual Exam Center" in [
+                            "📝 Live Individual Exam Center", "Live Individual Exam Center"
+                        ] else "📝 Live Individual Exam Center"
                         st.rerun()
                 else:
                     st.error("❌ Authentication failure: Check entry strings.")
@@ -168,7 +174,7 @@ else:
     </div>
     """, unsafe_allow_html=True)
 
-    # FIX: "Sign out" button pinned to the top right corner context grid
+    # Sign out button context grid
     h_col1, h_col2 = st.columns([5.8, 1.2])
     with h_col2:
         if st.button("🚪 Sign out", use_container_width=True, help="Disconnect active session node"):
@@ -181,14 +187,13 @@ else:
         st.error(f"⚠️ **REGULATION NOTICE ACTION LOGGED:** {USER['warning_msg']}")
 
     # =========================================================================
-    # SIDEBAR EXPANSION WORKSPACE LAYOUT (TOGGLED BY CORNER DIRECTIONAL ARROWS)
+    # SIDEBAR EXPANSION WORKSPACE LAYOUT
     # =========================================================================
     with st.sidebar:
         st.markdown("### 🗂️ Workspace Navigation")
         st.caption("Tap the arrow vectors inside the top-left edge bounds to fold this panel window away dynamically.")
         st.write("---")
         
-        # Absolute structural partition between admin tools and standard student views
         if USER["role"] in ["ADMIN", "SUPER_ADMIN"]:
             st.markdown("<b style='color:#ff4b4b;'>🛠️ MANAGEMENT OVERRIDES PANEL</b>", unsafe_allow_html=True)
             workspace_channels = [
@@ -232,7 +237,7 @@ else:
             st.caption("Issue explicit warnings, manage bans, clear warnings, or delete user log nodes permanently.")
             
             for target_uid, profile in list(db.USERS_REGISTRY.items()):
-                if target_uid == UID: continue  # Prevent administrative self-lockouts
+                if target_uid == UID: continue  
                 st.markdown(f"""
                 <div class="directory-profile-box">
                     <h4>👤 Node Allocation ID: <code>{target_uid}</code> | Name Target: {profile['name']}</h4>
@@ -355,15 +360,11 @@ else:
     # WORKSPACE MODULE 2: RECONFIGURED STANDARD STUDENT CHANNELS FRAMEWORK
     # =========================================================================
     else:
-        
-        if ACTIVE_WORKSPACE == "📝 Live Individual Exam Center":
+        if ACTIVE_WORKSPACE in ["📝 Live Individual Exam Center", "Live Individual Exam Center"]:
             st.markdown("<h2>📝 Real-Time Google Sheets Evaluation Engine</h2>", unsafe_allow_html=True)
-            
             sel_sub = st.selectbox("Select Target Subject Track Parameter:", ["Mathematics", "Physics", "Chemistry", "Biology"])
             
-            # Real Automated Sheet Pulling Action Form Link Trigger
             if st.button("🎲 Pull New Random Question From Google Sheets"):
-                # Invokes the live parsing functions fetching column A & B directly
                 pulled_node = db.fetch_question_from_sheet(sel_sub)
                 st.session_state["active_exam_question"] = pulled_node["Question"]
                 st.session_state["active_exam_solution"] = pulled_node["Solution"]
@@ -382,7 +383,6 @@ else:
                         if not typed_ans and not uploaded_photo:
                             st.error("❌ Action denied. You must supply an answer string or handwritten solution image to compute a grading score.")
                         else:
-                            # Dynamic keywords auto scoring algorithm framework
                             match_score = 40
                             if typed_ans:
                                 keywords = ["hence", "therefore", "let", "prove", "equals", "matrix", "implies", "cell", "membrane", "limit"]
@@ -397,7 +397,6 @@ else:
                             else: st.session_state["calculated_grade"] = "F"
                             st.session_state["exam_graded"] = True
                             
-                            # Append directly to tracker node logs
                             if "grade_logs" not in USER: USER["grade_logs"] = []
                             USER["grade_logs"].append({
                                 "Subject": sel_sub, "Score": match_score, "Grade": st.session_state["calculated_grade"], "Question": st.session_state["active_exam_question"], "Solution": st.session_state["active_exam_solution"], "User_Ans": typed_ans
@@ -422,7 +421,6 @@ else:
 
         elif ACTIVE_WORKSPACE == "🤝 Synchronized Partner Exam Center":
             st.markdown("<h2>🤝 Synchronized Peer-to-Peer Partnership Examination Center</h2>", unsafe_allow_html=True)
-            
             st.write(f"Assigned Room Coordinator Leader Unit Node: **{st.session_state.get('p_leader_node', 'Unassigned')}**")
             if st.button("👑 Establish Self as Appointed Session Leader"):
                 st.session_state["p_leader_node"] = USER["name"]
@@ -454,7 +452,6 @@ else:
                         if st.form_submit_button("LOCK COLLABORATIVE PACKET DATA"):
                             st.success("Answer arrays locked and committed down data tracking lanes.")
                             
-                    # Display NCDC responses dynamically to room members
                     st.markdown("#### 🌟 COMPLED NCDC MARKING SCHEMAS FOR BOTH TRACK QUESTIONS")
                     st.info(f"<b>Solution 1:</b> {st.session_state.get('partner_sol1')}", icon="🔬")
                     st.info(f"<b>Solution 2:</b> {st.session_state.get('partner_sol2')}", icon="🔬")
@@ -467,13 +464,10 @@ else:
 
         elif ACTIVE_WORKSPACE == "📚 Subject Group Discussions":
             st.markdown("<h2>📚 Interactive Subject Group Discussion Portal</h2>", unsafe_allow_html=True)
-            
             if not st.session_state["disc_leader"]:
                 st.session_state["disc_leader"] = USER["name"]
-                
             st.write(f"Classroom Session Leader Overlord: **{st.session_state['disc_leader']}**")
             
-            # ✋ INTERCOM CONTROLLER RESTRICTED SOLELY TO THE MESSAGING VIEW PAGES ONLY
             st.markdown("#### ✋ Intercom Microphone Flow Raise Hand Controller")
             if "discussion_hands" not in st.session_state: st.session_state["discussion_hands"] = []
             is_up = UID in st.session_state["discussion_hands"]
@@ -519,7 +513,6 @@ else:
             if st.session_state["disc_show_sol"] and st.session_state["disc_sol"]:
                 st.success(f"🌟 **NCDC STANDARD SOLUTION MAP SHEET:**\n{st.session_state['disc_sol']}")
 
-            # PREMIUM WHATSAPP PERSISTENT CHAT DESIGN BLOCK
             st.markdown("#### Classroom Conversation Ledger Stream")
             st.markdown("<div class='whatsapp-chat-canvas'>", unsafe_allow_html=True)
             for m in db.DISCUSSION_MESSAGES:
@@ -538,14 +531,10 @@ else:
                 """, unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
-            # INTEGRATED MULTIMEDIA FORM INPUT COMPONENT WITH MICROPHONE CAPTURE TRIGGER
             with st.form("Unified Discussion Media Transmission Console Hub", clear_on_submit=True):
                 m_txt = st.text_input("Type clarification argument or concept response text details:")
                 m_img = st.file_uploader("Attach handwritten solution worksheet photograph file matrix capture:", type=["png","jpg","jpeg"])
-                
-                # FIX: Interactive custom voice memo microphone upload component link
                 m_mic = st.file_uploader("🎤 TAP MICROPHONE INPUT - Upload recorded audio voice note memo file:", type=["mp3","wav","m4a"])
-                
                 if st.form_submit_button("TRANSMIT MULTIMEDIA PAYLOAD PACKET"):
                     if m_txt or m_img or m_mic:
                         db.DISCUSSION_MESSAGES.append({
@@ -557,7 +546,6 @@ else:
 
         elif ACTIVE_WORKSPACE == "💬 General Lounge Chat":
             st.markdown("<h2>💬 Global WhatsApp Media Communications Lounge</h2>", unsafe_allow_html=True)
-            
             st.markdown("<div class='whatsapp-chat-canvas'>", unsafe_allow_html=True)
             for m in db.GENERAL_CHAT_LEDGER:
                 side = "row-right" if m["uid"] == UID else "row-left"
@@ -590,7 +578,6 @@ else:
 
         elif ACTIVE_WORKSPACE == "🔒 Private Peer Chatroom":
             st.markdown("<h2>🔒 Private Peer-to-Peer Cryptographic Chatroom Node</h2>", unsafe_allow_html=True)
-            
             st.markdown("<div class='whatsapp-chat-canvas'>", unsafe_allow_html=True)
             for m in db.P2P_CHAT_LEDGER:
                 side = "row-right" if m["uid"] == UID else "row-left"
@@ -623,8 +610,6 @@ else:
 
         elif ACTIVE_WORKSPACE == "📊 Personal Progress Tracker":
             st.markdown("<h2>📊 Personal Analytical Progress Tracker Dashboard Matrix</h2>", unsafe_allow_html=True)
-            st.caption("Simplified metrics mapping your syllabus performance trajectory dynamically.")
-            
             logs = USER.get("grade_logs", [])
             if not logs:
                 st.info("No recorded assessment logs found. Complete an evaluation inside the Live Individual Exam Center to build tracking charts.")
@@ -636,7 +621,6 @@ else:
 
         elif ACTIVE_WORKSPACE == "📂 Finished Exam Vault Storage":
             st.markdown("<h2>📂 Done Assessment Historical Storage Vault</h2>", unsafe_allow_html=True)
-            
             logs = USER.get("grade_logs", [])
             if not logs:
                 st.info("Vault registry records are currently empty.")
@@ -669,11 +653,8 @@ else:
 
         elif ACTIVE_WORKSPACE == "📖 Global Candidates Directory":
             st.markdown("<h2>📖 Global Network Candidate Registry Directory Panel</h2>", unsafe_allow_html=True)
-            st.caption("Rendering active profiles for 200+ network nodes safely. Security passwords hidden completely from view arrays.")
-            
-            # PUBLIC DIRECTORY FOR SENDING MESSAGES / PARTNERSHIP REQUESTS
             for d_uid, d_profile in db.USERS_REGISTRY.items():
-                if d_profile["status"] != "Approved": continue
+                if d_profile.get("status") != "Approved": continue
                 st.markdown(f"""
                 <div class="directory-profile-box">
                     <h3>👤 Candidate Profile: {d_profile['name']}</h3>
