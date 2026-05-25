@@ -1,17 +1,17 @@
 # =========================================================================
-# FILE 1 OF 3: STABLE PERMANENT STORAGE ENGINE (database.py)
+# FILE 1 OF 3: PERMANENT STRUCTURAL DATABASE MODULE (database.py)
 # =========================================================================
 import json
 import os
 import time
 
-# Create a secure localized directory cluster for data survival
+# Secure database localized directory node
 DB_DIR = "shield_network_db"
 if not os.path.exists(DB_DIR):
     os.makedirs(DB_DIR)
 
 def load_storage_node(filename, default_structure):
-    """Safely reads persistent data pools from the disk partition."""
+    """Safely reads permanent data states from disk architecture."""
     file_path = os.path.join(DB_DIR, filename)
     if os.path.exists(file_path):
         try:
@@ -22,7 +22,7 @@ def load_storage_node(filename, default_structure):
     return default_structure
 
 def save_storage_node(filename, data_payload):
-    """Writes system mutations permanently to prevent cache drop data leaks."""
+    """Writes system mutations permanently to prevent cache drops or data leaks."""
     file_path = os.path.join(DB_DIR, filename)
     try:
         with open(file_path, "w", encoding="utf-8") as storage_file:
@@ -32,11 +32,11 @@ def save_storage_node(filename, data_payload):
         return False
 
 # =========================================================================
-# COMPREHENSIVE NCDC ADVANCED CURRICULUM VECTOR MAP (BIOLOGY INCLUDED)
+# COMPREHENSIVE NCDC ADVANCED SYLLABUS MAP (INCLUDING BIOLOGY)
 # =========================================================================
 NCDC_CURRICULUM_MAP = {
-    "Mathematics": [
-        "Pure Mathematics: Quadratics & Cubics", 
+    "Pure Mathematics": [
+        "Quadratics & Cubic Equations", 
         "Vectors, Lines & Collinearity Matrix", 
         "Trigonometric Identities & Equations", 
         "Calculus: Differentiation Mechanics", 
@@ -45,7 +45,7 @@ NCDC_CURRICULUM_MAP = {
     "Physics": [
         "Mechanics: Projectile Motion Linear Vectors", 
         "Modern Physics: Quantum & Atomic Structures", 
-        "Waves, Optic Mechanics & Geometrical Refraction", 
+        "Waves, Optics & Geometrical Refraction", 
         "Electricity, Magnetism & Alternating Currents"
     ],
     "Chemistry": [
@@ -58,15 +58,13 @@ NCDC_CURRICULUM_MAP = {
         "Biochemistry: Enzymes, Lipids & Carbohydrates",
         "Anatomy & Physiology: Homeostasis & Osmo-regulation",
         "Syllabus Ecology: Population Dynamics & Ecosystems",
-        "Genetics & Evolution: Monohybrid & Dihybrid Inheritance"
+        "Genetics & Evolution: Inheritance Mechanics"
     ]
 }
 
 # =========================================================================
-# SYSTEM CORE MASTER REPOSITORIES INITIALIZATION (CAPABLE OF 200+ USERS)
+# BASE MASTER ACCOUNT DIRECTORY (ACCOMMODATES 200+ USERS SAFELY)
 # =========================================================================
-
-# Master User Record Coordinates Cache
 DEFAULT_USERS = {
     "6601": {
         "username": "Setra stones", 
@@ -77,12 +75,10 @@ DEFAULT_USERS = {
         "phone": "+256700000000", 
         "email": "setra@amazima.org", 
         "location": "Kampala", 
-        "subjects": ["Mathematics", "Physics", "Biology"], 
+        "subjects": ["Pure Mathematics", "Physics", "Biology"], 
         "status": "Approved", 
         "role": "SUPER_ADMIN", 
-        "warning_msg": "", 
-        "partner": "6602", 
-        "partner_role": "Sync Partner"
+        "warning_msg": ""
     },
     "6602": {
         "username": "Gideon Cheps", 
@@ -93,24 +89,20 @@ DEFAULT_USERS = {
         "phone": "+256711111111", 
         "email": "gideon@amazima.org", 
         "location": "Jinja", 
-        "subjects": ["Mathematics", "Chemistry", "Biology"], 
+        "subjects": ["Pure Mathematics", "Chemistry", "Biology"], 
         "status": "Approved", 
         "role": "USER", 
-        "warning_msg": "", 
-        "partner": "6601", 
-        "partner_role": "Sync Partner"
+        "warning_msg": ""
     }
 }
 
-# Synchronize instance states down to persistence layers
+# Synchronize system variables down to permanent storage nodes
 USERS_REGISTRY = load_storage_node("users_registry.json", DEFAULT_USERS)
 REGISTRATION_CODES = load_storage_node("registration_codes.json", ["AMAZIMA-S5-2026", "SHIELD-TOKEN-2026"])
 GLOBAL_BROADCASTS = load_storage_node("global_broadcasts.json", ["Welcome to the Academic Shield Network portal interface system."])
 REVISION_NOTES_VAULT = load_storage_node("revision_notes_vault.json", [])
 SUGGESTIONS_BOX = load_storage_node("suggestions_box.json", [])
-LOUNGE_CHAT_HISTORY = load_storage_node("lounge_chat.json", [])
-PRIVATE_CHAT_HISTORY = load_storage_node("private_chat.json", [])
 
 def get_ugandan_timestamp():
-    """Generates standard time reference strings for chat logging."""
+    """Generates standard clock references for chat logs."""
     return time.strftime("%H:%M", time.localtime())
