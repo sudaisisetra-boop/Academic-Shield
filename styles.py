@@ -1,99 +1,130 @@
+# =========================================================================
+# FILE 2 OF 3: PREMIUM INTERFACE STYLING ENGINE (styles.py)
+# =========================================================================
 import streamlit as st
 
-def inject_whatsapp_styles():
-    """Injects custom dark theme interfaces and real-time custom WhatsApp message containers."""
+def inject_shield_theme():
+    """Injects high-fidelity stylesheets to restore the premium UI aesthetics."""
     st.markdown("""
-        <style>
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        header {visibility: hidden;}
-        
-        .timer-container {
-            background-color: #111111;
-            padding: 14px;
-            border-radius: 8px;
-            border: 2px solid #ff3333;
-            text-align: center;
-            margin-bottom: 15px;
+    <style>
+        /* Base Page Custom Background Canvas */
+        .stApp {
+            background-color: #0b141a;
+            color: #e9edef;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-        
-        /* WhatsApp Chat Core Engine Visuals */
-        .chat-container {
-            max-height: 500px;
-            overflow-y: auto;
-            padding: 15px;
-            background-color: #0b141a; 
-            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
-            background-repeat: repeat;
+
+        /* Fixed Top Header Container for Account Actions & Sign Out Navigation */
+        .premium-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #1f2c34, #111b21);
+            padding: 14px 24px;
             border-radius: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #222;
+            border-bottom: 2px solid #00a884;
+            margin-bottom: 20px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.4);
         }
-        .chat-bubble {
-            padding: 8px 12px;
-            border-radius: 7px;
-            margin-bottom: 10px;
-            max-width: 65%;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        .header-brand {
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 22px;
+            letter-spacing: 0.5px;
+        }
+        .header-identity {
+            font-size: 13.5px;
+            color: #8696a0;
+        }
+
+        /* Slide-Out Sidebar Overlay Panel Tweaks */
+        [data-testid="stSidebar"] {
+            background-color: #111b21 !important;
+            border-right: 1px solid #222e35 !important;
+            min-width: 280px !important;
+            max-width: 320px !important;
+        }
+        
+        /* Premium WhatsApp Chat Alignment Engine */
+        .whatsapp-chat-canvas {
+            background-color: #0b141a;
+            background-image: radial-gradient(#1f2c34 8%, transparent 9%);
+            background-size: 16px 16px;
+            padding: 24px;
+            border-radius: 14px;
+            max-height: 520px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border: 1px solid #222e35;
+            margin-bottom: 15px;
+        }
+        .message-bubble {
+            max-width: 70%;
+            padding: 9px 14px;
+            border-radius: 10px;
             font-size: 14.5px;
             line-height: 1.4;
             position: relative;
-            box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
+            color: #e9edef;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+            word-wrap: break-word;
         }
-        .chat-left { 
-            background-color: #202c33; 
-            color: #e9edef; 
-            margin-right: auto; 
-            text-align: left; 
+        .bubble-left {
+            background-color: #202c33;
+            align-self: flex-start;
             border-top-left-radius: 0px;
         }
-        .chat-right { 
-            background-color: #005c4b; 
-            color: #e9edef; 
-            margin-left: auto; 
-            text-align: left; 
+        .bubble-right {
+            background-color: #005c4b;
+            align-self: flex-end;
             border-top-right-radius: 0px;
         }
-        .chat-timestamp {
-            font-size: 10px;
-            color: rgba(233, 237, 239, 0.6);
-            text-align: right;
-            margin-top: 4px;
+        .bubble-sender {
+            font-weight: 700;
+            font-size: 12.5px;
+            color: #53bdeb;
+            margin-bottom: 3px;
             display: block;
         }
-        .whatsapp-ticks {
-            color: #53bdeb !important;
-            margin-left: 3px;
-            font-weight: bold;
-        }
-        .chat-media-box {
-            margin-top: 6px;
-            padding: 6px;
-            background-color: rgba(0,0,0,0.25);
-            border-radius: 6px;
-            font-size: 13px;
-            border-left: 3px solid #ff3333;
-        }
-        .audio-note-box {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: rgba(0,0,0,0.15);
-            padding: 8px;
-            border-radius: 6px;
+        .bubble-time {
+            font-size: 10px;
+            color: #8696a0;
+            float: right;
             margin-top: 5px;
-            border-left: 3px solid #53bdeb;
+            margin-left: 8px;
         }
-        
-        .system-warn-box { background-color: #3b1111; border: 2px solid #ff3333; padding: 15px; border-radius: 8px; margin-bottom: 15px; color: #ff9999; font-weight: bold;}
-        .admin-broadcast-banner { background-color: #ff3333; color: white; padding: 12px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 20px; }
-        
-        div.stButton > button { width: 100% !important; font-weight: bold !important; background-color: #1e1e1e !important; color: #ffffff !important; border: 1px solid #444444 !important; border-radius: 4px !important; }
-        div.stButton > button:hover { background-color: #ff3333 !important; color: white !important; border-color: #ff3333 !important; }
-        
-        .metric-card { background-color: #1a1a1a; padding: 15px; border-radius: 6px; border-left: 4px solid #ff3333; margin-bottom: 10px; }
-        .notes-box { background-color: #111111; padding: 20px; border: 1px dashed #444; border-radius: 8px; margin-bottom: 15px; }
-        .directory-card { background-color: #141414; padding: 18px; border-radius: 8px; border: 1px solid #252525; margin-bottom: 12px; }
-        .sudaisi-branding-footer { text-align: center; padding: 15px; margin-top: 40px; border-top: 1px solid #222; background-color: #0e0e0e; border-radius: 4px; }
-        </style>
+
+        /* Modernized Revision Cards & Directories Display Layouts */
+        .revision-note-card {
+            background: #151f24;
+            border-left: 5px solid #00a884;
+            padding: 16px;
+            border-radius: 4px 10px 10px 4px;
+            margin-bottom: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+        .directory-profile-box {
+            background: #111b21;
+            border: 1px solid #222e35;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            transition: transform 0.2s;
+        }
+        .directory-profile-box:hover {
+            border-color: #00a884;
+            transform: translateY(-2px);
+        }
+
+        /* Analytics Table Container Layouts */
+        .analytics-table-header {
+            background-color: #202c33;
+            color: #00a884;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 6px;
+        }
+    </style>
     """, unsafe_allow_html=True)
