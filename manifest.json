@@ -1,9 +1,16 @@
 {
-  "name": "Academic Shield Pro",
-  "short_name": "ASP",
-  "theme_color": "#ff3333",
-  "background_color": "#111111",
+  "short_name": "AcademicShield",
+  "name": "Academic Shield Network Hub",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2099/2099058.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0f1c24",
+  "theme_color": "#00a884",
   "display": "standalone",
-  "orientation": "portrait",
-  "start_url": "."
+  "orientation": "portrait"
 }
