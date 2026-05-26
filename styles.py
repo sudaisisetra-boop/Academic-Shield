@@ -1,158 +1,185 @@
 # =========================================================================
-# FILE 2 OF 3: MASTER CUSTOM HIGH-QUALITY CSS ENGINE (styles.py)
+# FINAL COMPREHENSIVE ENGINE LAYER: VISUAL DESIGN MATRIX (styles.py)
 # =========================================================================
 import streamlit as st
 
 def inject_shield_theme():
-    """Injects high-fidelity stylesheets to restore layout mechanics and premium visuals."""
+    """
+    Injects global CSS parameters directly into the Streamlit rendering engine.
+    Styles the system container components, custom messaging lanes, and 
+    dashboard evaluation blocks.
+    """
     st.markdown("""
     <style>
-        /* Base Core Premium Dark Background Theme Canvas */
+        /* Base Canvas Background Configurations */
         .stApp {
-            background-color: #0b141a;
-            color: #e9edef;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0b141a !important;
+            color: #e9edef !important;
         }
-
-        /* Top Fixed Fluid Header Brand Container Zone */
+        
+        /* Premium Header Strip Typography Layouts */
         .premium-header-bar {
+            background: linear-gradient(90deg, #1f2c34 0%, #111b21 100%);
+            padding: 18px 24px;
+            border-radius: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: linear-gradient(135deg, #1f2c34, #111b21);
-            padding: 14px 20px;
-            border-radius: 12px;
-            border-bottom: 3px solid #00a884;
-            margin-bottom: 8px;
-            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.4);
+            margin-bottom: 25px;
+            border: 1px solid #22333b;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         .header-brand {
-            color: #ffffff;
-            font-weight: 700;
             font-size: 20px;
-            letter-spacing: 0.5px;
+            font-weight: 800;
+            color: #00a884;
+            letter-spacing: 0.8px;
         }
         .header-identity {
-            font-size: 13px;
+            font-size: 14px;
             color: #8696a0;
         }
 
-        /* High Priority Global Admin Announcement System Layout */
+        /* High-Priority Administrative Broadcast Card Layouts */
         .global-broadcast-banner {
-            background-color: #182229;
-            border-left: 5px solid #ff4b4b;
+            background-color: #1a231f !important;
+            border-left: 5px solid #00a884 !important;
             padding: 16px;
             border-radius: 8px;
             margin-bottom: 20px;
-            box-shadow: 0px 2px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
         .broadcast-title {
-            color: #ff5252;
-            font-weight: 700;
-            margin: 0 0 6px 0;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
+            color: #00e676;
+            font-weight: bold;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
         }
 
-        /* Sidebar Navigation Layout Drawer Overrides */
-        [data-testid="stSidebar"] {
-            background-color: #111b21 !important;
-            border-right: 2px solid #222e35 !important;
+        /* High-Performance Microsecond Assessment Evaluation Scorecards */
+        .score-metric-box {
+            background-color: #111b21;
+            border: 1px solid #202c33;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin: 15px 0;
         }
         
-        /* Premium WhatsApp Style Chat Real-Time Scroll Canvas Grid */
+        /* Directory Profile and Syllabus Revision Cards */
+        .directory-profile-box {
+            background-color: #111b21;
+            border: 1px solid #22333b;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 15px;
+        }
+        .directory-profile-box h3 {
+            color: #e9edef;
+            margin-top: 0;
+            font-size: 18px;
+        }
+        .directory-profile-box p {
+            margin: 6px 0;
+            font-size: 14px;
+            color: #adbac7;
+        }
+        
+        .revision-note-card {
+            background-color: #1f2c34;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 4px solid #00a884;
+        }
+
+        /* Permanent Chatroom Canvas System Architecture (WhatsApp-Inspired Layout) */
         .whatsapp-chat-canvas {
             background-color: #0b141a;
-            background-image: radial-gradient(#1f2c34 8%, transparent 9%);
-            background-size: 16px 16px;
-            padding: 18px;
+            border: 1px solid #22333b;
             border-radius: 12px;
+            padding: 20px;
             max-height: 480px;
             overflow-y: auto;
+            margin-bottom: 20px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            border: 1px solid #222e35;
-            margin-bottom: 12px;
+            gap: 12px;
         }
-        
-        /* WhatsApp Right-Left Alternating Bubble Framework */
         .message-row {
             display: flex;
             width: 100%;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
-        .row-left { justify-content: flex-start; }
-        .row-right { justify-content: flex-end; }
-
+        .row-right {
+            justify-content: flex-end;
+        }
+        .row-left {
+            justify-content: flex-start;
+        }
         .message-bubble {
-            max-width: 72%;
-            padding: 9px 12px;
+            max-width: 75%;
+            padding: 10px 14px;
             border-radius: 10px;
-            font-size: 14px;
+            font-size: 15px;
             line-height: 1.4;
-            color: #e9edef;
-            box-shadow: 0 1px 1.5px rgba(0,0,0,0.25);
-            word-wrap: break-word;
-        }
-        .bubble-left {
-            background-color: #202c33;
-            border-top-left-radius: 0px;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.15);
         }
         .bubble-right {
-            background-color: #005c4b;
+            background-color: #005c4b !important;
+            color: #e9edef !important;
             border-top-right-radius: 0px;
         }
+        .bubble-left {
+            background-color: #202c33 !important;
+            color: #e9edef !important;
+            border-top-left-radius: 0px;
+        }
         .bubble-sender {
+            font-size: 12px;
             font-weight: 700;
-            font-size: 12.5px;
-            color: #53bdeb;
-            margin-bottom: 3px;
+            color: #00a884;
             display: block;
+            margin-bottom: 4px;
         }
         .bubble-time {
-            font-size: 10px;
+            font-size: 11px;
             color: #8696a0;
             float: right;
-            margin-top: 4px;
-            margin-left: 8px;
-        }
-        
-        /* Media Attachments and Audio Blocks Styling */
-        .chat-media-attachment {
-            border: 1px solid #334651;
-            border-radius: 6px;
-            padding: 4px;
-            background: #111b21;
             margin-top: 6px;
+            margin-left: 10px;
         }
         
-        /* Suggestions Cards & Public Directory Profiles Markup */
-        .public-suggestion-card {
-            background: #182229;
-            border: 1px solid #222e35;
-            border-top: 3px solid #00a884;
-            padding: 14px;
-            border-radius: 8px;
-            margin-bottom: 12px;
+        /* Chatroom Multimedia File Upload Indicators */
+        .chat-media-attachment {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            padding: 8px;
+            margin-top: 8px;
+            font-size: 13px;
+            border: 1px dashed #30404d;
+            color: #adbac7;
         }
-        .directory-profile-box {
-            background: #111b21;
-            border: 1px solid #222e35;
-            padding: 14px;
-            border-radius: 10px;
-            margin-bottom: 10px;
+
+        /* Tab Layout Overrides */
+        .stTabs [data-baseweb="tab"] {
+            color: #8696a0 !important;
+            font-size: 15px !important;
+            font-weight: 600 !important;
         }
-        .directory-profile-box:hover {
-            border-color: #00a884;
+        .stTabs [aria-selected="true"] {
+            color: #00a884 !important;
+            border-bottom-color: #00a884 !important;
         }
-        .revision-note-card {
-            background: #151f24;
-            border-left: 4px solid #00a884;
-            padding: 14px;
-            border-radius: 4px 10px 10px 4px;
-            margin-bottom: 12px;
+        
+        /* Input Field Form Focus Overrides */
+        input[type="text"], input[type="password"], textarea {
+            background-color: #2a3942 !important;
+            color: #e9edef !important;
+            border: 1px solid #3a4b56 !important;
+            border-radius: 6px !important;
         }
     </style>
     """, unsafe_allow_html=True)
