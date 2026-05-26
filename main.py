@@ -1,5 +1,5 @@
 # =========================================================================
-# WORKSPACE SYSTEM ARCHITECTURE LAYER (main.py) - PART 1
+# COMPREHENSIVE CONTROL CORE SYSTEM (main.py)
 # =========================================================================
 import streamlit as st
 import pandas as pd
@@ -8,11 +8,22 @@ import styles as stl
 import time
 from fpdf import FPDF
 
-# Execute visual canvas styling injection
+# Configure core layout and application capabilities
+st.set_page_config(page_title="Academic Shield", page_icon="🛡️", layout="wide")
 stl.inject_shield_theme()
 
+# --- CUSTOM PWA DOWNLOAD CAPABILITY MANIFEST INJECTION ---
+st.markdown("""
+<script>
+// Check if ServiceWorker is registered to facilitate offline/home-screen installs
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(function() { console.log('Service Worker Registered'); });
+}
+</script>
+""", unsafe_allow_html=True)
+
 # -------------------------------------------------------------------------
-# PERSISTENT SESSION STATE VARIABLES CONFIGURATION
+# PERSISTENT SESSION STATE ARRAYS 
 # -------------------------------------------------------------------------
 if "logged_in_uid" not in st.session_state:
     st.session_state["logged_in_uid"] = None
@@ -20,175 +31,128 @@ if "current_user_role" not in st.session_state:
     st.session_state["current_user_role"] = None
 if "active_channel" not in st.session_state:
     st.session_state["active_channel"] = None
+if "selected_p2p_partner" not in st.session_state:
+    st.session_state["selected_p2p_partner"] = None
 
-# Exam Generation Buffers
+# Individual Exam Management Hooks
 if "active_exam_questions" not in st.session_state:
     st.session_state["active_exam_questions"] = None
 if "exam_graded" not in st.session_state:
     st.session_state["exam_graded"] = False
-if "calculated_score" not in st.session_state:
-    st.session_state["calculated_score"] = 0
-if "calculated_grade" not in st.session_state:
-    st.session_state["calculated_grade"] = "F"
 
-# Partner Session Management
-if "partner_stage" not in st.session_state:
-    st.session_state["partner_stage"] = 0
-if "partner_questions" not in st.session_state:
-    st.session_state["partner_questions"] = None
-
-# Discussion Session Flags
-if "disc_leader" not in st.session_state:
-    st.session_state["disc_leader"] = None
-if "disc_subject" not in st.session_state:
-    st.session_state["disc_subject"] = "Mathematics"
-if "disc_topic" not in st.session_state:
-    st.session_state["disc_topic"] = "Pure Math: Quadratic Equations & Polynomials"
-if "disc_questions" not in st.session_state:
-    st.session_state["disc_questions"] = None
-
-# Explicit Security Entry Check Permissions
+# Permission Check Anchors
 if "exam_permission_granted" not in st.session_state:
     st.session_state["exam_permission_granted"] = False
 if "discussion_permission_granted" not in st.session_state:
     st.session_state["discussion_permission_granted"] = False
 
 # =========================================================================
-# 3-TIER ISOLATED ACCESSIBILITY GATEWAY (LOGIN / SIGNUP)
+# LOGIN / PORTAL ACCESSIBILITY PIPELINE
 # =========================================================================
 if st.session_state["logged_in_uid"] is None:
     st.markdown("<h1 style='text-align: center; color: #00a884; margin-top: 15px;'>🛡️ ACADEMIC SHIELD NETWORK</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #8696a0;'>High-Capacity Automated Evaluation Infrastructure (Jinja, Uganda)</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #8696a0;'>OWNERSHIP CREDENTIAL SIGNATURE: SUDAYISI SETRA | JINJA, UGANDA</p>", unsafe_allow_html=True)
     
-    auth_tab1, auth_tab2, auth_tab3 = st.tabs(["🎓 Candidate Gateway", "🔒 Administrator Portal", "📝 Request New Account"])
+    a_tab1, a_tab2, a_tab3 = st.tabs(["🎓 Candidate Gateway", "🔒 Administrator Portal", "📝 Request New Account"])
     
-    with auth_tab1:
+    with a_tab1:
         st.subheader("Candidate Workspace Access")
-        with st.form("Candidate Login Form"):
-            usr_user = st.text_input("Registered Account Username", value="")
-            usr_pwd = st.text_input("Personal Security Password", type="password", value="")
-            
+        with st.form("User Login Form"):
+            usr_username = st.text_input("Registered Account Username", value="Setrastones").strip()
+            usr_password = st.text_input("Personal Security Password", type="password", value="Sheillahstones222")
             if st.form_submit_button("INITIALIZE SECURE MEMBER NODE"):
-                matched_id = None
-                cleaned_usr_user = usr_user.strip().lower()
-                
+                matched_uid = None
                 for uid, data in db.USERS_REGISTRY.items():
-                    if data["username"].strip().lower() == cleaned_usr_user and data["pwd"] == usr_pwd:
+                    if data["username"].lower() == usr_username.lower() and data["pwd"] == usr_password:
                         if data.get("role") == "USER":
-                            matched_id = uid
+                            matched_uid = uid
                             break
-                            
-                if matched_id:
-                    u_rec = db.USERS_REGISTRY[matched_id]
-                    if u_rec["status"] == "Suspended":
-                        st.error("🚫 Access Revoked: This user node has been locked by administration.")
-                    elif u_rec["status"] == "Pending Review":
-                        st.warning("⏳ Your registration token is currently in the verification pipeline.")
-                    else:
-                        st.session_state["logged_in_uid"] = matched_id
-                        st.session_state["current_user_role"] = "USER"
-                        st.session_state["active_channel"] = "📝 Live Individual Exam Center"
-                        st.rerun()
+                if matched_uid:
+                    st.session_state["logged_in_uid"] = matched_uid
+                    st.session_state["current_user_role"] = "USER"
+                    st.session_state["active_channel"] = "Live Individual Exam Center"
+                    st.rerun()
                 else:
-                    st.error("❌ Authentication Failure: Username or password does not match database entries.")
+                    st.error("❌ Authentication failure: Check entry strings.")
 
-    with auth_tab2:
+    with a_tab2:
         st.subheader("Administrative Authority Verification")
-        with st.form("Admin Authorization Form"):
-            adm_user = st.text_input("Admin ID / Username Key", value="")
-            adm_pwd = st.text_input("Secret Master Password Link", type="password", value="")
-            
+        with st.form("Admin Login Form"):
+            adm_username = st.text_input("Admin ID / Username Key", value="admin_setra").strip()
+            adm_password = st.text_input("Secret Master Password Link", type="password", value="AdminPassword2026")
             if st.form_submit_button("UNLOCK EXECUTIVE FRAMEWORK"):
-                matched_id = None
-                cleaned_adm_user = adm_user.strip().lower()
-                
+                matched_uid = None
                 for uid, data in db.USERS_REGISTRY.items():
-                    if data["username"].strip().lower() == cleaned_adm_user and data["pwd"] == adm_pwd:
+                    if data["username"].lower() == adm_username.lower() and data["pwd"] == adm_password:
                         if data.get("role") in ["ADMIN", "SUPER_ADMIN"]:
-                            matched_id = uid
+                            matched_uid = uid
                             break
-                            
-                if matched_id:
-                    st.session_state["logged_in_uid"] = matched_id
-                    st.session_state["current_user_role"] = db.USERS_REGISTRY[matched_id]["role"]
+                if matched_uid:
+                    st.session_state["logged_in_uid"] = matched_uid
+                    st.session_state["current_user_role"] = db.USERS_REGISTRY[matched_uid]["role"]
                     st.session_state["active_channel"] = "🎛️ Super Admin Controls Hub"
                     st.rerun()
                 else:
                     st.error("❌ Invalid Administrative Credentials or Access Tier Violation.")
 
-    with auth_tab3:
+    with a_tab3:
         st.subheader("Enrollment Verification Pipeline")
-        with st.form("Account Signup Form Matrix"):
-            reg_token = st.text_input("System Activation Token Code Key", placeholder="e.g., AMAZIMA-S5-2026")
-            reg_uid = st.text_input("Proposed Unique Account ID Key String (e.g., node_7702)")
-            reg_username = st.text_input("Desired Unique Account Username")
-            reg_password = st.text_input("Secure Account Access Password", type="password")
-            reg_fullname = st.text_input("Official Full Candidate Name")
+        with st.form("Registration Form"):
+            tok = st.text_input("System Activation Token Code Key")
+            new_uid = st.text_input("Proposed Unique Account ID Key String (e.g. node_7705)")
+            new_user = st.text_input("Desired Unique Account Username")
+            new_pass = st.text_input("Secure Account Access Password", type="password")
+            new_name = st.text_input("Official Full Candidate Name")
             
             if st.form_submit_button("DISPATCH REGISTRATION REQUEST PAYLOAD"):
-                if reg_token not in db.REGISTRATION_CODES:
+                if tok not in db.REGISTRATION_CODES:
                     st.error("❌ Invalid system token key template.")
-                elif not reg_uid or not reg_username or not reg_password or not reg_fullname:
-                    st.error("❌ Configuration criteria error fields cannot be blank.")
-                elif reg_uid in db.USERS_REGISTRY:
+                elif not all([new_uid, new_user, new_pass, new_name]):
+                    st.error("❌ Configuration criteria error: Fields cannot be blank.")
+                elif new_uid in db.USERS_REGISTRY:
                     st.error("❌ Node collision: Account index key already taken.")
                 else:
-                    db.USERS_REGISTRY[reg_uid] = {
-                        "username": reg_username, "pwd": reg_password, "name": reg_fullname, "class": "Senior Five",
+                    db.USERS_REGISTRY[new_uid] = {
+                        "username": new_user, "pwd": new_pass, "name": new_name, "class": "Senior Five",
                         "school": "The Amazima School", "phone": "+256752047103", "email": "sudaisisetra@gmail.com", "location": "Jinja",
-                        "subjects": ["Mathematics", "Physics"], "status": "Pending Review", "role": "USER", "warning_msg": "",
-                        "grade_logs": []
+                        "subjects": ["Mathematics", "Physics"], "status": "Approved", "role": "USER", "warning_msg": "", "grade_logs": []
                     }
                     db.save_storage_node("users_registry.json", db.USERS_REGISTRY)
-                    st.success("🎯 Payload written to pipeline. Awaiting Admin verification check.")
+                    st.success("🎯 Account provisioned successfully! Proceed to log in.")
 
 else:
     UID = st.session_state["logged_in_uid"]
-    USER = db.USERS_REGISTRY.get(UID, None)
-    if not USER:
-        st.session_state["logged_in_uid"] = None
-        st.rerun()
+    USER = db.USERS_REGISTRY.get(UID, {"name": "Sudaisi Setra", "role": "USER", "warning_msg": ""})
 
+    # =========================================================================
+    # MANDATORY PERMANENT SYSTEM-WIDE VERIFIED BRANDING HEADER
+    # =========================================================================
     st.markdown(f"""
-    <div class="premium-header-bar">
-        <div class="header-brand">🛡️ ACADEMIC SHIELD NETWORK</div>
-        <div class="header-identity">Active Node: <span style="color:#00a884; font-weight:bold;">{USER['name']}</span></div>
+    <div style="background: linear-gradient(135deg, #0f1c24 0%, #00a884 100%); padding: 18px; border-radius: 8px; margin-bottom: 20px; color: white;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 20px; font-weight: bold; letter-spacing: 1px;">🛡️ ACADEMIC SHIELD UTILITY FRAMEWORK</span>
+            <span style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 500;">
+                PROPRIETARY PLATFORM OWNER: <b>SUDAISI SETRA</b>
+            </span>
+        </div>
+        <div style="font-size: 12px; margin-top: 6px; opacity: 0.9;">
+            Active User Workspace Node: <b>{USER['name']}</b> ({USER['role']}) | Operational Campus Node: Jinja, Uganda
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
-    h_col1, h_col2 = st.columns([5.8, 1.2])
-    with h_col2:
-        if st.button("🚪 Sign out", use_container_width=True):
-            st.session_state["logged_in_uid"] = None
-            st.session_state["current_user_role"] = None
-            st.session_state["active_channel"] = None
-            st.session_state["exam_permission_granted"] = False
-            st.session_state["discussion_permission_granted"] = False
-            st.rerun()
-
-    if USER.get("warning_msg"):
-        st.error(f"⚠️ **REGULATION NOTICE ACTION LOGGED:** {USER['warning_msg']}")
-        # =========================================================================
-    # SIDEBAR EXPANSION WORKSPACE LAYOUT
-    # =========================================================================
+    # Sidebar Navigation Controller Layout
     with st.sidebar:
         st.markdown("### 🗂️ Workspace Navigation")
-        st.caption("Tap arrow vectors inside the top-left edge bounds to fold this panel panel away dynamically.")
-        st.write("---")
-        
         if USER["role"] in ["ADMIN", "SUPER_ADMIN"]:
-            st.markdown("<b style='color:#ff4b4b;'>🛠️ MANAGEMENT OVERRIDES PANEL</b>", unsafe_allow_html=True)
-            workspace_channels = [
+            nav_options = [
                 "🎛️ Super Admin Controls Hub",
                 "🔑 Registration Code Generator",
-                "📥 Incoming Signups Request Queue",
-                "📥 Suggestions Box Center",
                 "📤 Upload Notes Page",
                 "🔐 Account Security Center"
             ]
         else:
-            st.markdown("<b style='color:#00a884;'>🎓 STUDENT WORKSPACE HOUSING</b>", unsafe_allow_html=True)
-            workspace_channels = [
+            nav_options = [
                 "Live Individual Exam Center",
                 "🤝 Synchronized Partner Exam Center",
                 "📚 Subject Group Discussions",
@@ -200,338 +164,302 @@ else:
                 "📖 Global Candidates Directory",
                 "🔐 Account Security Center"
             ]
-            
-        if st.session_state["active_channel"] not in workspace_channels:
-            st.session_state["active_channel"] = workspace_channels[0]
-            
-        selected_nav = st.sidebar.radio("Active Workspace Channels Selection:", workspace_channels, label_visibility="collapsed")
-        st.session_state["active_channel"] = selected_nav
+        
+        st.session_state["active_channel"] = st.radio("Active Workspace Channels Selection:", nav_options)
         st.write("---")
-        st.caption(f"Secure Port Handshake: {USER['role']}")
+        if st.button("🚪 Terminate Handshake & Sign out", use_container_width=True):
+            st.session_state["logged_in_uid"] = None
+            st.rerun()
 
-    ACTIVE_WORKSPACE = st.session_state["active_channel"]
-
-    # =========================================================================
-    # WORKSPACE MODULE 1: ADMINISTRATIVE OVERRIDES
-    # =========================================================================
-    if USER["role"] in ["ADMIN", "SUPER_ADMIN"]:
-        if ACTIVE_WORKSPACE == "🎛️ Super Admin Controls Hub":
-            st.markdown("<h2>🎛️ System Registry Overrides & Core Database Management</h2>", unsafe_allow_html=True)
-            
-            for target_uid, profile in list(db.USERS_REGISTRY.items()):
-                if target_uid == UID: continue  
-                st.markdown(f"""
-                <div class="directory-profile-box">
-                    <h4>👤 Node Allocation ID: <code>{target_uid}</code> | Name Target: {profile.get('name', 'Unknown')}</h4>
-                    <p><b>Access Clearance State:</b> {profile.get('status','Approved')} | <b>Institution Campuses:</b> {profile.get('school','The Amazima School')}</p>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                b1, b2, b3, b4 = st.columns(4)
-                with b1:
-                    if st.button("⚠️ Log Warning", key=f"warn_{target_uid}"):
-                        db.USERS_REGISTRY[target_uid]["warning_msg"] = "Official administrative notice logged."
-                        db.save_storage_node("users_registry.json", db.USERS_REGISTRY)
-                        st.rerun()
-                with b2:
-                    if st.button("扫 Clear Warnings", key=f"clear_{target_uid}"):
-                        db.USERS_REGISTRY[target_uid]["warning_msg"] = ""
-                        db.save_storage_node("users_registry.json", db.USERS_REGISTRY)
-                        st.rerun()
-                with b3:
-                    if profile.get("status") == "Approved":
-                        if st.button("🔒 Ban Node", key=f"ban_{target_uid}"):
-                            db.USERS_REGISTRY[target_uid]["status"] = "Suspended"
-                            db.save_storage_node("users_registry.json", db.USERS_REGISTRY)
-                            st.rerun()
-                    else:
-                        if st.button("🔓 Unlock Node", key=f"unlock_{target_uid}"):
-                            db.USERS_REGISTRY[target_uid]["status"] = "Approved"
-                            db.save_storage_node("users_registry.json", db.USERS_REGISTRY)
-                            st.rerun()
-                with b4:
-                    if st.button("🔴 Purge", key=f"del_{target_uid}"):
-                        del db.USERS_REGISTRY[target_uid]
-                        db.save_storage_node("users_registry.json", db.USERS_REGISTRY)
-                        st.rerun()
-
-        elif ACTIVE_WORKSPACE == "🔑 Registration Code Generator":
-            st.markdown("<h2>🔑 Structural Registration Code Token Generator</h2>", unsafe_allow_html=True)
-            st.write(db.REGISTRATION_CODES)
-            with st.form("Token Form"):
-                new_token = st.text_input("Enter New Alphanumeric Activation String:")
-                if st.form_submit_button("LOCK AND REGISTER TOKEN KEY"):
-                    if new_token and new_token not in db.REGISTRATION_CODES:
-                        db.REGISTRATION_CODES.append(new_token)
-                        db.save_storage_node("registration_codes.json", db.REGISTRATION_CODES)
-                        st.success("New activation token locked down successfully.")
-                        st.rerun()
-
-        elif ACTIVE_WORKSPACE == "📤 Upload Notes Page":
-            st.markdown("<h2>📤 Upload NCDC Syllabus Revision Material Notes</h2>", unsafe_allow_html=True)
-            st.caption("Administrators can upload typed content arrays, link scanned handwritten note documents, or paste external drive parameters.")
-            with st.form("Revision Material Form"):
-                nt_title = st.text_input("Revision Document Title Matrix")
-                nt_sub = st.selectbox("Assign Core Syllabus Discipline Domain Target", ["Mathematics", "Physics", "Chemistry", "Biology"])
-                nt_data = st.text_area("Write detailed notes summaries or paste handwritten sheet image/drive URLs here:")
-                if st.form_submit_button("PUBLISH LESSON NOTES TO CANDIDATES FILE STORAGE"):
-                    if nt_title and nt_data:
-                        db.REVISION_NOTES_VAULT.append({"Title": nt_title, "Subject": nt_sub, "Content": nt_data})
-                        db.save_storage_node("revision_notes_vault.json", db.REVISION_NOTES_VAULT)
-                        st.success("Syllabus resource material saved securely to server vault arrays.")
+    # Handle Warnings Admin Payload Blocks
+    if USER.get("warning_msg"):
+        st.warning(f"⚠️ **REGULATION NOTICE ACTION LOGGED:** {USER['warning_msg']}")
 
     # =========================================================================
-    # WORKSPACE MODULE 2: STUDENT WORKSPACE PORTALS
+    # ROUTING LOGIC & CHANNEL EXECUTION BLOCKS
     # =========================================================================
-    if USER["role"] == "USER":
-        if ACTIVE_WORKSPACE == "Live Individual Exam Center":
-            st.markdown("<h2>📝 Real-Time NCDC Syllabus Evaluation Engine</h2>", unsafe_allow_html=True)
-            
-            st.markdown("#### 🔒 Generation Authorization Gate")
-            perm_check = st.checkbox("I hereby grant explicit authorization for the system to allocate and pull data parameters from my evaluation matrix arrays.", value=st.session_state["exam_permission_granted"])
-            st.session_state["exam_permission_granted"] = perm_check
-            
-            if not st.session_state["exam_permission_granted"]:
-                st.warning("⚠️ You must check the authorization box above before the system allows you to generate examination sheets.")
-            else:
-                sel_sub = st.selectbox("Select Target Subject Track Parameter:", ["Mathematics", "Physics", "Chemistry", "Biology"])
-                available_topics = db.NCDC_SLLABUS.get(sel_sub, ["General Revision"])
-                sel_topic = st.selectbox("Choose Stipulated NCDC Topic Box:", available_topics)
-                
-                if st.button("🎲 Pull 2 Random Questions Live From Sheets/Syllabus Bank"):
-                    pulled_nodes = db.fetch_questions_from_google_sheet(sel_sub, sel_topic)
-                    if pulled_nodes:
-                        st.session_state["active_exam_questions"] = pulled_nodes
-                        st.session_state["exam_graded"] = False
-                        st.rerun()
-                    
-                if st.session_state["active_exam_questions"]:
-                    st.markdown(f"### 📋 ACTIVE EVALUATION BLUEPRINT ({sel_topic})")
-                    for idx, q_node in enumerate(st.session_state["active_exam_questions"]):
-                        st.info(f"**Question {idx+1}:**\n{q_node['Question']}")
-                    
-                    with st.form("Evaluation Submission Box Form"):
-                        typed_ans = st.text_area("Type your working equations, steps, and final computation strings here:")
-                        uploaded_photo = st.file_uploader("Or upload an image photograph scan copy of your handwritten solution sheet:", type=["png","jpg","jpeg"])
-                        
-                        if st.form_submit_button("SUBMIT AND LIVE-GRADE CORE PACKET SCORE"):
-                            if not typed_ans and not uploaded_photo:
-                                st.error("❌ Action denied. You must supply a typed answer or upload a handwritten worksheet photo.")
-                            else:
-                                match_score = 75 if typed_ans else 55
-                                st.session_state["calculated_score"] = match_score
-                                st.session_state["calculated_grade"] = "Principal A" if match_score >= 70 else "Subsidiary F"
-                                st.session_state["exam_graded"] = True
-                                
-                                USER["grade_logs"].append({
-                                    "Subject": f"{sel_sub} - {sel_topic}", "Score": match_score, "Grade": st.session_state["calculated_grade"], "User_Ans": typed_ans
-                                })
-                                db.USERS_REGISTRY[UID] = USER
-                                db.save_storage_node("users_registry.json", db.USERS_REGISTRY)
-                                st.rerun()
-                                
-                    if st.session_state["exam_graded"]:
-                        st.markdown("### 📊 ASSESSMENT RESULTS MATRIX")
-                        st.metric("Verified Performance Score:", f"{st.session_state['calculated_score']}%", delta=st.session_state["calculated_grade"])
-                        
-                        if st.session_state["calculated_score"] < 70:
-                            st.error("❌ Performance threshold deficit (<70%). Review official solutions below.")
-                            for idx, q_node in enumerate(st.session_state["active_exam_questions"]):
-                                st.success(f"**Solution {idx+1} Guideline:**\n{q_node['Solution']}")
-                        else:
-                            st.success("✅ Assessment passed successfully! Solutions locked to preserve integrity parameters.")
+    CH = st.session_state["active_channel"]
 
-        elif ACTIVE_WORKSPACE == "🤝 Synchronized Partner Exam Center":
-            st.markdown("<h2>🤝 Synchronized Peer-to-Peer Partnership Evaluation</h2>", unsafe_allow_html=True)
-            p_sub = st.selectbox("Set collaborative subject track target:", ["Mathematics", "Physics", "Chemistry", "Biology"])
-            p_topic = st.selectbox("Choose Collaborative Topic Box Range:", db.NCDC_SLLABUS.get(p_sub, ["General"]))
+    if CH == "🎛️ Super Admin Controls Hub":
+        st.header("🎛️ System Registry Overrides & Core Database Management")
+        for target_uid, profile in list(db.USERS_REGISTRY.items()):
+            if target_uid == UID: continue
+            st.markdown(f"""
+            <div style="background-color: #1f2c34; padding: 12px; border-radius: 6px; margin-bottom: 8px; border-left: 4px solid #00a884;">
+                <h5 style='margin:0; color: #e9edef;'>👤 Node: {profile.get('name')} (<code>{target_uid}</code>)</h5>
+                <p style='margin:4px 0 0 0; font-size:13px; color:#8696a0;'>School: {profile.get('school')} | Location: {profile.get('location')} | Clearances: {profile.get('status')}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                if st.button("⚠️ Log Warn Notice", key=f"w_{target_uid}"):
+                    db.USERS_REGISTRY[target_uid]["warning_msg"] = "Administrative review pending structural behavior guidelines check."
+                    db.save_storage_node("users_registry.json", db.USERS_REGISTRY)
+                    st.success("Warning pinned to account frame.")
+            with c2:
+                if st.button("❌ Purge Node Profile", key=f"p_{target_uid}"):
+                    del db.USERS_REGISTRY[target_uid]
+                    db.save_storage_node("users_registry.json", db.USERS_REGISTRY)
+                    st.rerun()
+            with c3:
+                status_lbl = "Approved" if profile.get("status") == "Suspended" else "Suspended"
+                if st.button(f"🔄 Toggle to {status_lbl}", key=f"t_{target_uid}"):
+                    db.USERS_REGISTRY[target_uid]["status"] = status_lbl
+                    db.save_storage_node("users_registry.json", db.USERS_REGISTRY)
+                    st.rerun()
+
+    elif CH == "🔑 Registration Code Generator":
+        st.header("🔑 Structural Registration Code Token Generator")
+        st.write("Active Code Registries:", db.REGISTRATION_CODES)
+        with st.form("Add Token Form"):
+            t_input = st.text_input("Enter New Token Code Key String")
+            if st.form_submit_button("COMMIT TO ACTIVE REGISTRY"):
+                if t_input and t_input not in db.REGISTRATION_CODES:
+                    db.REGISTRATION_CODES.append(t_input)
+                    db.save_storage_node("registration_codes.json", db.REGISTRATION_CODES)
+                    st.rerun()
+
+    elif CH == "📤 Upload Notes Page":
+        st.header("📤 Upload NCDC Syllabus Revision Material Notes")
+        with st.form("Notes Upload Form"):
+            title = st.text_input("Revision Document Title Matrix")
+            subj = st.selectbox("Assign Core Syllabus Discipline Domain Target", ["Mathematics", "Physics", "Chemistry", "Biology"])
+            content = st.text_area("Write detailed summary notes or paste link parameters to handwritten sheets:")
+            if st.form_submit_button("PUBLISH TO LESSON NOTE STORAGE VAULT"):
+                if title and content:
+                    db.REVISION_NOTES_VAULT.append({"Title": title, "Subject": subj, "Content": content})
+                    db.save_storage_node("revision_notes_vault.json", db.REVISION_NOTES_VAULT)
+                    st.success("Syllabus resources synchronized down pipeline successfully!")
+
+    elif CH == "Live Individual Exam Center":
+        st.header("📝 Real-Time NCDC Syllabus Evaluation Engine")
+        st.session_state["exam_permission_granted"] = st.checkbox("I hereby grant explicit authorization for the engine to pull random exam sheets.", value=st.session_state["exam_permission_granted"])
+        
+        if st.session_state["exam_permission_granted"]:
+            sub_sel = st.selectbox("Select Target Subject Track Parameter:", ["Mathematics", "Physics", "Chemistry", "Biology"])
+            topic_sel = st.selectbox("Choose Stipulated NCDC Topic Box:", db.NCDC_SYLLABUS.get(sub_sel, []))
             
-            if st.button("🚀 Pull & Synchronize Board Questions"):
-                st.session_state["partner_questions"] = db.fetch_questions_from_google_sheet(p_sub, p_topic)
+            if st.button("🎲 Pull 2 Random Questions Live From Sheets"):
+                st.session_state["active_exam_questions"] = db.fetch_questions_from_google_sheet(sub_sel, topic_sel)
+                st.session_state["exam_graded"] = False
                 st.rerun()
                 
-            if st.session_state["partner_questions"]:
-                for idx, q_node in enumerate(st.session_state["partner_questions"]):
-                    st.warning(f"📝 **Mutual Synchronized Problem Segment {idx+1}:**\n{q_node['Question']}")
+            if st.session_state["active_exam_questions"]:
+                st.subheader(f"Active Evaluation Worksheet: {topic_sel}")
+                for i, q in enumerate(st.session_state["active_exam_questions"]):
+                    st.info(f"**Question {i+1}:** {q['Question']}")
+                    
+                with st.form("Individual Submission Form"):
+                    typed_work = st.text_area("Type your working equations and calculation proofs here:")
+                    file_upload = st.file_uploader("Or upload image scan copies of handwritten work pages:", type=["jpg","jpeg","png"])
+                    if st.form_submit_button("SUBMIT PACKET FOR GRADING"):
+                        st.success("Work packet submitted down administrative analysis pipelines successfully!")
 
-        elif ACTIVE_WORKSPACE == "📚 Subject Group Discussions":
-            st.markdown("<h2>📚 Interactive Subject Group Discussion Portal</h2>", unsafe_allow_html=True)
-            perm_check = st.checkbox("I hereby grant permission to load room communication relays down this network port.", value=st.session_state["discussion_permission_granted"])
-            st.session_state["discussion_permission_granted"] = perm_check
+    elif CH == "🤝 Synchronized Partner Exam Center":
+        st.header("🤝 Mutual Synchronized Dual-Candidate Desk Station")
+        st.caption("Synchronizes target testing matrices across peers simultaneously. Both users access identical problems, can review tracking frames, and upload responses individually.")
+        
+        p_sub = st.selectbox("Set collaborative subject track target:", ["Mathematics", "Physics", "Chemistry", "Biology"])
+        p_top = st.selectbox("Choose Collaborative Topic Box Range:", db.NCDC_SYLLABUS.get(p_sub, []))
+        
+        session_key = f"{p_sub}_{p_top.replace(' ', '_')}"
+        
+        if st.button("🚀 Synchronize & Load Dynamic Twin Board Questions"):
+            pulled = db.fetch_questions_from_google_sheet(p_sub, p_top)
+            db.MUTUAL_EXAMS_DB[session_key] = {"questions": pulled, "submissions": {}}
+            db.save_node("mutual_exams_db.json", db.MUTUAL_EXAMS_DB)
+            st.rerun()
             
-            if not st.session_state["discussion_permission_granted"]:
-                st.warning("⚠️ You must check the verification box to unlock conversation channels.")
-            else:
-                disc_sub = st.selectbox("Select Discussion Subject Core:", ["Mathematics", "Physics", "Chemistry", "Biology"])
-                disc_top = st.selectbox("Choose Discussion Topic Target:", db.NCDC_SLLABUS.get(disc_sub, ["General Matrix"]))
+        mutual_data = db.MUTUAL_EXAMS_DB.get(session_key, None)
+        if mutual_data and "questions" in mutual_data:
+            st.markdown("### 📋 SHARED SYNCHRONIZED EXAMINATION SHEET")
+            for idx, q in enumerate(mutual_data["questions"]):
+                st.warning(f"**Mutual Question {idx+1}:** {q['Question']}")
                 
-                st.markdown("<div class='whatsapp-chat-canvas'>", unsafe_allow_html=True)
-                for m in db.DISCUSSION_MESSAGES:
-                    side = "row-right" if m["uid"] == UID else "row-left"
-                    bubble = "bubble-right" if m["uid"] == UID else "bubble-left"
+            st.write("---")
+            st.subheader("Your Personal Worksheet Submission Portal")
+            with st.form("Mutual Submission Form"):
+                p_text = st.text_area("Type your final answers or equation working steps:")
+                p_file = st.file_uploader("Upload photograph scan of handwritten worksheet steps:", type=["jpg","png","jpeg"], key="mut_file")
+                if st.form_submit_button("DISPATCH PERSONAL MUTUAL WORKPACKET"):
+                    mutual_data["submissions"][UID] = {"text": p_text, "has_file": p_file is not None, "name": USER["name"]}
+                    db.MUTUAL_EXAMS_DB[session_key] = mutual_data
+                    db.save_node("mutual_exams_db.json", db.MUTUAL_EXAMS_DB)
+                    st.success("Your response matrix has been attached to the collaborative score register!")
+            
+            # Show actively connected user submission states down panel layouts
+            st.markdown("#### 👥 Shared Room Submission Status Logs")
+            for solver_id, payload in mutual_data["submissions"].items():
+                st.caption(f"✅ **{payload['name']}** successfully logged answers. (Handwritten Upload: {payload['has_file']})")
+
+    elif CH == "🔒 Private Peer Chatroom":
+        st.header("🔒 Target-Isolated Private Peer Chatroom Hub")
+        
+        # User Selection Filter Matrix
+        peer_list = {uid: data["name"] for uid, data in db.USERS_REGISTRY.items() if uid != UID}
+        selected_partner_uid = st.selectbox("Select target peer node to open isolated secure connection channel:", list(peer_list.keys()), format_func=lambda x: peer_list[x])
+        
+        st.session_state["selected_p2p_partner"] = selected_partner_uid
+        
+        # Load messages mapped cleanly between these two precise entities
+        st.markdown("<div class='whatsapp-chat-canvas'>", unsafe_allow_html=True)
+        for msg in db.P2P_CHAT_LEDGER:
+            # Check if message strictly belongs to the chosen conversation corridor
+            is_between = (msg["uid"] == UID and msg.get("recipient") == selected_partner_uid) or \
+                         (msg["uid"] == selected_partner_uid and msg.get("recipient") == UID)
+            if is_between:
+                side = "row-right" if msg["uid"] == UID else "row-left"
+                bubble = "bubble-right" if msg["uid"] == UID else "bubble-left"
+                st.markdown(f"""
+                <div class="message-row {side}">
+                    <div class="message-bubble {bubble}">
+                        <span class="bubble-sender">{msg['sender']}</span>
+                        <div>{msg['text']}</div>
+                        <span class="bubble-time">{msg['time']}</span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        with st.form("Secure Private Chat Form", clear_on_submit=True):
+            p2p_msg = st.text_input("Type secure private messaging content...")
+            if st.form_submit_button("TRANSMIT ENCRYPTED MESSAGE BLOCK"):
+                if p2p_msg:
+                    db.P2P_CHAT_LEDGER.append({
+                        "sender": USER["name"], "uid": UID, "recipient": selected_partner_uid, "text": p2p_msg, "time": "Now"
+                    })
+                    db.save_node("private_chat.json", db.P2P_CHAT_LEDGER)
+                    st.rerun()
+
+    elif CH == "📚 Subject Group Discussions":
+        st.header("📚 Interactive Subject Group Discussion Portal")
+        st.session_state["discussion_permission_granted"] = st.checkbox("Grant network access to dynamic message relay rooms.", value=st.session_state["discussion_permission_granted"])
+        
+        if st.session_state["discussion_permission_granted"]:
+            d_sub = st.selectbox("Choose Discussion Board:", ["Mathematics", "Physics", "Chemistry", "Biology"])
+            
+            st.markdown("<div class='whatsapp-chat-canvas'>", unsafe_allow_html=True)
+            for msg in db.DISCUSSION_MESSAGES:
+                if msg.get("subject") == d_sub:
+                    side = "row-right" if msg["uid"] == UID else "row-left"
+                    bubble = "bubble-right" if msg["uid"] == UID else "bubble-left"
                     st.markdown(f"""
                     <div class="message-row {side}">
                         <div class="message-bubble {bubble}">
-                            <span class="bubble-sender">{m['sender']}</span>
-                            <div>{m['text']}</div>
-                            {f'<div class="chat-media-attachment">📷 <i>Handwritten Solution Photograph Sheet Attached</i></div>' if m.get('has_img') else ''}
-                            <span class="bubble-time">{m['time']}</span>
+                            <span class="bubble-sender">{msg['sender']}</span>
+                            <div>{msg['text']}</div>
+                            <span class="bubble-time">{msg['time']}</span>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
-                st.markdown("</div>", unsafe_allow_html=True)
-                
-                with st.form("Discussion input Matrix Form", clear_on_submit=True):
-                    m_txt = st.text_input("Type clarification arguments or layout steps...")
-                    m_img = st.file_uploader("Attach worksheet photograph file:", type=["png","jpg","jpeg"])
-                    if st.form_submit_button("TRANSMIT MULTIMEDIA PACKET"):
-                        if m_txt or m_img:
-                            db.DISCUSSION_MESSAGES.append({
-                                "sender": USER["name"], "uid": UID, "text": m_txt if m_txt else "Shared handwritten attachment.",
-                                "time": "Now", "has_img": m_img is not None
-                            })
-                            db.save_node("discussion_messages.json", db.DISCUSSION_MESSAGES)
-                            st.rerun()
-
-        elif ACTIVE_WORKSPACE == "📖 Read Revision Notes Vault":
-            st.markdown("<h2>📖 Read Official Revision Notes Vault Storage</h2>", unsafe_allow_html=True)
-            st.caption("Access syllabus materials, check uploaded text arrays, or generate customized PDF documentation streams instantly.")
-            
-            if not db.REVISION_NOTES_VAULT:
-                st.info("No documents are currently available inside the server vaults.")
-            else:
-                for idx, note in enumerate(db.REVISION_NOTES_VAULT):
-                    with st.expander(f"📄 {note['Title']} ({note['Subject']})"):
-                        st.markdown(f"**Subject Discipline Track:** {note['Subject']}")
-                        st.write(note['Content'])
-                        
-                        # PDF compiling engine block logic built right here
-                        pdf = FPDF()
-                        pdf.add_page()
-                        pdf.set_font("Arial", size=12)
-                        pdf.cell(200, 10, txt=f"Academic Shield Network Document Reference: {note['Title']}", ln=1, align="C")
-                        pdf.ln(10)
-                        pdf.multi_cell(0, 10, txt=str(note['Content']))
-                        
-                        try:
-                            pdf_output = pdf.output(dest="S").encode("latin-1")
-                            st.download_button(
-                                label="📥 Download This Notes File as PDF Document",
-                                data=pdf_output,
-                                file_name=f"{note['Title'].replace(' ', '_')}.pdf",
-                                mime="application/pdf",
-                                key=f"dl_{idx}"
-                            )
-                        except Exception as e:
-                            st.caption("Note contains math characters. Tap download to compile data payload streams safely.")
-
-        elif ACTIVE_WORKSPACE == "💬 General Lounge Chat":
-            st.markdown("<h2>💬 Global Media Communications Lounge</h2>", unsafe_allow_html=True)
-            st.markdown("<div class='whatsapp-chat-canvas'>", unsafe_allow_html=True)
-            for m in db.GENERAL_CHAT_LEDGER:
-                side = "row-right" if m["uid"] == UID else "row-left"
-                bubble = "bubble-right" if m["uid"] == UID else "bubble-left"
-                st.markdown(f"""
-                <div class="message-row {side}">
-                    <div class="message-bubble {bubble}">
-                        <span class="bubble-sender">{m['sender']}</span>
-                        <div>{m['text']}</div>
-                        <span class="bubble-time">{m['time']}</span>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
             
-            with st.form("Lounge Form", clear_on_submit=True):
-                l_txt = st.text_input("Type message text content to stream globally...")
-                if st.form_submit_button("SEND MSG"):
-                    if l_txt:
-                        db.GENERAL_CHAT_LEDGER.append({"sender": USER["name"], "uid": UID, "text": l_txt, "time": "Now"})
-                        db.save_node("lounge_chat.json", db.GENERAL_CHAT_LEDGER)
+            with st.form("Group chat dispatch form", clear_on_submit=True):
+                g_txt = st.text_input("Type clarification post or mathematical arguments...")
+                if st.form_submit_button("STREAM MESSAGE"):
+                    if g_txt:
+                        db.DISCUSSION_MESSAGES.append({
+                            "sender": USER["name"], "uid": UID, "subject": d_sub, "text": g_txt, "time": "Now"
+                        })
+                        db.save_node("discussion_messages.json", db.DISCUSSION_MESSAGES)
                         st.rerun()
 
-        elif ACTIVE_WORKSPACE == "🔒 Private Peer Chatroom":
-            st.markdown("<h2>🔒 Private Peer-to-Peer Chatroom Node</h2>", unsafe_allow_html=True)
-            st.markdown("<div class='whatsapp-chat-canvas'>", unsafe_allow_html=True)
-            for m in db.P2P_CHAT_LEDGER:
-                side = "row-right" if m["uid"] == UID else "row-left"
-                bubble = "bubble-right" if m["uid"] == UID else "bubble-left"
-                st.markdown(f"""
-                <div class="message-row {side}">
-                    <div class="message-bubble {bubble}">
-                        <span class="bubble-sender">{m['sender']}</span>
-                        <div>{m['text']}</div>
-                        <span class="bubble-time">{m['time']}</span>
-                    </div>
+    elif CH == "📖 Read Revision Notes Vault":
+        st.header("📖 Read Official Revision Notes Vault Storage")
+        if not db.REVISION_NOTES_VAULT:
+            st.info("No documents are currently available inside the server vaults.")
+        else:
+            for idx, note in enumerate(db.REVISION_NOTES_VAULT):
+                with st.expander(f"📄 {note['Title']} ({note['Subject']})"):
+                    st.write(note['Content'])
+                    
+                    # Safe PDF byte encoding architecture block
+                    pdf = FPDF()
+                    pdf.add_page()
+                    pdf.set_font("Helvetica", size=12)
+                    pdf.cell(200, 10, txt=f"Document Asset: {note['Title']}", ln=1, align="C")
+                    pdf.ln(10)
+                    pdf.multi_cell(0, 10, txt=str(note['Content']).encode('utf-8').decode('latin-1', 'ignore'))
+                    
+                    try:
+                        pdf_bytes = pdf.output()
+                        st.download_button(
+                            label="📥 Download This Notes File as PDF Document",
+                            data=bytes(pdf_bytes),
+                            file_name=f"{note['Title'].replace(' ', '_')}.pdf",
+                            mime="application/pdf",
+                            key=f"dl_pdf_{idx}"
+                        )
+                    except Exception as e:
+                        st.caption("Compilation issue reading characters. File download available via online syncing.")
+
+    elif CH == "💬 General Lounge Chat":
+        st.header("💬 Global Media Communications Lounge")
+        st.markdown("<div class='whatsapp-chat-canvas'>", unsafe_allow_html=True)
+        for m in db.GENERAL_CHAT_LEDGER:
+            side = "row-right" if m["uid"] == UID else "row-left"
+            bubble = "bubble-right" if m["uid"] == UID else "bubble-left"
+            st.markdown(f"""
+            <div class="message-row {side}">
+                <div class="message-bubble {bubble}">
+                    <span class="bubble-sender">{m['sender']}</span>
+                    <div>{m['text']}</div>
+                    <span class="bubble-time">{m['time']}</span>
                 </div>
-                """, unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-            
-            with st.form("Private Chat Form", clear_on_submit=True):
-                p_txt = st.text_input("Type secure private messaging content...")
-                if st.form_submit_button("TRANSMIT ENCRYPTED MESSAGE BLOCK"):
-                    if p_txt:
-                        db.P2P_CHAT_LEDGER.append({"sender": USER["name"], "uid": UID, "text": p_txt, "time": "Now"})
-                        db.save_node("private_chat.json", db.P2P_CHAT_LEDGER)
-                        st.rerun()
+            </div>
+            """, unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        with st.form("Lounge Form Interface", clear_on_submit=True):
+            l_txt = st.text_input("Type message text content to stream globally...")
+            if st.form_submit_button("SEND MSG"):
+                if l_txt:
+                    db.GENERAL_CHAT_LEDGER.append({"sender": USER["name"], "uid": UID, "text": l_txt, "time": "Now"})
+                    db.save_node("lounge_chat.json", db.GENERAL_CHAT_LEDGER)
+                    st.rerun()
 
-        elif ACTIVE_WORKSPACE == "📊 Personal Progress Tracker":
-            st.markdown("<h2>📊 Personal Analytical Progress Dashboard Matrix</h2>", unsafe_allow_html=True)
-            logs = USER.get("grade_logs", [])
-            if not logs:
-                st.info("No recorded assessment logs found yet.")
-            else:
-                df_logs = pd.DataFrame(logs)
-                st.dataframe(df_logs[["Subject", "Score", "Grade"]])
-                st.bar_chart(df_logs.set_index("Subject")["Score"])
+    elif CH == "📊 Personal Progress Tracker":
+        st.header("📊 Personal Analytical Progress Dashboard Matrix")
+        logs = USER.get("grade_logs", [])
+        if not logs:
+            st.info("No recorded assessment logs found yet.")
+        else:
+            st.dataframe(pd.DataFrame(logs)[["Subject", "Score", "Grade"]])
 
-        elif ACTIVE_WORKSPACE == "📂 Finished Exam Vault Storage":
-            st.markdown("<h2>📂 Evaluation Document Historical Storage Vault</h2>", unsafe_allow_html=True)
-            logs = USER.get("grade_logs", [])
-            if not logs:
-                st.info("Vault registry records are currently empty.")
-            else:
-                for idx, item in enumerate(logs):
-                    st.markdown(f"""
-                    <div class="revision-note-card">
-                        <h4>📄 Historical Assessment Document Reference #{idx+1}</h4>
-                        <p><b>Syllabus Discipline:</b> {item['Subject']} | <b>Score:</b> {item['Score']}% ({item['Grade']})</p>
-                        <p style='color:#8696a0;'><b>Your Solution Summary:</b> "{item.get('User_Ans','')}"</p>
-                    </div>
-                    """, unsafe_allow_html=True)
+    elif CH == "📂 Finished Exam Vault Storage":
+        st.header("📂 Evaluation Document Historical Storage Vault")
+        logs = USER.get("grade_logs", [])
+        if not logs:
+            st.info("Vault registry records are currently empty.")
+        else:
+            for idx, item in enumerate(logs):
+                st.info(f"📄 **Assessment Log #{idx+1}:** {item['Subject']} | Score Gained: {item['Score']}% ({item['Grade']})")
 
-        elif ACTIVE_WORKSPACE == "📖 Global Candidates Directory":
-            st.markdown("<h2>📖 Global Network Candidate Registry Directory</h2>", unsafe_allow_html=True)
-            for d_uid, d_profile in db.USERS_REGISTRY.items():
-                if d_profile.get("status") != "Approved": continue
-                st.markdown(f"""
-                <div class="directory-profile-box">
-                    <h3>👤 Candidate Profile: {d_profile.get('name','Hidden Portfolio Name')}</h3>
-                    <p><b>Username Reference Key:</b> <code>{d_profile.get('username','anon')}</code></p>
-                    <p><b>Institution Base School:</b> {d_profile.get('school','The Amazima School')} | <b>Location Coordinates:</b> {d_profile.get('location','Jinja')}</p>
-                </div>
-                """, unsafe_allow_html=True)
+    elif CH == "📖 Global Candidates Directory":
+        st.header("📖 Global Network Candidate Registry Directory")
+        for d_uid, d_profile in db.USERS_REGISTRY.items():
+            if d_profile.get("status") != "Approved": continue
+            # Clear password keys from being exposed inside directory structures securely
+            st.markdown(f"""
+            <div style="background-color: #1f2c34; padding: 16px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #00a884;">
+                <h3 style="margin: 0 0 6px 0; color: #00a884;">👤 Profile Name: {d_profile.get('name', 'Hidden Candidate Portfolio')}</h3>
+                <p style="margin: 3px 0; font-size: 14px; color: #e9edef;"><b>System Username Handle:</b> <code>{d_profile.get('username')}</code></p>
+                <p style="margin: 3px 0; font-size: 14px; color: #e9edef;"><b>Class Standing Level:</b> {d_profile.get('class')} </p>
+                <p style="margin: 3px 0; font-size: 14px; color: #e9edef;"><b>Assigned Campus Institution:</b> {d_profile.get('school')} </p>
+                <p style="margin: 3px 0; font-size: 14px; color: #e9edef;"><b>Contact Support Phone:</b> {d_profile.get('phone')} | <b>Email Node Address:</b> {d_profile.get('email')}</p>
+                <p style="margin: 3px 0; font-size: 14px; color: #e9edef;"><b>Geographic Coordinates Location:</b> {d_profile.get('location')} </p>
+            </div>
+            """, unsafe_allow_html=True)
 
-    # =========================================================================
-    # GLOBAL ACCESSIBILITY WORKSPACE MODULE: ACCOUNT SECURITY CENTER (FOR ALL)
-    # =========================================================================
-    if ACTIVE_WORKSPACE == "🔐 Account Security Center":
-        st.markdown("<h2>🔐 Account Security & Password Modification Panel</h2>", unsafe_allow_html=True)
-        with st.form("Universal Password Form"):
-            old_p = st.text_input("Enter Current Password Vector String:", type="password", value="")
-            new_p = st.text_input("Define New Secure Account Access Password:", type="password", value="")
-            confirm_p = st.text_input("Confirm New Password Mapping Sequence:", type="password", value="")
-            
-            if st.form_submit_button("COMMIT PASSWORD UPDATE MATRIX"):
-                if old_p != USER["pwd"]:
-                    st.error("❌ Authentication Failure: Current verification string does not match database records.")
-                elif not new_p or len(new_p) < 4:
-                    st.error("❌ Configuration Error: Password field entry too short.")
-                elif new_p != confirm_p:
-                    st.error("❌ Structural Collision: Password sequences do not align.")
-                else:
+    elif CH == "🔐 Account Security Center":
+        st.header("🔐 Account Security & Password Modification Panel")
+        with st.form("Password Adjust Security Form"):
+            old_p = st.text_input("Enter Current Password Vector String:", type="password")
+            new_p = st.text_input("Define New Secure Account Access Password:", type="password")
+            if st.form_submit_button("COMMIT CHANGE"):
+                if old_p == USER["pwd"] and len(new_p) >= 4:
                     db.USERS_REGISTRY[UID]["pwd"] = new_p
                     db.save_storage_node("users_registry.json", db.USERS_REGISTRY)
-                    st.success("🎯 Password refactoring verified! Database updated successfully.")
-                    time.sleep(1)
-                    st.rerun()
+                    st.success("Account credential strings adjusted securely!")
+                else:
+                    st.error("Validation failed. Check current string entry constraints.")
